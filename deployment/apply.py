@@ -4,6 +4,7 @@ import sys
 from pytezos import ContractInterface, PyTezosClient, pytezos
 from pytezos.operation.result import OperationResult
 from termcolor import colored
+from pprint import pprint
 
 from settings import deployment
 
@@ -20,13 +21,13 @@ def get_address(pytezos_admin_client, operation_hash):
         except Exception:
             pass
 
-def wait_applied(pytezos_admin_client, operation_hash):
+def wait_applied(pytezos_admin_client: PyTezosClient, operation_hash):
     while True:
         try:
             opg = pytezos_admin_client.shell.blocks[-10:].find_operation(operation_hash)
 
             if OperationResult.is_applied(opg):
-                return True
+                return pytezos_admin_client.shell.head.level()
 
             time.sleep(1)
         except Exception:
@@ -39,8 +40,6 @@ class ActionKind:
 
     origination = "origination"
     contract_call = "contract_call"
-    transaction = "transaction"
-
 
 def run_actions(client: PyTezosClient):
     """
@@ -91,6 +90,12 @@ def run_actions(client: PyTezosClient):
             else:
                 storage = code.storage.dummy()
 
+            if "overrides" in action:
+                storage = {
+                    **storage,
+                    **action["overrides"]
+                }
+
             operation_group = client.origination(
                 script=code.script(initial_storage=storage)
             ).send()
@@ -99,24 +104,6 @@ def run_actions(client: PyTezosClient):
 
             print(f'\tContract Address: {contract_address_map[action["name"]]}')
 
-        elif action["kind"] == ActionKind.transaction:
-            print(
-                colored(
-                    f'== Transferring amount {action["amount"]} to "{action["destination"]}"',
-                    "blue",
-                    attrs=["bold"],
-                )
-            )
-            if "description" in action:
-                print(f'\t{action["description"]}')
-
-            op = client.transaction(
-                destination=action["destination"],
-                amount=action["amount"],
-                gas_limit=1000000,
-            )
-
-            wait_applied(client, op.send().hash())
         elif action["kind"] == ActionKind.contract_call:
             if "disabled" in action and action["disabled"]:
                 print(
@@ -144,6 +131,7 @@ def run_actions(client: PyTezosClient):
                 op = op.with_amount(action["amount"])
 
             wait_applied(client, op.send().hash())
+
 
     return contract_address_map
 

@@ -1,14 +1,28 @@
 pytezos:
-  rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech/
-  private_key: edsk...
+    rpc_endpoint: http://localhost:20000
+    private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
-  null_kt1_address: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-  null_tz1_address: tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU
-  admin_address: tz1hVbDpAtjNmGJF2PciJyUe37BziCv9QMro
+    null_kt1_address: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
+    null_tz1_address: tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU
+    admin_address: tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
 actions:
+    - kind: origination
+      contract_kind: merkle_tree
+      name: merkle_tree
+      code_path: __SNAPSHOTS__/compilation/IBCF/merkle_patricia_tree/step_000_cont_0_contract.tz
+      storage: __SNAPSHOTS__/compilation/IBCF/merkle_patricia_tree/step_000_cont_0_storage.tz
+      overrides:
+          administrators:
+              - admin_address
 
-  - kind: origination
-    contract_kind: merkle_tree
-    name: merkle_tree
-    code_path: __SNAPSHOTS__/compilation/IBCF/merkle_patricia_tree/step_000_cont_0_contract.tz
-    storage: __SNAPSHOTS__/compilation/IBCF/merkle_patricia_tree/step_000_cont_0_storage.tz
+    - kind: contract_call
+      contract_address: merkle_tree
+      entrypoint: insert
+      argument:
+          key: "0xff"
+          value: "0xff"
+
+    - kind: contract_call
+      contract_address: KT19HSiaxzeAoRFpLyt9qzhzCeLk6vG6tSuE
+      entrypoint: snapshot_merkle_tree
+      argument:
