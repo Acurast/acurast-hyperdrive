@@ -35,10 +35,9 @@ tests/%: tests/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh test $< $(SNAPSHOTS_FOLDER)/test/$* --html
 
 clean_tests:
-	@rm -rf $(SNAPSHOTS_FOLDER)/compilation
+	@rm -rf $(SNAPSHOTS_FOLDER)/test
 
 test: clean_tests $(TESTS:%.py=%) setup_env
-	@rm -rf $(SNAPSHOTS_FOLDER)/test
 	@echo "Tested all contracts."
 ##
 ## - Tests
