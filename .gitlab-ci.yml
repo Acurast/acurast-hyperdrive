@@ -1,0 +1,33 @@
+image: ubuntu:latest
+
+stages:
+  - compile
+  - test
+
+compile_contracts:
+  stage: compile
+  before_script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev python3-pip python3-setuptools build-essential libsodium-dev libsecp256k1-dev libgmp3-dev npm git curl > log.txt # A custom image will be created later
+    - make
+  script:
+    - make compile
+    - git diff --exit-code .
+  artifacts:
+    when: always
+    paths:
+      - log.txt
+
+test_contracts:
+  stage: test
+  before_script:
+    - apt-get update
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev python3-pip python3-setuptools build-essential libsodium-dev libsecp256k1-dev libgmp3-dev npm git curl > log.txt # A custom image will be created later
+    - make
+  script:
+    - make test
+    - git diff --exit-code .
+  artifacts:
+    when: always
+    paths:
+      - log.txt
