@@ -104,7 +104,22 @@ def remove_prefix(label, prefix_length):
     :returns: Type.Label
     """
     length = sp.compute(sp.as_nat(label.length - prefix_length, "PREFIX_TOO_LONG"))
-    return sp.record(
-        length = length,
-        data = sp.slice(label.data, prefix_length, length).open_some("PREFIX_LONGER_THAN_DATA")
-    )
+
+    new_label=sp.bind_block()
+    with new_label:
+        with sp.if_(length == 0):
+            sp.result(
+                sp.record(
+                    length = 0,
+                    data = ""
+                )
+            )
+        with sp.else_():
+            sp.result(
+                sp.record(
+                    length = length,
+                    data = sp.slice(label.data, prefix_length, length).open_some("PREFIX_LONGER_THAN_DATA")
+                )
+            )
+
+    return new_label.value

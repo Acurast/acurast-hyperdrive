@@ -39,25 +39,58 @@ def test():
     scenario += ibcf
 
     # Insert multiple states
-    ibcf.insert(
-        sp.record(
-            key=encoded_price_key,
-            value=encoded_price_value_1
-        )
-    ).run(sender=alice.address)
-    ibcf.insert(
-        sp.record(
-            key=encoded_price_key,
-            value=encoded_price_value_2
-        )
-    ).run(sender=bob.address)
-    ibcf.insert(
-        sp.record(
-            key=encoded_price_key,
-            value=encoded_price_value_2
-        )
-    ).run(sender=claus.address)
+    # ibcf.insert(
+    #     sp.record(
+    #         key=encoded_price_key,
+    #         value=encoded_price_value_1
+    #     )
+    # ).run(sender=alice.address)
+    # ibcf.insert(
+    #     sp.record(
+    #         key=encoded_price_key,
+    #         value=encoded_price_value_2
+    #     )
+    # ).run(sender=bob.address)
+    # ibcf.insert(
+    #     sp.record(
+    #         key=encoded_price_key,
+    #         value=encoded_price_value_2
+    #     )
+    # ).run(sender=claus.address)
 
+    ibcf.insert(
+        sp.record(
+            key=sp.bytes("0x000000000000000000000000000000"),
+            value=sp.bytes("0xff"),
+        )
+    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
+    ibcf.insert(
+        sp.record(
+            key=sp.bytes("0x000000000000000000000000000001"),
+            value=sp.bytes("0xff"),
+        )
+    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
+
+    ibcf.insert(
+        sp.record(
+            key=sp.bytes("0x000000000000000000000000000002"),
+            value=sp.bytes("0xff"),
+        )
+    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
+    ibcf.insert(
+        sp.record(
+            key=sp.bytes("0x000000000000000000000000000003"),
+            value=sp.bytes("0xff"),
+        )
+    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
+
+    ibcf.insert(
+        sp.record(
+            key=sp.bytes("0x000000000000000000000000000004"),
+            value=sp.bytes("0xff"),
+        )
+    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
+    return
     # Snapshot merkle tree for level 1
     ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_1)
 
