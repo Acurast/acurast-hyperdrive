@@ -1,10 +1,10 @@
 pytezos:
-    rpc_endpoint: http://localhost:20000
-    private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
+  rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech/ # http://localhost:20000
+  private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
     null_kt1_address: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
     null_tz1_address: tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU
-    admin_address: tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
+    admin_address: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3 #tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
 actions:
     - kind: origination
       contract_kind: merkle_tree
@@ -23,6 +23,13 @@ actions:
           value: "0xff"
 
     - kind: contract_call
-      contract_address: KT19HSiaxzeAoRFpLyt9qzhzCeLk6vG6tSuE
+      contract_address: merkle_tree
+      entrypoint: insert
+      argument:
+          key: "0xffff"
+          value: "0xffff"
+
+    - kind: contract_call
+      contract_address: merkle_tree
       entrypoint: snapshot_merkle_tree
       argument:

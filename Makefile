@@ -46,7 +46,7 @@ test: clean_tests $(TESTS:%.py=%) setup_env
 ##
 ## + Deployment
 ##
-export CONFIG_PATH ?= deployment/settings/ghostnet.yaml
+export CONFIG_PATH ?= deployment/configs/ghostnet.yaml
 deploy: install-dependencies
 	@python3 deployment/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
 ##

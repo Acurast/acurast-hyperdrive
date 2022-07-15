@@ -4,9 +4,9 @@ import sys
 from pytezos import ContractInterface, PyTezosClient, pytezos
 from pytezos.operation.result import OperationResult
 from termcolor import colored
-from pprint import pprint
 
-from settings import deployment
+from configs import deployment
+
 
 def get_address(pytezos_admin_client, operation_hash):
     while True:
@@ -21,6 +21,7 @@ def get_address(pytezos_admin_client, operation_hash):
         except Exception:
             pass
 
+
 def wait_applied(pytezos_admin_client: PyTezosClient, operation_hash):
     while True:
         try:
@@ -33,6 +34,7 @@ def wait_applied(pytezos_admin_client: PyTezosClient, operation_hash):
         except Exception:
             pass
 
+
 class ActionKind:
     """
     Defines all deployment action types
@@ -40,6 +42,7 @@ class ActionKind:
 
     origination = "origination"
     contract_call = "contract_call"
+
 
 def run_actions(client: PyTezosClient):
     """
@@ -91,16 +94,15 @@ def run_actions(client: PyTezosClient):
                 storage = code.storage.dummy()
 
             if "overrides" in action:
-                storage = {
-                    **storage,
-                    **action["overrides"]
-                }
+                storage = {**storage, **action["overrides"]}
 
             operation_group = client.origination(
                 script=code.script(initial_storage=storage)
             ).send()
 
-            contract_address_map[action["name"]] = get_address(client, operation_group.hash())
+            contract_address_map[action["name"]] = get_address(
+                client, operation_group.hash()
+            )
 
             print(f'\tContract Address: {contract_address_map[action["name"]]}')
 
@@ -131,7 +133,6 @@ def run_actions(client: PyTezosClient):
                 op = op.with_amount(action["amount"])
 
             wait_applied(client, op.send().hash())
-
 
     return contract_address_map
 
