@@ -4,6 +4,7 @@ from pytezos import pytezos
 
 client = pytezos.using(shell=sys.argv[1])
 
+
 def visualize(nodes, states, root):
     graph_attr = {
         "labelloc": "t",
@@ -30,8 +31,9 @@ def visualize(nodes, states, root):
         "fontsize": "8",
     }  # edge attributes
 
-    dot = graphviz.Digraph(graph_attr=graph_attr,
-                           node_attr=node_attr, edge_attr=edge_attr)
+    dot = graphviz.Digraph(
+        graph_attr=graph_attr, node_attr=node_attr, edge_attr=edge_attr
+    )
 
     for state in states:
         node_attr = {
@@ -66,14 +68,24 @@ def link(dot, hash, nodes):
     if hash in nodes:
         node = nodes[hash]
 
-        dot.edge(hash, node["left"]["node"], label=f'({node["left"]["label"]["length"]}) {node["left"]["label"]["data"]}')
+        dot.edge(
+            hash,
+            node["left"]["node"],
+            label=f'({node["left"]["label"]["length"]}) {node["left"]["label"]["data"]}',
+        )
         link(dot, node["left"]["node"], nodes)
 
-        dot.edge(hash, node["right"]["node"], label=f'({node["right"]["label"]["length"]}) {node["right"]["label"]["data"]}')
+        dot.edge(
+            hash,
+            node["right"]["node"],
+            label=f'({node["right"]["label"]["length"]}) {node["right"]["label"]["data"]}',
+        )
         link(dot, node["right"]["node"], nodes)
+
 
 def pp_bytes(b):
     return b.hex()
+
 
 tree = client.contract(sys.argv[2]).storage()["tree"]
 
@@ -83,20 +95,13 @@ for state in tree["states"]:
 
 nodes = {}
 for node in tree["nodes"]:
-    left = {
-        **tree["nodes"][node][0],
-        "node": pp_bytes(tree["nodes"][node][0]["node"])
-    }
-    right = {
-        **tree["nodes"][node][1],
-        "node": pp_bytes(tree["nodes"][node][1]["node"])
-    }
+    left = {**tree["nodes"][node][0], "node": pp_bytes(tree["nodes"][node][0]["node"])}
+    right = {**tree["nodes"][node][1], "node": pp_bytes(tree["nodes"][node][1]["node"])}
 
-    nodes[node.hex()] = {
-        "left": left,
-        "right": right
-    }
+    nodes[node.hex()] = {"left": left, "right": right}
 
-visualize(nodes, states, pp_bytes(tree["root"])).render("merkle_tree", format="png", view=False)
+visualize(nodes, states, pp_bytes(tree["root"])).render(
+    "merkle_tree", format="png", view=False
+)
 
 print(f"total states: {len(states)}")
