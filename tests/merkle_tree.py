@@ -19,7 +19,6 @@ def test():
     encoded_price_value_2 = ENCODE("2")
     encoded_price_value_3 = ENCODE("3")
 
-
     BLOCK_LEVEL_1 = 1
     BLOCK_LEVEL_2 = 2
 
@@ -28,11 +27,9 @@ def test():
     ibcf.update_initial_storage(
         sp.record(
             bytes_to_bits=bytes_to_bits,
-            administrators=sp.set([
-                admin.address
-            ]),
+            administrators=sp.set([admin.address]),
             merkle_history=sp.big_map(),
-            tree=EMPTY_TREE
+            tree=EMPTY_TREE,
         )
     )
 
@@ -95,11 +92,9 @@ def test():
     ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_1)
 
     # Get proof of inclusion for key="price" and price="1"
-    proof = ibcf.get_proof(sp.record(
-        owner=alice.address,
-        key=encoded_price_key,
-        level=BLOCK_LEVEL_1
-    ))
+    proof = ibcf.get_proof(
+        sp.record(owner=alice.address, key=encoded_price_key, level=BLOCK_LEVEL_1)
+    )
 
     # Verify proof for block 1 (Valid)
     ibcf.verify_proof(
@@ -109,8 +104,8 @@ def test():
             state=sp.record(
                 owner=encoded_alice_address,
                 key=encoded_price_key,
-                value=encoded_price_value_1
-            )
+                value=encoded_price_value_1,
+            ),
         )
     )
 
@@ -122,30 +117,21 @@ def test():
             state=sp.record(
                 owner=encoded_alice_address,
                 key=encoded_price_key,
-                value=encoded_price_value_1
-            )
+                value=encoded_price_value_1,
+            ),
         )
     ).run(valid=False)
 
     # Insert multiple new states
-    ibcf.insert(
-        sp.record(
-            key=encoded_price_key,
-            value=encoded_price_value_2
-        )
-    ).run(sender=alice.address)
-    ibcf.insert(
-        sp.record(
-            key=encoded_price_key,
-            value=encoded_price_value_1
-        )
-    ).run(sender=bob.address)
-    ibcf.insert(
-        sp.record(
-            key=encoded_price_key,
-            value=encoded_price_value_3
-        )
-    ).run(sender=claus.address)
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+        sender=alice.address
+    )
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
+        sender=bob.address
+    )
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_3)).run(
+        sender=claus.address
+    )
 
     # Snapshot merkle tree for level 2
     ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_2)
@@ -158,17 +144,15 @@ def test():
             state=sp.record(
                 owner=encoded_alice_address,
                 key=encoded_price_key,
-                value=encoded_price_value_1
-            )
+                value=encoded_price_value_1,
+            ),
         )
     ).run(valid=False, exception=Error.PROOF_INVALID)
 
     # Get proof of inclusion for key="price" and price="1" on block 2
-    proof = ibcf.get_proof(sp.record(
-        owner=claus.address,
-        key=encoded_price_key,
-        level=BLOCK_LEVEL_2
-    ))
+    proof = ibcf.get_proof(
+        sp.record(owner=claus.address, key=encoded_price_key, level=BLOCK_LEVEL_2)
+    )
 
     # Verify proof for block 2 (Valid)
     ibcf.verify_proof(
@@ -178,7 +162,7 @@ def test():
             state=sp.record(
                 owner=encoded_claus_address,
                 key=encoded_price_key,
-                value=encoded_price_value_3
-            )
+                value=encoded_price_value_3,
+            ),
         )
     )
