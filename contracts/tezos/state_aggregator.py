@@ -348,7 +348,7 @@ class IBCF(sp.Contract):
                 )
             )
 
-    @sp.entry_point()
+    @sp.onchain_view()
     def verify_proof(self, arg):
         """
         Validates a proof against a given state.
@@ -365,6 +365,6 @@ class IBCF(sp.Contract):
                     derived_hash.value = HASH_FUNCTION(derived_hash.value + right)
 
         sp.verify(
-            self.data.merkle_history[arg.level].root == derived_hash.value,
+            self.data.merkle_history.contains(arg.level) & (self.data.merkle_history[arg.level].root == derived_hash.value),
             Error.PROOF_INVALID,
         )

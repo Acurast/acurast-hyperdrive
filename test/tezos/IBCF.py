@@ -70,17 +70,21 @@ def test():
     )
 
     # Verify proof for block 2 (Invalid)
-    ibcf.verify_proof(
-        sp.record(
-            level=BLOCK_LEVEL_2,
-            proof=proof.proof,
-            state=sp.record(
-                owner=encoded_alice_address,
-                key=encoded_price_key,
-                value=encoded_price_value_1,
-            ),
-        )
-    ).run(valid=False)
+    ex = sp.catch_exception(
+        ibcf.verify_proof(
+            sp.record(
+                level=BLOCK_LEVEL_2,
+                proof=proof.proof,
+                state=sp.record(
+                    owner=encoded_alice_address,
+                    key=encoded_price_key,
+                    value=encoded_price_value_1,
+                ),
+            )
+        ),
+        t = sp.TString
+    )
+    scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 
     # Insert multiple new states
     ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
@@ -97,17 +101,21 @@ def test():
     ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_2)
 
     # Verify old proof on block 2 (Invalid)
-    ibcf.verify_proof(
-        sp.record(
-            level=BLOCK_LEVEL_2,
-            proof=proof.proof,
-            state=sp.record(
-                owner=encoded_alice_address,
-                key=encoded_price_key,
-                value=encoded_price_value_1,
-            ),
-        )
-    ).run(valid=False, exception=Error.PROOF_INVALID)
+    ex = sp.catch_exception(
+        ibcf.verify_proof(
+            sp.record(
+                level=BLOCK_LEVEL_2,
+                proof=proof.proof,
+                state=sp.record(
+                    owner=encoded_alice_address,
+                    key=encoded_price_key,
+                    value=encoded_price_value_1,
+                ),
+            )
+        ),
+        t = sp.TString
+    )
+    scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 
     # Get proof of inclusion for key="price" and price="1" on block 2
     proof = ibcf.get_proof(
