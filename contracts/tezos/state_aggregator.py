@@ -16,16 +16,25 @@ MAX_VALUE_LENGTH = 1000
 # This constant is used to limit the amount of states being stored per merkle tree.
 MAX_STATES = 200
 
+EMPTY_TREE = sp.record(
+    root=sp.bytes("0x"),
+    root_edge=sp.record(
+        node=sp.bytes("0x"),
+        label=sp.record(data="", length=sp.nat(0)),
+    ),
+    nodes=sp.map(),
+    states=sp.map(),
+)
 
 def ENCODE(d):
     return sp.pack(d)
-
 
 class Error:
     PROOF_INVALID = "PROOF_INVALID"
     NOT_FOUND = "NOT_FOUND"
     NOT_ALLOWED = "NOT_ALLOWED"
     STATE_TOO_LARGE = "STATE_TOO_LARGE"
+    LEVEL_ALREADY_USED = "LEVEL_ALREADY_USED"
 
 
 #################
@@ -77,9 +86,6 @@ class Type:
         key=sp.TBytes,
         value=sp.TBytes,
     ).right_comb()
-    VerifyProofArgument = sp.TRecord(
-        level=sp.TNat, proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
-    ).right_comb()
     InsertArgument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
     # Views
     GetProofArgument = sp.TRecord(
@@ -90,18 +96,9 @@ class Type:
         merkle_root=sp.TBytes,
         proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
     ).right_comb()
-
-
-EMPTY_TREE = sp.record(
-    root=sp.bytes("0x"),
-    root_edge=sp.record(
-        node=sp.bytes("0x"),
-        label=sp.record(data="", length=sp.nat(0)),
-    ),
-    nodes=sp.map(tkey=sp.TBytes, tvalue=Type.Node),
-    states=sp.map(tkey=sp.TBytes, tvalue=sp.TBytes),
-)
-
+    VerifyProofArgument = sp.TRecord(
+        level=sp.TNat, proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
+    ).right_comb()
 
 class IBCF(sp.Contract):
     """
@@ -240,14 +237,6 @@ class IBCF(sp.Contract):
             sp.result(r_stack.value[r_size.value])
 
     @sp.entry_point()
-    def snapshot_merkle_tree(self):
-        # Only allowed addresses can call this entry point
-        sp.verify(self.data.administrators.contains(sp.sender), Error.NOT_ALLOWED)
-
-        self.data.merkle_history[sp.level] = self.data.tree
-        self.data.tree = EMPTY_TREE
-
-    @sp.entry_point()
     def insert(self, param):
         """
         Include new state into the merkle tree.
@@ -277,6 +266,17 @@ class IBCF(sp.Contract):
 
         self.data.tree.root = hash_edge(edge.value)
         self.data.tree.root_edge = edge.value
+
+    @sp.entry_point()
+    def snapshot_merkle_tree(self):
+        # Only allowed addresses can call this entry point
+        sp.verify(self.data.administrators.contains(sp.sender), Error.NOT_ALLOWED)
+        # Only allow one snapshot per level
+        sp.verify(~self.data.merkle_history.contains(sp.level), Error.LEVEL_ALREADY_USED)
+        # Snapshot current state
+        self.data.merkle_history[sp.level] = self.data.tree
+        # Reset current state
+        self.data.tree = EMPTY_TREE
 
     @sp.onchain_view()
     def get_proof(self, arg):
@@ -329,13 +329,14 @@ class IBCF(sp.Contract):
                 #
                 # The proof path must include the complement, since
                 # the head is already known.
-                with sp.if_(head == 0):
-                    h = hash_edge(tree.value.nodes[root_edge.value.node].children[1])
-                    blinded_path.value.push(sp.right(h))
-                with sp.else_():
-                    h = hash_edge(tree.value.nodes[root_edge.value.node].children[0])
-                    blinded_path.value.push(sp.left(h))
+                hash = sp.bind_block()
+                with hash:
+                    with sp.if_(head == 0):
+                        sp.result(sp.right(hash_edge(tree.value.nodes[root_edge.value.node].children[1])))
+                    with sp.else_():
+                        sp.result(sp.left(hash_edge(tree.value.nodes[root_edge.value.node].children[0])))
 
+                blinded_path.value.push(hash.value)
                 root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
                 key_label.value = tail
 

@@ -22,7 +22,10 @@ compilation/%: compilation/%.py install-dependencies
 clean_compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation
 
-compile: clean_compilations $(COMPILATIONS:%.py=%) setup_env
+compile-tezos: $(COMPILATIONS:%.py=%) setup_env
+	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \;
+
+compile: clean_compilations compile-tezos
 	@npm run compile
 	@echo "Compiled all contracts."
 ##
@@ -38,7 +41,9 @@ test/%: test/%.py install-dependencies
 clean_tests:
 	@rm -rf $(SNAPSHOTS_FOLDER)/test
 
-test: clean_tests $(TESTS:%.py=%) setup_env
+test-tezos: $(TESTS:%.py=%) setup_env
+
+test: clean_tests test-tezos
 	@npm run test
 	@echo "Tested all contracts."
 ##
