@@ -6,6 +6,7 @@ from pytezos.operation.result import OperationResult
 from termcolor import colored
 
 from configs import deployment
+from deployment.scripts.insert_multiple_states import insert_multiple_states
 
 
 def get_address(pytezos_admin_client, operation_hash):
@@ -42,6 +43,9 @@ class ActionKind:
 
     origination = "origination"
     contract_call = "contract_call"
+
+
+Scripts = {"insert_multiple_states": insert_multiple_states}
 
 
 def run_actions(client: PyTezosClient):
@@ -125,14 +129,17 @@ def run_actions(client: PyTezosClient):
             if "description" in action:
                 print(f'\t{action["description"]}')
 
-            op = client.contract(action["contract_address"]).parameter(
-                action["entrypoint"], action["argument"]
-            )
+            if "script" in action:
+                Scripts[action["script"]](client, action)
+            else:
+                op = client.contract(action["contract_address"]).parameter(
+                    action["entrypoint"], action["argument"]
+                )
 
-            if "amount" in action:
-                op = op.with_amount(action["amount"])
+                if "amount" in action:
+                    op = op.with_amount(action["amount"])
 
-            wait_applied(client, op.send().hash())
+                wait_applied(client, op.send().hash())
 
     return contract_address_map
 

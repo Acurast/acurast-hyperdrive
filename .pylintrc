@@ -4,4 +4,4 @@ init-hook='from pylint.config import find_pylintrc; import os, sys; sys.path.app
 disable=no-self-argument,no-method-argument
 
 [FORMAT]
-max-line-length=240
+max-line-length=120

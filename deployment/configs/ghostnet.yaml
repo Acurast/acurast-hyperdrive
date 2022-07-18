@@ -18,16 +18,7 @@ actions:
     - kind: contract_call
       contract_address: merkle_tree
       entrypoint: insert
-      argument:
-          key: "0xff"
-          value: "0xff"
-
-    - kind: contract_call
-      contract_address: merkle_tree
-      entrypoint: insert
-      argument:
-          key: "0xffff"
-          value: "0xffff"
+      script: insert_multiple_states
 
     - kind: contract_call
       contract_address: merkle_tree
