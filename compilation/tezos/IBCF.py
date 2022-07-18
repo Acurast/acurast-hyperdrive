@@ -1,10 +1,10 @@
 import smartpy as sp
 
-from contracts.merkle_patricia_tree import IBCF, EMPTY_TREE
-from contracts.utils.bytes import bytes_to_bits
+from contracts.tezos.state_aggregator import IBCF, EMPTY_TREE
+from contracts.tezos.utils.bytes import bytes_to_bits
 
 sp.add_compilation_target(
-    "merkle_patricia_tree",
+    "state_aggregator",
     IBCF(),
     storage=sp.record(
         bytes_to_bits=bytes_to_bits,

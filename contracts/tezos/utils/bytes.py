@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.utils.misc import generate_var
+from contracts.tezos.utils.misc import generate_var
 
 
 def _hex(n: int) -> str:

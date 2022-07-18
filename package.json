@@ -1,0 +1,15 @@
+{
+  "name": "ibcf-tezos",
+  "version": "1.0.0",
+  "dependencies": {
+    "ethers": "^5.6.9",
+    "web3": "^1.7.4"
+  },
+  "devDependencies": {
+    "ganache": "7.3.2",
+    "truffle": "5.5.22"
+  },
+  "scripts": {
+    "compile": "truffle compile"
+  }
+}

@@ -8,6 +8,7 @@
 | [Python 3](https://www.python.org) |
 | [Curl](https://curl.se) |
 | [npm](https://github.com/npm/cli) |
+| [nodejs](https://nodejs.org/en) |
 
 ## Contract Compilation
 

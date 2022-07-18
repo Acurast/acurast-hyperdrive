@@ -12,7 +12,7 @@ compile_contracts:
     - make
   script:
     - make compile
-    - git diff --exit-code .
+    - git diff --exit-code __SNAPSHOTS__
   artifacts:
     when: always
     paths:
@@ -26,7 +26,7 @@ test_contracts:
     - make
   script:
     - make test
-    - git diff --exit-code .
+    - git diff --exit-code __SNAPSHOTS__
   artifacts:
     when: always
     paths:

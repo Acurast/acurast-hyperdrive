@@ -6,8 +6,8 @@ FLEXTESA_IMAGE=oxheadalpha/flextesa:latest
 FLEXTESA_SCRIPT=jakartabox
 CONTAINER_NAME=ibc-tezos-sandbox
 
-COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilations/*.py))
-TESTS := $(filter-out %/__init__.py, $(wildcard tests/*.py))
+COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilation/**/*.py))
+TESTS := $(filter-out %/__init__.py, $(wildcard test/**/*.py))
 
 touch_done=@mkdir -p $(@D) && touch $@;
 
@@ -16,13 +16,14 @@ all: install-dependencies
 ##
 ## + Compilations
 ##
-compilations/%: compilations/%.py install-dependencies
+compilation/%: compilation/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh compile $< $(SNAPSHOTS_FOLDER)/compilation/$* --erase-comments
 
 clean_compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation
 
 compile: clean_compilations $(COMPILATIONS:%.py=%) setup_env
+	@npm run compile
 	@echo "Compiled all contracts."
 ##
 ## - Compilations
@@ -31,7 +32,7 @@ compile: clean_compilations $(COMPILATIONS:%.py=%) setup_env
 ##
 ## + Tests
 ##
-tests/%: tests/%.py install-dependencies
+test/%: test/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh test $< $(SNAPSHOTS_FOLDER)/test/$* --html
 
 clean_tests:
@@ -83,7 +84,12 @@ $(BUILD_FOLDER)/install-smartpy:
 	@bash -c "bash <(curl -s https://smartpy.io/cli/install.sh) --prefix $(SMARTPY_CLI_PATH) --yes"
 	$(touch_done)
 
-install-dependencies: install-smartpy
+install-npm-packages: $(BUILD_FOLDER)/npm-packages
+$(BUILD_FOLDER)/npm-packages: package.json
+	@npm i --silent
+	$(touch_done)
+
+install-dependencies: install-smartpy install-npm-packages
 	@pip install -r requirements.txt --quiet
 ##
 ## - Install dependencies

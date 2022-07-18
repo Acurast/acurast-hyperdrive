@@ -1,7 +1,7 @@
 import smartpy as sp
 
-from contracts.merkle_patricia_tree import EMPTY_TREE, IBCF, ENCODE, Error
-from contracts.utils.bytes import bytes_to_bits
+from contracts.tezos.state_aggregator import EMPTY_TREE, IBCF, ENCODE, Error
+from contracts.tezos.utils.bytes import bytes_to_bits
 
 
 @sp.add_test(name="IBCF")
