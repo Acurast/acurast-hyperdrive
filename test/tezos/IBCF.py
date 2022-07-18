@@ -1,8 +1,10 @@
 import smartpy as sp
 
+import contracts.tezos.state_aggregator
 from contracts.tezos.state_aggregator import EMPTY_TREE, IBCF, ENCODE, Error
 from contracts.tezos.utils.bytes import bytes_to_bits
 
+contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
 
 @sp.add_test(name="IBCF")
 def test():
@@ -36,58 +38,16 @@ def test():
     scenario += ibcf
 
     # Insert multiple states
-    # ibcf.insert(
-    #     sp.record(
-    #         key=encoded_price_key,
-    #         value=encoded_price_value_1
-    #     )
-    # ).run(sender=alice.address)
-    # ibcf.insert(
-    #     sp.record(
-    #         key=encoded_price_key,
-    #         value=encoded_price_value_2
-    #     )
-    # ).run(sender=bob.address)
-    # ibcf.insert(
-    #     sp.record(
-    #         key=encoded_price_key,
-    #         value=encoded_price_value_2
-    #     )
-    # ).run(sender=claus.address)
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
+        sender=alice.address
+    )
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+        sender=bob.address
+    )
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+        sender=claus.address
+    )
 
-    ibcf.insert(
-        sp.record(
-            key=sp.bytes("0x000000000000000000000000000000"),
-            value=sp.bytes("0xff"),
-        )
-    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
-    ibcf.insert(
-        sp.record(
-            key=sp.bytes("0x000000000000000000000000000001"),
-            value=sp.bytes("0xff"),
-        )
-    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
-
-    ibcf.insert(
-        sp.record(
-            key=sp.bytes("0x000000000000000000000000000002"),
-            value=sp.bytes("0xff"),
-        )
-    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
-    ibcf.insert(
-        sp.record(
-            key=sp.bytes("0x000000000000000000000000000003"),
-            value=sp.bytes("0xff"),
-        )
-    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
-
-    ibcf.insert(
-        sp.record(
-            key=sp.bytes("0x000000000000000000000000000004"),
-            value=sp.bytes("0xff"),
-        )
-    ).run(sender=sp.address("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"))
-    return
     # Snapshot merkle tree for level 1
     ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_1)
 

@@ -2,13 +2,17 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 contract IBCF_Validator {
-    address private administrator;
+    address private administrator = 0xf17f52151EbEF6C7334FAD080c5704D77216b732;
     mapping(uint256 => bytes32) root_history;
 
     // modifier to check if caller is the administrator
     modifier isAdmin() {
         require(msg.sender == administrator, "NOT_ADMIN");
         _;
+    }
+
+    function update_administrator(address new_admnistrator) public isAdmin {
+        administrator = new_admnistrator;
     }
 
     function add_merkle_root_restricted(uint256 level, bytes32 merkle_root) public isAdmin {
@@ -35,7 +39,7 @@ contract IBCF_Validator {
                 hash = keccak256(abi.encodePacked(proof[i][0], hash));
             }
         }
-        require(root_history[block_level] == hash);
+        require(root_history[block_level] == hash, "PROOF_INVALID");
     }
 
     function verify_signature(bytes32 hash, uint8 v, bytes32 r, bytes32 s) private view {

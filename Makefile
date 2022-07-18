@@ -39,6 +39,7 @@ clean_tests:
 	@rm -rf $(SNAPSHOTS_FOLDER)/test
 
 test: clean_tests $(TESTS:%.py=%) setup_env
+	@npm run test
 	@echo "Tested all contracts."
 ##
 ## - Tests

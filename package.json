@@ -10,6 +10,7 @@
     "truffle": "5.5.22"
   },
   "scripts": {
-    "compile": "truffle compile"
+    "compile": "truffle compile",
+    "test": "truffle test"
   }
 }

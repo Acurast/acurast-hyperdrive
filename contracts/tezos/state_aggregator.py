@@ -1,6 +1,10 @@
 import smartpy as sp
 
-from contracts.tezos.utils.misc import chop_first_bit, split_common_prefix, remove_prefix
+from contracts.tezos.utils.misc import (
+    chop_first_bit,
+    split_common_prefix,
+    remove_prefix,
+)
 from contracts.tezos.utils.bytes import bits_of_bytes
 
 HASH_FUNCTION = sp.keccak
