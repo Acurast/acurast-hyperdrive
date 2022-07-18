@@ -17,8 +17,9 @@ def generate_var(postfix=None):
     return id
 
 
-def split_common_prefix(a, b):
-    return split_at(a, common_prefix(a, b))
+def split_common_prefix(arg):
+    (a, b) = sp.match_pair(arg)
+    sp.result(split_at(a, common_prefix(a, b)))
 
 
 def split_at(bits, pos):
@@ -100,15 +101,17 @@ def chop_first_bit(label):
     tail_length = sp.as_nat(label.length - 1, 0)  # Cannot fail, already validated above
     tail = sp.slice(label.data, 1, tail_length).open_some("OUT_OF_BOUNDS")
 
-    return (first_bit.value, sp.record(length=tail_length, data=tail))
+    sp.result((first_bit.value, sp.record(length=tail_length, data=tail)))
 
 
-def remove_prefix(label, prefix_length):
+def remove_prefix(arg):
     """
     Builds a new label after removing a given `prefix_length`.
 
     :returns: Type.Label
     """
+    (label, prefix_length) = sp.match_pair(arg)
+
     length = sp.compute(sp.as_nat(label.length - prefix_length, "PREFIX_TOO_LONG"))
 
     new_label = sp.bind_block()
@@ -125,4 +128,4 @@ def remove_prefix(label, prefix_length):
                 )
             )
 
-    return new_label.value
+    sp.result(new_label.value)

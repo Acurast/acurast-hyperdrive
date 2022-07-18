@@ -26,8 +26,10 @@ EMPTY_TREE = sp.record(
     states=sp.map(),
 )
 
+
 def ENCODE(d):
     return sp.pack(d)
+
 
 class Error:
     PROOF_INVALID = "PROOF_INVALID"
@@ -100,6 +102,7 @@ class Type:
         level=sp.TNat, proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
     ).right_comb()
 
+
 class IBCF(sp.Contract):
     """
     Inter blockchain communication framework contract
@@ -118,9 +121,10 @@ class IBCF(sp.Contract):
     @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
     def insert_at_edge(self, arg):
         with sp.set_result_type(Type.Edge):
-            r_stack = sp.local("r_stack", sp.map(tkey=sp.TInt, tvalue=Type.Edge))
+            # Michelson does not have recursive calls
             r_size = sp.local("r_size", sp.int(0))
-
+            r_stack = sp.local("r_stack", sp.map(tkey=sp.TInt, tvalue=Type.Edge))
+            c_size = sp.local("c_size", sp.int(1))
             c_stack = sp.local(
                 "c_stack",
                 sp.map(
@@ -147,8 +151,11 @@ class IBCF(sp.Contract):
                     ),
                 ),
             )
-            c_size = sp.local("c_size", sp.int(1))
             first = sp.local("first", True)
+
+            chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
+            remove_prefix_lambda = sp.compute(sp.build_lambda(remove_prefix))
+            split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
 
             with sp.while_(c_size.value > 0):
                 (edge, key, value, node, head, edge_node, prefix) = sp.match_record(
@@ -183,7 +190,7 @@ class IBCF(sp.Contract):
                 with sp.else_():
                     sp.verify(key.length >= edge.label.length, "Key length mismatch")
                     (prefix, suffix) = sp.match_record(
-                        split_common_prefix(key.data, edge.label.data),
+                        split_common_prefix_lambda((key.data, edge.label.data)),
                         "prefix",
                         "suffix",
                     )
@@ -199,15 +206,20 @@ class IBCF(sp.Contract):
                         with sp.else_():
                             with sp.if_(prefix.length < edge.label.length):
                                 # Mismatch, so lets create a new branch node.
-                                (head, tail) = sp.match_pair(chop_first_bit(suffix))
-                                branch_node = sp.local("node", sp.record(children={}))
-
-                                branch_node.value.children[head] = sp.record(
-                                    node=value, label=tail
-                                )
-                                branch_node.value.children[1 - head] = sp.record(
-                                    node=edge.node,
-                                    label=remove_prefix(edge.label, prefix.length + 1),
+                                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
+                                branch_node = sp.local(
+                                    "node",
+                                    sp.record(
+                                        children={
+                                            head: sp.record(node=value, label=tail),
+                                            (1 - head): sp.record(
+                                                node=edge.node,
+                                                label=remove_prefix_lambda(
+                                                    (edge.label, prefix.length + 1)
+                                                ),
+                                            ),
+                                        }
+                                    ),
                                 )
 
                                 r_size.value += 1
@@ -218,9 +230,9 @@ class IBCF(sp.Contract):
 
                             with sp.else_():
                                 # Partial match, lets just follow the path
-                                sp.verify(suffix.length > 1, "Bad key")
+                                sp.verify(suffix.length > 1, "Bad suffix")
 
-                                (head, tail) = sp.match_pair(chop_first_bit(suffix))
+                                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
                                 node = sp.compute(self.data.tree.nodes[edge.node])
 
                                 c_size.value += 1
@@ -247,7 +259,7 @@ class IBCF(sp.Contract):
         sp.verify(sp.len(param.value) < MAX_VALUE_LENGTH, Error.STATE_TOO_LARGE)
 
         key_label = sp.record(
-            data=bits_of_bytes(self, hash_key(ENCODE(sp.sender), param.key)),
+            data=bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(sp.sender), param.key)),
             length=HASH_LENGTH,
         )
 
@@ -272,7 +284,9 @@ class IBCF(sp.Contract):
         # Only allowed addresses can call this entry point
         sp.verify(self.data.administrators.contains(sp.sender), Error.NOT_ALLOWED)
         # Only allow one snapshot per level
-        sp.verify(~self.data.merkle_history.contains(sp.level), Error.LEVEL_ALREADY_USED)
+        sp.verify(
+            ~self.data.merkle_history.contains(sp.level), Error.LEVEL_ALREADY_USED
+        )
         # Snapshot current state
         self.data.merkle_history[sp.level] = self.data.tree
         # Reset current state
@@ -289,10 +303,13 @@ class IBCF(sp.Contract):
         )
         """
         sp.set_type(arg, Type.GetProofArgument)
+        chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
+        split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
+
         key_label = sp.local(
             "key_label",
             sp.record(
-                data=bits_of_bytes(self, hash_key(ENCODE(arg.owner), arg.key)),
+                data=bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(arg.owner), arg.key)),
                 length=HASH_LENGTH,
             ),
         )
@@ -304,7 +321,7 @@ class IBCF(sp.Contract):
         continue_loop = sp.local("continue_loop", True)
         with sp.while_(continue_loop.value):
             (prefix, suffix) = sp.match_record(
-                split_common_prefix(key_label.value.data, root_edge.value.label.data),
+                split_common_prefix_lambda((key_label.value.data, root_edge.value.label.data)),
                 "prefix",
                 "suffix",
             )
@@ -314,7 +331,7 @@ class IBCF(sp.Contract):
                 # Proof found
                 continue_loop.value = False
             with sp.else_():
-                (head, tail) = sp.match_pair(chop_first_bit(suffix))
+                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
 
                 # Add hash to proof path with direction (0=left or 1=right)
                 #
@@ -332,9 +349,21 @@ class IBCF(sp.Contract):
                 hash = sp.bind_block()
                 with hash:
                     with sp.if_(head == 0):
-                        sp.result(sp.right(hash_edge(tree.value.nodes[root_edge.value.node].children[1])))
+                        sp.result(
+                            sp.right(
+                                hash_edge(
+                                    tree.value.nodes[root_edge.value.node].children[1]
+                                )
+                            )
+                        )
                     with sp.else_():
-                        sp.result(sp.left(hash_edge(tree.value.nodes[root_edge.value.node].children[0])))
+                        sp.result(
+                            sp.left(
+                                hash_edge(
+                                    tree.value.nodes[root_edge.value.node].children[0]
+                                )
+                            )
+                        )
 
                 blinded_path.value.push(hash.value)
                 root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
@@ -366,6 +395,7 @@ class IBCF(sp.Contract):
                     derived_hash.value = HASH_FUNCTION(derived_hash.value + right)
 
         sp.verify(
-            self.data.merkle_history.contains(arg.level) & (self.data.merkle_history[arg.level].root == derived_hash.value),
+            self.data.merkle_history.contains(arg.level)
+            & (self.data.merkle_history[arg.level].root == derived_hash.value),
             Error.PROOF_INVALID,
         )

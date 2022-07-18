@@ -6,6 +6,7 @@ from contracts.tezos.utils.bytes import bytes_to_bits
 
 contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
 
+
 @sp.add_test(name="IBCF")
 def test():
     admin = sp.test_account("admin")
@@ -82,7 +83,7 @@ def test():
                 ),
             )
         ),
-        t = sp.TString
+        t=sp.TString,
     )
     scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 
@@ -113,7 +114,7 @@ def test():
                 ),
             )
         ),
-        t = sp.TString
+        t=sp.TString,
     )
     scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 

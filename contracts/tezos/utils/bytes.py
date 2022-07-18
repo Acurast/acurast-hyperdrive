@@ -23,10 +23,10 @@ def pad_start(value):
     return value
 
 
-def bits_of_bytes(self, b):
+def bits_of_bytes(bytes_to_bits, b):
     bits = sp.local(generate_var("bits"), "")
     with sp.for_("x", sp.range(0, sp.len(b), 1)) as x:
-        bits.value += self.data.bytes_to_bits[
+        bits.value += bytes_to_bits[
             sp.slice(b, x, 1).open_some("Out of bonds")
         ]
 
