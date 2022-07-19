@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.bytes import get_prefix, get_suffix, generate_var
 
+
 def split_common_prefix(arg):
     (a, b) = sp.match_pair(arg)
     sp.result(split_at((a, common_prefix(a, b))))
@@ -24,7 +25,7 @@ def split_at(arg):
     with sp.if_(pos != 0):
         prefix.value.data = get_prefix(l.data, l.length, pos)
 
-    suffix_length = sp.as_nat(l.length - pos, 0) # Cannot fail, checked above
+    suffix_length = sp.as_nat(l.length - pos, 0)  # Cannot fail, checked above
     return sp.record(
         prefix=prefix.value,
         suffix=sp.record(

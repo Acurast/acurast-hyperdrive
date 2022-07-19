@@ -1,6 +1,6 @@
 from pytezos import PyTezosClient
 
-TOTAL_INSERTS = 5
+TOTAL_INSERTS = 3000
 OPS_PER_BLOCK = 5
 
 
@@ -10,7 +10,7 @@ def insert_multiple_states(client: PyTezosClient, action: dict, wait_applied):
         ops = []
         for j in range(i * OPS_PER_BLOCK, (i + 1) * OPS_PER_BLOCK):
             key = int(j).to_bytes(15, "big").hex()
-            value = int(j).to_bytes(10, "big").hex()*100
+            value = int(j).to_bytes(10, "big").hex() * 100
 
             ops.append(
                 contract.parameter(action["entrypoint"], {"key": key, "value": value})
@@ -19,7 +19,7 @@ def insert_multiple_states(client: PyTezosClient, action: dict, wait_applied):
         print("Sending batch:", i + 1)
         while True:
             try:
-                wait_applied(client, client.bulk(*ops).send(ttl = 120).hash())
+                wait_applied(client, client.bulk(*ops).send(ttl=120).hash())
                 break
             except Exception as ex:
                 print("Failed:", ex)

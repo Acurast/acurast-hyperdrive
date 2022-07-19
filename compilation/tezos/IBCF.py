@@ -10,6 +10,5 @@ sp.add_compilation_target(
         bytes_to_bits=bytes_to_bits,
         administrators=sp.set(),
         merkle_history=sp.big_map(),
-        tree=EMPTY_TREE,
     ),
 )

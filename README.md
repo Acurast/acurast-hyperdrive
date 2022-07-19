@@ -1,6 +1,6 @@
 # Inter Blockchain Communication Framework
 
-![merkle tree](merkle_tree.svg)
+![merkle tree](ibcf.svg)
 
 ## Dependencies
 
@@ -123,6 +123,8 @@ python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.te
 ```
 
 ### Visualize current merkle tree
+
+![merkle tree](merkle_tree.svg)
 
 ```sh
 # This will create a merkle_tree.png at $PWD

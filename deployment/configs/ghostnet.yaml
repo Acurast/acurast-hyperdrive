@@ -1,5 +1,5 @@
 pytezos:
-  rpc_endpoint: http://localhost:20000 #https://tezos-ithacanet-node-1.diamond.papers.tech
+  rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech #http://localhost:20000
   private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
     admin_address: tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb

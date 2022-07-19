@@ -1,6 +1,8 @@
 import smartpy as sp
 
 latest_var_id = 0
+
+
 def generate_var(postfix=None):
     """
     Generate a unique variable name
@@ -38,9 +40,7 @@ def pad_start(value):
 def bits_of_bytes(bytes_to_bits, b):
     bits = sp.local(generate_var("bits"), "")
     with sp.for_("x", sp.range(0, sp.len(b), 1)) as x:
-        bits.value += bytes_to_bits[
-            sp.slice(b, x, 1).open_some("Out of bonds")
-        ]
+        bits.value += bytes_to_bits[sp.slice(b, x, 1).open_some("Out of bonds")]
 
     return bits.value
 
@@ -59,14 +59,16 @@ def bytes_of_bits(self, b):
 
     return _bytes.value
 
+
 def int_of_bits(bstring):
     n = sp.local("n", 0)
-    length = sp.compute(sp.len(bstring)-1)
-    with sp.for_("p", sp.range(0, length+1, 1)) as p:
+    length = sp.compute(sp.len(bstring) - 1)
+    with sp.for_("p", sp.range(0, length + 1, 1)) as p:
         with sp.if_(sp.slice(bstring, abs(p), 1) == sp.some("1")):
-            n.value += pow(2, abs(length-p))
+            n.value += pow(2, abs(length - p))
 
     sp.result(n.value)
+
 
 def pow(n, e):
     result = sp.local(generate_var("result"), 1)
@@ -74,19 +76,22 @@ def pow(n, e):
     exponent = sp.local(generate_var("exponent"), e)
 
     with sp.while_(exponent.value != 0):
-        with sp.if_((exponent.value%2) != 0):
+        with sp.if_((exponent.value % 2) != 0):
             result.value *= base.value
 
-        exponent.value = exponent.value >> 1 # Equivalent to exponent.value / 2
+        exponent.value = exponent.value >> 1  # Equivalent to exponent.value / 2
         base.value *= base.value
 
     return result.value
 
+
 def get_suffix(b, length):
     return b & sp.as_nat((1 << length) - 1)
 
+
 def get_prefix(b, full_length, prefix_length):
-    return b >> sp.as_nat(full_length-prefix_length)
+    return b >> sp.as_nat(full_length - prefix_length)
+
 
 def is_bit_set(i, n):
     return (i >> n) & 1

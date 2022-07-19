@@ -8,6 +8,7 @@ from termcolor import colored
 from configs import deployment
 from deployment.scripts.insert_multiple_states import insert_multiple_states
 
+
 def get_address(pytezos_admin_client, operation_hash):
     while True:
         try:
@@ -101,7 +102,7 @@ def run_actions(client: PyTezosClient):
 
             operation_group = client.origination(
                 script=code.script(initial_storage=storage)
-            ).send(ttl = 120)
+            ).send(ttl=120)
 
             wait_applied(client, operation_group.hash())
 
@@ -133,8 +134,10 @@ def run_actions(client: PyTezosClient):
             if "script" in action:
                 Scripts[action["script"]](client, action, wait_applied)
             else:
-                op = client.contract(action["contract_address"]).using(block_id="head").parameter(
-                    action["entrypoint"], action["argument"]
+                op = (
+                    client.contract(action["contract_address"])
+                    .using(block_id="head")
+                    .parameter(action["entrypoint"], action["argument"])
                 )
 
                 if "amount" in action:

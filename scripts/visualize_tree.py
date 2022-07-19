@@ -66,7 +66,6 @@ def link(dot, hash, nodes):
     if hash in nodes:
         node = nodes[hash]
 
-
         dot.edge(
             hash,
             node["left"]["node"],
@@ -99,6 +98,8 @@ for node in tree["nodes"]:
 
     nodes[node.hex()] = {"left": left, "right": right}
 
-visualize(nodes, states, pp_bytes(tree["root"])).render(filename="merkle_tree", format="svg", view=False, cleanup=True)
+visualize(nodes, states, pp_bytes(tree["root"])).render(
+    filename="merkle_tree", format="svg", view=False, cleanup=True
+)
 
 print(f"total states: {len(states)}")

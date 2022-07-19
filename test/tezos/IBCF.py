@@ -32,25 +32,44 @@ def test():
             bytes_to_bits=bytes_to_bits,
             administrators=sp.set([admin.address]),
             merkle_history=sp.big_map(),
-            tree=EMPTY_TREE,
         )
     )
 
     scenario += ibcf
 
-    # Insert multiple states
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
-        sender=alice.address
+    # Add new administrator
+    ibcf.update_administrators(sp.set([sp.variant("add", alice.address)])).run(
+        sender=admin.address
     )
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
-        sender=bob.address
+    scenario.verify(ibcf.data.administrators.contains(alice.address))
+    # Remove administrator
+    ibcf.update_administrators(sp.set([sp.variant("remove", alice.address)])).run(
+        sender=admin.address
     )
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
-        sender=claus.address
+    scenario.verify(~ibcf.data.administrators.contains(alice.address))
+
+    # Try to remove an administrator without having permissions
+    ibcf.update_administrators(sp.set([sp.variant("remove", alice.address)])).run(
+        sender=bob.address, valid=False, exception=Error.NOT_ALLOWED
     )
 
-    # Snapshot merkle tree for level 1
-    ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_1)
+    # Try to remove all administrators
+    ibcf.update_administrators(sp.set([sp.variant("remove", admin.address)])).run(
+        sender=admin.address,
+        valid=False,
+        exception=Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED,
+    )
+
+    # Insert multiple states
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
+        sender=alice.address, level=BLOCK_LEVEL_1
+    )
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+        sender=bob.address, level=BLOCK_LEVEL_1
+    )
+    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+        sender=claus.address, level=BLOCK_LEVEL_1
+    )
 
     # Get proof of inclusion for key="price" and price="1"
     proof = ibcf.get_proof(
@@ -89,17 +108,14 @@ def test():
 
     # Insert multiple new states
     ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
-        sender=alice.address
+        sender=alice.address, level=BLOCK_LEVEL_2
     )
     ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
-        sender=bob.address
+        sender=bob.address, level=BLOCK_LEVEL_2
     )
     ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_3)).run(
-        sender=claus.address
+        sender=claus.address, level=BLOCK_LEVEL_2
     )
-
-    # Snapshot merkle tree for level 2
-    ibcf.snapshot_merkle_tree().run(sender=admin.address, level=BLOCK_LEVEL_2)
 
     # Verify old proof on block 2 (Invalid)
     ex = sp.catch_exception(

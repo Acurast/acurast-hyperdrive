@@ -14,7 +14,7 @@ NULL_HASH = sp.bytes("0x")
 # This constant is used to limit the data length being inserted.
 MAX_VALUE_LENGTH = 1024
 # This constant is used to limit the amount of states being stored per merkle tree.
-MAX_STATES = 200
+MAX_STATES = 2500
 
 EMPTY_TREE = sp.record(
     root=sp.bytes("0x"),
@@ -38,6 +38,7 @@ class Error:
     STATE_TOO_LARGE = "STATE_TOO_LARGE"
     LEVEL_ALREADY_USED = "LEVEL_ALREADY_USED"
     TOO_MANY_STATES = "TOO_MANY_STATES"
+    AT_LEAST_ONE_ADMIN_IS_REQUIRED = "AT_LEAST_ONE_ADMIN_IS_REQUIRED"
 
 
 #################
@@ -62,16 +63,16 @@ def hash_node(node):
     return HASH_FUNCTION(hash_edge(node.children[0]) + hash_edge(node.children[1]))
 
 
-def insert_node(self, node):
+def insert_node(tree, node):
     node_hash = hash_node(node)
-    self.data.tree.nodes[node_hash] = node
+    tree.value.nodes[node_hash] = node
 
     return node_hash
 
 
-def replace_node(self, old_hash, node):
-    del self.data.tree.nodes[old_hash]
-    return insert_node(self, node)
+def replace_node(tree, old_hash, node):
+    del tree.value.nodes[old_hash]
+    return insert_node(tree, node)
 
 
 class Type:
@@ -89,7 +90,11 @@ class Type:
         key=sp.TBytes,
         value=sp.TBytes,
     ).right_comb()
+    # Entry points
     InsertArgument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
+    UpdateAdministratorsArgument = sp.TSet(
+        sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
+    )
     # Views
     GetProofArgument = sp.TRecord(
         owner=sp.TAddress, level=sp.TNat, key=sp.TBytes
@@ -115,13 +120,13 @@ class IBCF(sp.Contract):
                 bytes_to_bits=sp.TMap(sp.TBytes, sp.TString),
                 administrators=sp.TSet(sp.TAddress),
                 merkle_history=sp.TBigMap(sp.TNat, Type.Tree),
-                tree=Type.Tree,
             ).right_comb()
         )
 
     @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
     def insert_at_edge(self, arg):
-        with sp.set_result_type(Type.Edge):
+        tree = sp.local("tree", arg.tree)
+        with sp.set_result_type(Type.Tree):
             # Michelson does not have recursive calls
             r_size = sp.local("r_size", sp.int(0))
             r_stack = sp.local("r_stack", sp.map(tkey=sp.TInt, tvalue=Type.Edge))
@@ -131,7 +136,7 @@ class IBCF(sp.Contract):
                 sp.map(
                     {
                         1: sp.record(
-                            edge=arg.edge,
+                            edge=tree.value.root_edge,
                             key=arg.key,
                             value=arg.value,
                             prefix=sp.none,
@@ -156,7 +161,9 @@ class IBCF(sp.Contract):
 
             chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
             remove_prefix_lambda = sp.compute(sp.build_lambda(remove_prefix))
-            split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
+            split_common_prefix_lambda = sp.compute(
+                sp.build_lambda(split_common_prefix)
+            )
 
             with sp.while_(c_size.value > 0):
                 (edge, key, value, node, head, edge_node, prefix) = sp.match_record(
@@ -179,14 +186,13 @@ class IBCF(sp.Contract):
                     del c_stack.value[c_size.value]
                     c_size.value -= 1
 
-                    result = r_stack.value[r_size.value]
                     n = sp.local("n", node.open_some())
-                    n.value.children[head.open_some()] = result
+                    n.value.children[head.open_some()] = r_stack.value[r_size.value]
 
-                    new_node_hash = replace_node(self, edge_node.open_some(), n.value)
+                    new_node_hash = replace_node(tree, edge_node.open_some(), n.value)
 
-                    r_stack.value[r_size.value] = sp.record(
-                        node=new_node_hash, key=prefix.open_some()
+                    r_stack.value[r_size.value] = sp.compute(
+                        sp.record(node=new_node_hash, key=prefix.open_some())
                     )
                 with sp.else_():
                     sp.verify(key.length >= edge.key.length, "KEY_LENGTH_MISMATCH")
@@ -207,7 +213,9 @@ class IBCF(sp.Contract):
                         with sp.else_():
                             with sp.if_(prefix.length < edge.key.length):
                                 # Mismatch, so lets create a new branch node.
-                                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
+                                (head, tail) = sp.match_pair(
+                                    chop_first_bit_lambda(suffix)
+                                )
                                 branch_node = sp.local(
                                     "node",
                                     sp.record(
@@ -224,17 +232,21 @@ class IBCF(sp.Contract):
                                 )
 
                                 r_size.value += 1
-                                r_stack.value[r_size.value] = sp.record(
-                                    node=insert_node(self, branch_node.value),
-                                    key=prefix,
+                                r_stack.value[r_size.value] = sp.compute(
+                                    sp.record(
+                                        node=insert_node(tree, branch_node.value),
+                                        key=prefix,
+                                    )
                                 )
 
                             with sp.else_():
                                 # Partial match, lets just follow the path
-                                sp.verify(suffix.length > 1, "Bad suffix")
+                                sp.verify(suffix.length > 1, "BAD_SUFFIX")
 
-                                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
-                                node = sp.compute(self.data.tree.nodes[edge.node])
+                                (head, tail) = sp.match_pair(
+                                    chop_first_bit_lambda(suffix)
+                                )
+                                node = sp.compute(tree.value.nodes[edge.node])
 
                                 c_size.value += 1
                                 c_stack.value[c_size.value] = sp.record(
@@ -247,7 +259,12 @@ class IBCF(sp.Contract):
                                     edge_node=sp.some(edge.node),
                                 )
 
-            sp.result(r_stack.value[r_size.value])
+            # Update root node
+            edge = sp.compute(r_stack.value[r_size.value])
+            tree.value.root = hash_edge(edge)
+            tree.value.root_edge = edge
+
+            sp.result(tree.value)
 
     @sp.entry_point()
     def insert(self, param):
@@ -258,43 +275,60 @@ class IBCF(sp.Contract):
 
         int_of_bits_lambda = sp.compute(sp.build_lambda(int_of_bits))
 
+        with sp.if_(~self.data.merkle_history.contains(sp.level)):
+            self.data.merkle_history[sp.level] = EMPTY_TREE
+
+        tree = sp.local("tree", self.data.merkle_history[sp.level])
+
         # Do not allow users to insert values bigger than MAX_VALUE_LENGTH
         sp.verify(sp.len(param.value) < MAX_VALUE_LENGTH, Error.STATE_TOO_LARGE)
-        sp.verify(sp.len(self.data.tree.states) < MAX_STATES, Error.TOO_MANY_STATES)
+        sp.verify(sp.len(tree.value.states) < MAX_STATES, Error.TOO_MANY_STATES)
 
-        key = sp.record(
-            data=int_of_bits_lambda(bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(sp.sender), param.key))),
-            length=HASH_LENGTH,
+        key = sp.compute(
+            sp.record(
+                data=int_of_bits_lambda(
+                    bits_of_bytes(
+                        self.data.bytes_to_bits, hash_key(ENCODE(sp.sender), param.key)
+                    )
+                ),
+                length=HASH_LENGTH,
+            )
         )
 
         # Set new state
         state_hash = sp.compute(hash_state(ENCODE(sp.sender), param.key, param.value))
-        self.data.tree.states[state_hash] = param.value
+        tree.value.states[state_hash] = param.value
 
-        edge = sp.local("edge", sp.record(key=key, node=state_hash))
-        # Skip first insertion
-        with sp.if_(self.data.tree.root != NULL_HASH):
-            edge.value = self.insert_at_edge(
-                sp.record(
-                    edge=self.data.tree.root_edge, key=key, value=state_hash
-                )
+        with sp.if_(tree.value.root != NULL_HASH):
+            # Skip on first insertion
+            tree.value = self.insert_at_edge(
+                sp.record(tree=tree.value, key=key, value=state_hash)
             )
+        with sp.else_():
+            edge = sp.compute(sp.record(key=key, node=state_hash))
+            tree.value.root = hash_edge(edge)
+            tree.value.root_edge = edge
 
-        self.data.tree.root = hash_edge(edge.value)
-        self.data.tree.root_edge = edge.value
+        self.data.merkle_history[sp.level] = tree.value
 
     @sp.entry_point()
-    def snapshot_merkle_tree(self):
+    def update_administrators(self, param):
+        sp.set_type(param, Type.UpdateAdministratorsArgument)
+
         # Only allowed addresses can call this entry point
         sp.verify(self.data.administrators.contains(sp.sender), Error.NOT_ALLOWED)
-        # Only allow one snapshot per level
+
+        with sp.for_("el", param.elements()) as el:
+            with el.match_cases() as cases:
+                with cases.match("add") as add:
+                    self.data.administrators.add(add)
+                with cases.match("remove") as remove:
+                    self.data.administrators.remove(remove)
+
+        # Make sure at least one admin remains
         sp.verify(
-            ~self.data.merkle_history.contains(sp.level), Error.LEVEL_ALREADY_USED
+            sp.len(self.data.administrators) > 0, Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED
         )
-        # Snapshot current state
-        self.data.merkle_history[sp.level] = self.data.tree
-        # Reset current state
-        self.data.tree = EMPTY_TREE
 
     @sp.onchain_view()
     def get_proof(self, arg):
@@ -314,7 +348,11 @@ class IBCF(sp.Contract):
         key = sp.local(
             "key",
             sp.record(
-                data=int_of_bits_lambda(bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(arg.owner), arg.key))),
+                data=int_of_bits_lambda(
+                    bits_of_bytes(
+                        self.data.bytes_to_bits, hash_key(ENCODE(arg.owner), arg.key)
+                    )
+                ),
                 length=HASH_LENGTH,
             ),
         )
