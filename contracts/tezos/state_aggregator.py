@@ -12,9 +12,9 @@ HASH_LENGTH = 256
 NULL_HASH = sp.bytes("0x")
 
 # This constant is used to limit the data length being inserted.
-MAX_VALUE_LENGTH = 1024
+MAX_STATE_LENGTH = 32
 # This constant is used to limit the amount of states being stored per merkle tree.
-MAX_STATES = 2500
+MAX_STATES = 10
 
 EMPTY_TREE = sp.record(
     root=sp.bytes("0x"),
@@ -92,9 +92,15 @@ class Type:
     ).right_comb()
     # Entry points
     InsertArgument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
-    UpdateAdministratorsArgument = sp.TSet(
-        sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
+    ConfigureArgument = sp.TVariant(
+        update_administrators=sp.TSet(
+            sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
+        ),
+        update_history_ttl=sp.TNat,
+        update_max_state_size=sp.TNat,
+        update_max_states=sp.TNat,
     )
+
     # Views
     GetProofArgument = sp.TRecord(
         owner=sp.TAddress, level=sp.TNat, key=sp.TBytes
@@ -117,9 +123,18 @@ class IBCF(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
+                config=sp.TRecord(
+                    administrators=sp.TSet(sp.TAddress),
+                    # This constant sets a time to live for every entry in merkle_history
+                    history_ttl=sp.TNat,
+                    # This constant is used to limit the data length being inserted (in bytes).
+                    max_state_size=sp.TNat,
+                    # This constant is used to limit the amount of states being stored per merkle tree.
+                    max_states=sp.TNat,
+                ),
                 bytes_to_bits=sp.TMap(sp.TBytes, sp.TString),
-                administrators=sp.TSet(sp.TAddress),
                 merkle_history=sp.TBigMap(sp.TNat, Type.Tree),
+                merkle_history_indexes=sp.TList(sp.TNat),
             ).right_comb()
         )
 
@@ -280,9 +295,25 @@ class IBCF(sp.Contract):
 
         tree = sp.local("tree", self.data.merkle_history[sp.level])
 
-        # Do not allow users to insert values bigger than MAX_VALUE_LENGTH
-        sp.verify(sp.len(param.value) < MAX_VALUE_LENGTH, Error.STATE_TOO_LARGE)
+        # Do not allow users to insert values bigger than max_state_size
+        sp.verify(
+            sp.len(param.value) <= self.data.config.max_state_size,
+            Error.STATE_TOO_LARGE,
+        )
         sp.verify(sp.len(tree.value.states) < MAX_STATES, Error.TOO_MANY_STATES)
+
+        latest_indexes = sp.local("latest_indexes", [])
+        with sp.for_("el", self.data.merkle_history_indexes) as el:
+            with sp.if_(
+                (el + self.data.config.history_ttl > sp.level) & (el != sp.level)
+            ):
+                latest_indexes.value.push(el)
+            with sp.else_():
+                # Remove old merkle tree
+                del self.data.merkle_history[el]
+
+        self.data.merkle_history_indexes = latest_indexes.value
+        self.data.merkle_history_indexes.push(sp.level)
 
         key = sp.compute(
             sp.record(
@@ -312,23 +343,33 @@ class IBCF(sp.Contract):
         self.data.merkle_history[sp.level] = tree.value
 
     @sp.entry_point()
-    def update_administrators(self, param):
-        sp.set_type(param, Type.UpdateAdministratorsArgument)
+    def configure(self, param):
+        sp.set_type(param, Type.ConfigureArgument)
 
         # Only allowed addresses can call this entry point
-        sp.verify(self.data.administrators.contains(sp.sender), Error.NOT_ALLOWED)
-
-        with sp.for_("el", param.elements()) as el:
-            with el.match_cases() as cases:
-                with cases.match("add") as add:
-                    self.data.administrators.add(add)
-                with cases.match("remove") as remove:
-                    self.data.administrators.remove(remove)
-
-        # Make sure at least one admin remains
         sp.verify(
-            sp.len(self.data.administrators) > 0, Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED
+            self.data.config.administrators.contains(sp.sender), Error.NOT_ALLOWED
         )
+
+        with param.match_cases() as action:
+            with action.match("update_administrators") as payload:
+                with sp.for_("el", payload.elements()) as el:
+                    with el.match_cases() as cases:
+                        with cases.match("add") as add:
+                            self.data.config.administrators.add(add)
+                        with cases.match("remove") as remove:
+                            self.data.config.administrators.remove(remove)
+                # Make sure at least one admin remains
+                sp.verify(
+                    sp.len(self.data.config.administrators) > 0,
+                    Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED,
+                )
+            with cases.match("update_history_ttl") as payload:
+                self.data.config.history_ttl = payload
+            with cases.match("update_max_state_size") as payload:
+                self.data.config.max_state_size = payload
+            with cases.match("update_max_states") as payload:
+                self.data.config.max_states = payload
 
     @sp.onchain_view()
     def get_proof(self, arg):
@@ -336,7 +377,8 @@ class IBCF(sp.Contract):
         Returns the Merkle-proof for the given key
 
         :returns: sp.TRecord(
-            root_hash   = sp.TBytes,
+            level       = sp.TNat,
+            merkle_root = sp.TBytes,
             proof       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
         )
         """

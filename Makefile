@@ -23,7 +23,8 @@ clean_compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation
 
 compile-tezos: $(COMPILATIONS:%.py=%) setup_env
-	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \;
+	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; > $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
+	@cat $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 
 compile: clean_compilations compile-tezos
 	@npm run compile

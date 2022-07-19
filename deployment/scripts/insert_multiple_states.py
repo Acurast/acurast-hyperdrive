@@ -9,8 +9,8 @@ def insert_multiple_states(client: PyTezosClient, action: dict, wait_applied):
     for i in range(0, TOTAL_INSERTS // OPS_PER_BLOCK):
         ops = []
         for j in range(i * OPS_PER_BLOCK, (i + 1) * OPS_PER_BLOCK):
-            key = int(j).to_bytes(15, "big").hex()
-            value = int(j).to_bytes(10, "big").hex() * 100
+            key = int(j).to_bytes(32, "big").hex()
+            value = int(j).to_bytes(32, "big").hex()
 
             ops.append(
                 contract.parameter(action["entrypoint"], {"key": key, "value": value})

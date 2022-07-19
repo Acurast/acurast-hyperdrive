@@ -10,8 +10,12 @@ actions:
       code_path: __SNAPSHOTS__/compilation/tezos/IBCF/state_aggregator/step_000_cont_0_contract.tz
       storage: __SNAPSHOTS__/compilation/tezos/IBCF/state_aggregator/step_000_cont_0_storage.tz
       overrides:
-          administrators:
-              - admin_address
+          config:
+              administrators:
+                  - admin_address
+              history_ttl: 4
+              max_state_size: 32
+              max_states: 5
 
     - kind: contract_call
       contract_address: merkle_tree

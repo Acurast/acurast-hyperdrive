@@ -7,6 +7,22 @@ from contracts.tezos.utils.bytes import bytes_to_bits
 contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
 
 
+def update_administrators(payload):
+    return sp.variant("update_administrators", payload)
+
+
+def update_history_ttl(payload):
+    return sp.variant("update_history_ttl", payload)
+
+
+def update_max_state_size(payload):
+    return sp.variant("update_max_state_size", payload)
+
+
+def update_max_states(payload):
+    return sp.variant("update_max_states", payload)
+
+
 @sp.add_test(name="IBCF")
 def test():
     admin = sp.test_account("admin")
@@ -29,36 +45,79 @@ def test():
     ibcf = IBCF()
     ibcf.update_initial_storage(
         sp.record(
+            config=sp.record(
+                administrators=sp.set([admin.address]),
+                history_ttl=5,
+                max_state_size=32,
+                max_states=1000,
+            ),
             bytes_to_bits=bytes_to_bits,
-            administrators=sp.set([admin.address]),
             merkle_history=sp.big_map(),
+            merkle_history_indexes=[],
         )
     )
 
     scenario += ibcf
 
     # Add new administrator
-    ibcf.update_administrators(sp.set([sp.variant("add", alice.address)])).run(
-        sender=admin.address
-    )
-    scenario.verify(ibcf.data.administrators.contains(alice.address))
+    ibcf.configure(
+        update_administrators(sp.set([sp.variant("add", alice.address)]))
+    ).run(sender=admin.address)
+    scenario.verify(ibcf.data.config.administrators.contains(alice.address))
     # Remove administrator
-    ibcf.update_administrators(sp.set([sp.variant("remove", alice.address)])).run(
-        sender=admin.address
-    )
-    scenario.verify(~ibcf.data.administrators.contains(alice.address))
+    ibcf.configure(
+        update_administrators(sp.set([sp.variant("remove", alice.address)]))
+    ).run(sender=admin.address)
+    scenario.verify(~ibcf.data.config.administrators.contains(alice.address))
 
     # Try to remove an administrator without having permissions
-    ibcf.update_administrators(sp.set([sp.variant("remove", alice.address)])).run(
-        sender=bob.address, valid=False, exception=Error.NOT_ALLOWED
-    )
+    ibcf.configure(
+        update_administrators(sp.set([sp.variant("remove", admin.address)]))
+    ).run(sender=bob.address, valid=False, exception=Error.NOT_ALLOWED)
 
     # Try to remove all administrators
-    ibcf.update_administrators(sp.set([sp.variant("remove", admin.address)])).run(
+    ibcf.configure(
+        update_administrators(sp.set([sp.variant("remove", admin.address)]))
+    ).run(
         sender=admin.address,
         valid=False,
         exception=Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED,
     )
+
+    # Update history_ttl
+    ibcf.configure(update_history_ttl(10)).run(
+        sender=admin.address,
+    )
+    scenario.verify(ibcf.data.config.history_ttl == 10)
+
+    # Update max_state_size
+    ibcf.configure(update_max_state_size(16)).run(
+        sender=admin.address,
+    )
+    scenario.verify(ibcf.data.config.max_state_size == 16)
+    ibcf.configure(update_max_state_size(32)).run(
+        sender=admin.address,
+    )
+
+    # Update max_states
+    ibcf.configure(update_max_states(15)).run(
+        sender=admin.address,
+    )
+    scenario.verify(ibcf.data.config.max_states == 15)
+
+    # Do not allow states bigger than 32 bytes
+    ibcf.insert(
+        sp.record(key=encoded_price_key, value=sp.bytes("0x" + ("00" * 33)))
+    ).run(
+        sender=alice.address,
+        level=BLOCK_LEVEL_1,
+        valid=False,
+        exception=Error.STATE_TOO_LARGE,
+    )
+    # states with 32 bytes or less are allowed
+    ibcf.insert(
+        sp.record(key=encoded_price_key, value=sp.bytes("0x" + ("00" * 32)))
+    ).run(sender=alice.address, level=BLOCK_LEVEL_1)
 
     # Insert multiple states
     ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
