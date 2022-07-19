@@ -43,9 +43,7 @@ def visualize(nodes, states, root):
                                 <TD COLSPAN="3"><B>{state}</B></TD>
                             </TR>
                             <TR>
-                                <TD>owner</TD>
-                                <TD>key</TD>
-                                <TD>{states[state]}</TD>
+                                <TD COLSPAN="3"><B>Value: </B>{states[state]}</TD>
                             </TR>
                         </TABLE>>""",
         }
@@ -68,17 +66,18 @@ def link(dot, hash, nodes):
     if hash in nodes:
         node = nodes[hash]
 
+
         dot.edge(
             hash,
             node["left"]["node"],
-            label=f'({node["left"]["label"]["length"]}) {node["left"]["label"]["data"]}',
+            label=f'({node["left"]["key"]["length"]}) {node["left"]["key"]["data"]}',
         )
         link(dot, node["left"]["node"], nodes)
 
         dot.edge(
             hash,
             node["right"]["node"],
-            label=f'({node["right"]["label"]["length"]}) {node["right"]["label"]["data"]}',
+            label=f'({node["right"]["key"]["length"]}) {node["right"]["key"]["data"]}',
         )
         link(dot, node["right"]["node"], nodes)
 

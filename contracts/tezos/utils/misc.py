@@ -1,75 +1,57 @@
 import smartpy as sp
 
-latest_var_id = 0
-
-
-def generate_var(postfix=None):
-    """
-    Generate a unique variable name
-
-    Necessary because of smartpy code inlining
-    """
-    global latest_var_id
-
-    id = "utils_%s%s" % (latest_var_id, ("_" + postfix if postfix is not None else ""))
-    latest_var_id += 1
-
-    return id
-
+from contracts.tezos.utils.bytes import get_prefix, get_suffix, generate_var
 
 def split_common_prefix(arg):
     (a, b) = sp.match_pair(arg)
-    sp.result(split_at(a, common_prefix(a, b)))
+    sp.result(split_at((a, common_prefix(a, b))))
 
 
-def split_at(bits, pos):
+def split_at(arg):
     """
-    Splits a sequence of bits at a given position into two labels, a prefix and a suffix.
+    Splits a sequence of bits at a given position into two keys, a prefix and a suffix.
 
     :returns: sp.TRecord(
-        prefix = Type.Label,
-        suffix = Type.Label
+        prefix = Type.KeyMeta,
+        suffix = Type.KeyMeta
     )
     """
-    sp.verify((pos <= sp.len(bits)) & (pos <= 256), "Bad pos")
+    (l, pos) = sp.match_pair(arg)
+    sp.verify((pos <= l.length) & (pos <= 256), "BAD_POS")
 
-    prefix = sp.local("prefix", sp.record(length=pos, data=""))  # NULL path
+    prefix = sp.local("prefix", sp.record(length=pos, data=0))  # NULL path
 
-    # TODO: Improve
     with sp.if_(pos != 0):
-        prefix.value.data = sp.slice(bits, 0, pos).open_some("Out of bounds")
+        prefix.value.data = get_prefix(l.data, l.length, pos)
 
-    # TODO: Improve
-    suffix_length = sp.as_nat(sp.len(bits) - pos, "underflow")
+    suffix_length = sp.as_nat(l.length - pos, 0) # Cannot fail, checked above
     return sp.record(
         prefix=prefix.value,
         suffix=sp.record(
             length=suffix_length,
-            data=sp.slice(bits, pos, suffix_length).open_some("Out of bounds"),
+            data=get_suffix(l.data, suffix_length),
         ),
     )
 
 
 def common_prefix(a, b):
     """
-    Returns the length of the longest common prefix of the two labels.
+    Returns the length of the longest common prefix of the two keys.
 
     :returns: sp.TNat
     """
     length = sp.bind_block()
     with length:
-        l_a = sp.local(generate_var("l_a"), sp.len(a)).value
-        l_b = sp.local(generate_var("l_b"), sp.len(b)).value
-        with sp.if_(l_a < l_b):
-            sp.result(l_a)
+        with sp.if_(a.length < b.length):
+            sp.result(a.length)
         with sp.else_():
-            sp.result(l_b)
+            sp.result(b.length)
 
     prefix_length = sp.local(generate_var("prefix_length"), 0)
     break_loop = sp.local(generate_var("break_loop"), False)
     with sp.while_(~break_loop.value & (prefix_length.value < length.value)):
-        bit_a = sp.slice(a, prefix_length.value, 1).open_some("OUT_OF_BOUNDS")
-        bit_b = sp.slice(b, prefix_length.value, 1).open_some("OUT_OF_BOUNDS")
+        bit_a = get_prefix(a.data, a.length, prefix_length.value + 1)
+        bit_b = get_prefix(b.data, b.length, prefix_length.value + 1)
 
         with sp.if_(bit_a == bit_b):
             prefix_length.value += 1
@@ -79,53 +61,42 @@ def common_prefix(a, b):
     return prefix_length.value
 
 
-def chop_first_bit(label):
+def chop_first_bit(key):
     """
-    Builds a pair that has as first element the first bit of a label and
-    as second element a new label without that first bit.
+    Builds a pair that has as first element the first bit of a key and
+    as second element a new key without that first bit.
 
-    :returns: sp.TPair(sp.TNat, Type.Label)
+    :returns: sp.TPair(sp.TNat, Type.KeyMeta)
     """
-    sp.verify(label.length > 0, "EMPTY_LABEL")
+    sp.verify(key.length > 0, "EMPTY_KEY")
 
-    first_bit = sp.bind_block()
-    with first_bit:
-        bit = sp.slice(label.data, 0, 1).open_some(
-            0
-        )  # Cannot fail, already validated above
-        with sp.if_(bit == "0"):
-            sp.result(sp.int(0))
-        with sp.else_():
-            sp.result(sp.int(1))
+    tail_length = sp.as_nat(key.length - 1, 0)  # Cannot fail, already validated above
+    tail = get_suffix(key.data, tail_length)
+    first_bit = sp.to_int(key.data >> tail_length)
 
-    tail_length = sp.as_nat(label.length - 1, 0)  # Cannot fail, already validated above
-    tail = sp.slice(label.data, 1, tail_length).open_some("OUT_OF_BOUNDS")
-
-    sp.result((first_bit.value, sp.record(length=tail_length, data=tail)))
+    sp.result((first_bit, sp.record(length=tail_length, data=tail)))
 
 
 def remove_prefix(arg):
     """
-    Builds a new label after removing a given `prefix_length`.
+    Builds a new key after removing a given `prefix_length`.
 
-    :returns: Type.Label
+    :returns: Type.KeyMeta
     """
-    (label, prefix_length) = sp.match_pair(arg)
+    (key, prefix_length) = sp.match_pair(arg)
 
-    length = sp.compute(sp.as_nat(label.length - prefix_length, "PREFIX_TOO_LONG"))
+    length = sp.compute(sp.as_nat(key.length - prefix_length, "PREFIX_TOO_LONG"))
 
-    new_label = sp.bind_block()
-    with new_label:
+    new_key = sp.bind_block()
+    with new_key:
         with sp.if_(length == 0):
-            sp.result(sp.record(length=0, data=""))
+            sp.result(sp.record(length=0, data=0))
         with sp.else_():
             sp.result(
                 sp.record(
                     length=length,
-                    data=sp.slice(label.data, prefix_length, length).open_some(
-                        "PREFIX_LONGER_THAN_DATA"
-                    ),
+                    data=get_suffix(key.data, length),
                 )
             )
 
-    sp.result(new_label.value)
+    sp.result(new_key.value)

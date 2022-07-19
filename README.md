@@ -1,5 +1,7 @@
 # Inter Blockchain Communication Framework
 
+![image](merkle_tree.png)
+
 ## Dependencies
 
 | |

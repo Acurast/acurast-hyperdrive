@@ -5,14 +5,14 @@ from contracts.tezos.utils.misc import (
     split_common_prefix,
     remove_prefix,
 )
-from contracts.tezos.utils.bytes import bits_of_bytes
+from contracts.tezos.utils.bytes import bits_of_bytes, int_of_bits
 
 HASH_FUNCTION = sp.keccak
 HASH_LENGTH = 256
 NULL_HASH = sp.bytes("0x")
 
 # This constant is used to limit the data length being inserted.
-MAX_VALUE_LENGTH = 1000
+MAX_VALUE_LENGTH = 1024
 # This constant is used to limit the amount of states being stored per merkle tree.
 MAX_STATES = 200
 
@@ -20,7 +20,7 @@ EMPTY_TREE = sp.record(
     root=sp.bytes("0x"),
     root_edge=sp.record(
         node=sp.bytes("0x"),
-        label=sp.record(data="", length=sp.nat(0)),
+        key=sp.record(data=0, length=0),
     ),
     nodes=sp.map(),
     states=sp.map(),
@@ -37,6 +37,7 @@ class Error:
     NOT_ALLOWED = "NOT_ALLOWED"
     STATE_TOO_LARGE = "STATE_TOO_LARGE"
     LEVEL_ALREADY_USED = "LEVEL_ALREADY_USED"
+    TOO_MANY_STATES = "TOO_MANY_STATES"
 
 
 #################
@@ -53,7 +54,7 @@ def hash_key(owner, key):
 
 
 def hash_edge(edge):
-    # return HASH_FUNCTION(edge.node + sp.pack(edge.label))
+    # return HASH_FUNCTION(edge.node + sp.pack(edge.key))
     return edge.node
 
 
@@ -74,8 +75,8 @@ def replace_node(self, old_hash, node):
 
 
 class Type:
-    Label = sp.TRecord(data=sp.TString, length=sp.TNat).right_comb()
-    Edge = sp.TRecord(node=sp.TBytes, label=Label).right_comb()
+    KeyMeta = sp.TRecord(data=sp.TNat, length=sp.TNat).right_comb()
+    Edge = sp.TRecord(node=sp.TBytes, key=KeyMeta).right_comb()
     Node = sp.TRecord(children=sp.TMap(sp.TInt, Edge)).right_comb()
     Tree = sp.TRecord(
         root=sp.TBytes,
@@ -142,9 +143,9 @@ class IBCF(sp.Contract):
                     tkey=sp.TInt,
                     tvalue=sp.TRecord(
                         edge=Type.Edge,
-                        key=Type.Label,
+                        key=Type.KeyMeta,
                         value=sp.TBytes,
-                        prefix=sp.TOption(Type.Label),
+                        prefix=sp.TOption(Type.KeyMeta),
                         node=sp.TOption(Type.Node),
                         head=sp.TOption(sp.TInt),
                         edge_node=sp.TOption(sp.TBytes),
@@ -185,12 +186,12 @@ class IBCF(sp.Contract):
                     new_node_hash = replace_node(self, edge_node.open_some(), n.value)
 
                     r_stack.value[r_size.value] = sp.record(
-                        node=new_node_hash, label=prefix.open_some()
+                        node=new_node_hash, key=prefix.open_some()
                     )
                 with sp.else_():
-                    sp.verify(key.length >= edge.label.length, "Key length mismatch")
+                    sp.verify(key.length >= edge.key.length, "KEY_LENGTH_MISMATCH")
                     (prefix, suffix) = sp.match_record(
-                        split_common_prefix_lambda((key.data, edge.label.data)),
+                        split_common_prefix_lambda((key, edge.key)),
                         "prefix",
                         "suffix",
                     )
@@ -201,21 +202,21 @@ class IBCF(sp.Contract):
                             # Full match with the key, update operation
                             r_size.value += 1
                             r_stack.value[r_size.value] = sp.record(
-                                node=value, label=prefix
+                                node=value, key=prefix
                             )
                         with sp.else_():
-                            with sp.if_(prefix.length < edge.label.length):
+                            with sp.if_(prefix.length < edge.key.length):
                                 # Mismatch, so lets create a new branch node.
                                 (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
                                 branch_node = sp.local(
                                     "node",
                                     sp.record(
                                         children={
-                                            head: sp.record(node=value, label=tail),
+                                            head: sp.record(node=value, key=tail),
                                             (1 - head): sp.record(
                                                 node=edge.node,
-                                                label=remove_prefix_lambda(
-                                                    (edge.label, prefix.length + 1)
+                                                key=remove_prefix_lambda(
+                                                    (edge.key, prefix.length + 1)
                                                 ),
                                             ),
                                         }
@@ -225,7 +226,7 @@ class IBCF(sp.Contract):
                                 r_size.value += 1
                                 r_stack.value[r_size.value] = sp.record(
                                     node=insert_node(self, branch_node.value),
-                                    label=prefix,
+                                    key=prefix,
                                 )
 
                             with sp.else_():
@@ -255,11 +256,14 @@ class IBCF(sp.Contract):
         """
         sp.set_type(param, Type.InsertArgument)
 
+        int_of_bits_lambda = sp.compute(sp.build_lambda(int_of_bits))
+
         # Do not allow users to insert values bigger than MAX_VALUE_LENGTH
         sp.verify(sp.len(param.value) < MAX_VALUE_LENGTH, Error.STATE_TOO_LARGE)
+        sp.verify(sp.len(self.data.tree.states) < MAX_STATES, Error.TOO_MANY_STATES)
 
-        key_label = sp.record(
-            data=bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(sp.sender), param.key)),
+        key = sp.record(
+            data=int_of_bits_lambda(bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(sp.sender), param.key))),
             length=HASH_LENGTH,
         )
 
@@ -267,12 +271,12 @@ class IBCF(sp.Contract):
         state_hash = sp.compute(hash_state(ENCODE(sp.sender), param.key, param.value))
         self.data.tree.states[state_hash] = param.value
 
-        edge = sp.local("edge", sp.record(label=key_label, node=state_hash))
+        edge = sp.local("edge", sp.record(key=key, node=state_hash))
         # Skip first insertion
         with sp.if_(self.data.tree.root != NULL_HASH):
             edge.value = self.insert_at_edge(
                 sp.record(
-                    edge=self.data.tree.root_edge, key=key_label, value=state_hash
+                    edge=self.data.tree.root_edge, key=key, value=state_hash
                 )
             )
 
@@ -305,11 +309,12 @@ class IBCF(sp.Contract):
         sp.set_type(arg, Type.GetProofArgument)
         chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
         split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
+        int_of_bits_lambda = sp.compute(sp.build_lambda(int_of_bits))
 
-        key_label = sp.local(
-            "key_label",
+        key = sp.local(
+            "key",
             sp.record(
-                data=bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(arg.owner), arg.key)),
+                data=int_of_bits_lambda(bits_of_bytes(self.data.bytes_to_bits, hash_key(ENCODE(arg.owner), arg.key))),
                 length=HASH_LENGTH,
             ),
         )
@@ -321,11 +326,11 @@ class IBCF(sp.Contract):
         continue_loop = sp.local("continue_loop", True)
         with sp.while_(continue_loop.value):
             (prefix, suffix) = sp.match_record(
-                split_common_prefix_lambda((key_label.value.data, root_edge.value.label.data)),
+                split_common_prefix_lambda((key.value, root_edge.value.key)),
                 "prefix",
                 "suffix",
             )
-            sp.verify(prefix.length == root_edge.value.label.length, Error.NOT_FOUND)
+            sp.verify(prefix.length == root_edge.value.key.length, Error.NOT_FOUND)
 
             with sp.if_(suffix.length == 0):
                 # Proof found
@@ -367,7 +372,7 @@ class IBCF(sp.Contract):
 
                 blinded_path.value.push(hash.value)
                 root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
-                key_label.value = tail
+                key.value = tail
 
         with sp.set_result_type(Type.ProofResult):
             sp.result(

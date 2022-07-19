@@ -1,21 +1,21 @@
 parameter (or (pair %insert (bytes %key) (bytes %value)) (unit %snapshot_merkle_tree));
-storage   (pair (set %administrators address) (pair (map %bytes_to_bits bytes string) (pair (big_map %merkle_history nat (pair (map %nodes bytes (map int (pair (pair %label (string %data) (nat %length)) (bytes %node)))) (pair (bytes %root) (pair (pair %root_edge (pair %label (string %data) (nat %length)) (bytes %node)) (map %states bytes bytes))))) (pair %tree (map %nodes bytes (map int (pair (pair %label (string %data) (nat %length)) (bytes %node)))) (pair (bytes %root) (pair (pair %root_edge (pair %label (string %data) (nat %length)) (bytes %node)) (map %states bytes bytes)))))));
+storage   (pair (set %administrators address) (pair (map %bytes_to_bits bytes string) (pair (big_map %merkle_history nat (pair (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node)))) (pair (bytes %root) (pair (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node)) (map %states bytes bytes))))) (pair %tree (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node)))) (pair (bytes %root) (pair (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node)) (map %states bytes bytes)))))));
 code
   {
     LAMBDA
-      (pair (pair (pair (pair string nat) bytes) (pair (pair string nat) bytes)) (pair (set address) (pair (map bytes string) (pair (big_map nat (pair (map bytes (map int (pair (pair string nat) bytes))) (pair bytes (pair (pair (pair string nat) bytes) (map bytes bytes))))) (pair (map bytes (map int (pair (pair string nat) bytes))) (pair bytes (pair (pair (pair string nat) bytes) (map bytes bytes))))))))
-      (pair (pair (pair string nat) bytes) (pair (set address) (pair (map bytes string) (pair (big_map nat (pair (map bytes (map int (pair (pair string nat) bytes))) (pair bytes (pair (pair (pair string nat) bytes) (map bytes bytes))))) (pair (map bytes (map int (pair (pair string nat) bytes))) (pair bytes (pair (pair (pair string nat) bytes) (map bytes bytes))))))))
+      (pair (pair (pair (pair nat nat) bytes) (pair (pair nat nat) bytes)) (pair (set address) (pair (map bytes string) (pair (big_map nat (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (map bytes bytes))))) (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (map bytes bytes))))))))
+      (pair (pair (pair nat nat) bytes) (pair (set address) (pair (map bytes string) (pair (big_map nat (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (map bytes bytes))))) (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (map bytes bytes))))))))
       {
         UNPAIR;     
         PUSH int 0; 
-        EMPTY_MAP int (pair (pair string nat) bytes); 
+        EMPTY_MAP int (pair (pair nat nat) bytes); 
         PUSH int 1; 
-        EMPTY_MAP int (pair (pair (pair (pair string nat) bytes) (pair (option bytes) (option int))) (pair (pair (pair string nat) (option (map int (pair (pair string nat) bytes)))) (pair (option (pair string nat)) bytes))); 
+        EMPTY_MAP int (pair (pair (pair (pair nat nat) bytes) (pair (option bytes) (option int))) (pair (pair (pair nat nat) (option (map int (pair (pair nat nat) bytes)))) (pair (option (pair nat nat)) bytes))); 
         DUP 5;      
         GET 4;      
-        NONE (pair string nat); 
+        NONE (pair nat nat); 
         PAIR;       
-        NONE (map int (pair (pair string nat) bytes)); 
+        NONE (map int (pair (pair nat nat) bytes)); 
         DUP 7;      
         GET 3;      
         PAIR;       
@@ -30,8 +30,8 @@ code
         UPDATE;     
         PUSH bool True; 
         LAMBDA
-          (pair string nat)
-          (pair int (pair string nat))
+          (pair nat nat)
+          (pair int (pair nat nat))
           {
             DUP;        
             CDR;        
@@ -41,77 +41,69 @@ code
             IF
               {}
               {
-                PUSH string "EMPTY_LABEL"; 
+                PUSH string "EMPTY_KEY"; 
                 FAILWITH;   
               }; 
             DUP;        
-            CAR;        
-            PUSH string "0"; 
+            CDR;        
+            PUSH nat 1; 
             SWAP;       
-            PUSH nat 1; 
-            PUSH nat 0; 
-            SLICE;      
+            SUB;        
+            ISNAT;      
             IF_NONE
               {
                 PUSH int 0; 
                 FAILWITH;   
               }
               {}; 
-            COMPARE;    
-            EQ;         
-            IF
-              {
-                PUSH int 0; 
-              }
-              {
-                PUSH int 1; 
-              }; 
             PUSH nat 1; 
-            DUP 3;      
+            DUP;        
+            DUP 4;      
             CDR;        
             SUB;        
             ISNAT;      
             IF_NONE
               {
                 PUSH int 0; 
+                FAILWITH;   
+              }
+              {}; 
+            PUSH nat 1; 
+            LSL;        
+            SUB;        
+            ISNAT;      
+            IF_NONE
+              {
+                PUSH int 86; 
                 FAILWITH;   
               }
               {}; 
             DUP 3;      
             CAR;        
-            PUSH nat 1; 
-            DIG 4;      
-            CDR;        
-            SUB;        
-            ISNAT;      
-            IF_NONE
-              {
-                PUSH int 0; 
-                FAILWITH;   
-              }
-              {}; 
-            PUSH nat 1; 
-            SLICE;      
-            IF_NONE
-              {
-                PUSH string "OUT_OF_BOUNDS"; 
-                FAILWITH;   
-              }
-              {}; 
+            AND;        
             PAIR;       
-            SWAP;       
+            PUSH nat 1; 
+            DUP 3;      
+            CDR;        
+            SUB;        
+            ISNAT;      
+            IF_NONE
+              {
+                PUSH int 0; 
+                FAILWITH;   
+              }
+              {}; 
+            DIG 2;      
+            CAR;        
+            LSR;        
+            INT;        
             PAIR;       
           }; 
         LAMBDA
-          (pair (pair string nat) nat)
-          (pair string nat)
+          (pair (pair nat nat) nat)
+          (pair nat nat)
           {
-            DUP;        
             UNPAIR;     
-            SWAP;       
-            DUP;        
-            DUG 2;      
-            SWAP;       
             DUP;        
             DUG 2;      
             CDR;        
@@ -129,49 +121,55 @@ code
             EQ;         
             IF
               {
-                DROP 4;     
-                PUSH (pair string nat) (Pair "" 0); 
+                DROP 2;     
+                PUSH (pair nat nat) (Pair 0 0); 
               }
               {
-                DIG 3;      
-                DROP;       
                 DUP;        
+                PUSH nat 1; 
                 DIG 2;      
-                CAR;        
-                DIG 2;      
-                DIG 3;      
-                SLICE;      
+                PUSH nat 1; 
+                LSL;        
+                SUB;        
+                ISNAT;      
                 IF_NONE
                   {
-                    PUSH string "PREFIX_LONGER_THAN_DATA"; 
+                    PUSH int 86; 
                     FAILWITH;   
                   }
                   {}; 
+                DIG 2;      
+                CAR;        
+                AND;        
                 PAIR;       
               }; 
           }; 
         LAMBDA
-          (pair string string)
-          (pair (pair string nat) (pair string nat))
+          (pair (pair nat nat) (pair nat nat))
+          (pair (pair nat nat) (pair nat nat))
           {
             DUP;        
             UNPAIR;     
+            SWAP;       
             DUP;        
-            SIZE;       
-            DUP 3;      
-            SIZE;       
+            DUG 2;      
+            CDR;        
+            SWAP;       
             DUP;        
-            DUP 3;      
+            DUG 2;      
+            CDR;        
             COMPARE;    
             LT;         
             IF
               {
+                DUP;        
+                CDR;        
+              }
+              {
                 SWAP;       
                 DUP;        
                 DUG 2;      
-              }
-              {
-                DUP;        
+                CDR;        
               }; 
             PUSH nat 0; 
             PUSH bool False; 
@@ -181,26 +179,38 @@ code
             LT;         
             LOOP
               {
-                DUP 7;      
+                PUSH nat 1; 
+                DUP 3;      
+                ADD;        
+                DUP 6;      
+                CDR;        
+                SUB;        
+                ISNAT;      
+                IF_NONE
+                  {
+                    PUSH int 89; 
+                    FAILWITH;   
+                  }
+                  {}; 
+                DUP 6;      
+                CAR;        
+                LSR;        
                 PUSH nat 1; 
                 DUP 4;      
-                SLICE;      
+                ADD;        
+                DUP 6;      
+                CDR;        
+                SUB;        
+                ISNAT;      
                 IF_NONE
                   {
-                    PUSH string "OUT_OF_BOUNDS"; 
+                    PUSH int 89; 
                     FAILWITH;   
                   }
                   {}; 
-                DUP 7;      
-                PUSH nat 1; 
-                DUP 5;      
-                SLICE;      
-                IF_NONE
-                  {
-                    PUSH string "OUT_OF_BOUNDS"; 
-                    FAILWITH;   
-                  }
-                  {}; 
+                DUP 6;      
+                CAR;        
+                LSR;        
                 COMPARE;    
                 EQ;         
                 IF
@@ -229,28 +239,20 @@ code
             DROP;       
             SWAP;       
             DROP;       
-            SWAP;       
-            DROP;       
-            SWAP;       
-            DROP;       
             DIG 2;      
             DROP;       
             DIG 2;      
             DROP;       
             SWAP;       
             DUP;        
-            DUG 2;      
-            SIZE;       
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            CDR;        
+            DUP 3;      
             COMPARE;    
             LE;         
             IF
               {
-                DUP;        
                 PUSH nat 256; 
-                SWAP;       
+                DUP 3;      
                 COMPARE;    
                 LE;         
               }
@@ -260,64 +262,73 @@ code
             IF
               {}
               {
-                PUSH string "Bad pos"; 
+                PUSH string "BAD_POS"; 
                 FAILWITH;   
               }; 
+            SWAP;       
             DUP;        
-            PUSH string ""; 
+            DUG 2;      
+            PUSH nat 0; 
             PAIR;       
             PUSH nat 0; 
-            DUP 3;      
+            DUP 4;      
             COMPARE;    
             NEQ;        
             IF
               {
                 DUP 3;      
                 DUP 3;      
-                PUSH nat 0; 
-                SLICE;      
+                CDR;        
+                SUB;        
+                ISNAT;      
                 IF_NONE
                   {
-                    PUSH string "Out of bounds"; 
+                    PUSH int 89; 
                     FAILWITH;   
                   }
                   {}; 
+                DUP 3;      
+                CAR;        
+                LSR;        
                 UPDATE 1;   
               }
               {}; 
-            SWAP;       
-            DUP;        
-            DUG 2;      
-            DUP 4;      
-            SIZE;       
+            DUP 3;      
+            DUP 3;      
+            CDR;        
             SUB;        
             ISNAT;      
             IF_NONE
               {
-                PUSH string "underflow"; 
+                PUSH int 0; 
                 FAILWITH;   
               }
               {}; 
-            DUP 4;      
-            DUP 4;      
-            DIG 5;      
-            SIZE;       
-            SUB;        
-            ISNAT;      
-            IF_NONE
-              {
-                PUSH string "underflow"; 
-                FAILWITH;   
-              }
-              {}; 
+            PUSH nat 1; 
             DIG 4;      
-            SLICE;      
+            DUP 5;      
+            CDR;        
+            SUB;        
+            ISNAT;      
             IF_NONE
               {
-                PUSH string "Out of bounds"; 
+                PUSH int 0; 
                 FAILWITH;   
               }
               {}; 
+            PUSH nat 1; 
+            LSL;        
+            SUB;        
+            ISNAT;      
+            IF_NONE
+              {
+                PUSH int 86; 
+                FAILWITH;   
+              }
+              {}; 
+            DIG 3;      
+            CAR;        
+            AND;        
             PAIR;       
             SWAP;       
             PAIR;       
@@ -333,7 +344,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 162; 
+                PUSH int 163; 
                 FAILWITH;   
               }
               {}; 
@@ -357,7 +368,7 @@ code
                 DUG 10;     
                 PUSH int 0; 
                 DUG 11;     
-                EMPTY_MAP int (pair (pair (pair (pair string nat) bytes) (pair (option bytes) (option int))) (pair (pair (pair string nat) (option (map int (pair (pair string nat) bytes)))) (pair (option (pair string nat)) bytes))); 
+                EMPTY_MAP int (pair (pair (pair (pair nat nat) bytes) (pair (option bytes) (option int))) (pair (pair (pair nat nat) (option (map int (pair (pair nat nat) bytes)))) (pair (option (pair nat nat)) bytes))); 
                 DUG 11;     
               }
               {}; 
@@ -384,7 +395,7 @@ code
                 DIG 2;      
                 DROP;       
                 DIG 8;      
-                NONE (pair (pair (pair (pair string nat) bytes) (pair (option bytes) (option int))) (pair (pair (pair string nat) (option (map int (pair (pair string nat) bytes)))) (pair (option (pair string nat)) bytes))); 
+                NONE (pair (pair (pair (pair nat nat) bytes) (pair (option bytes) (option int))) (pair (pair (pair nat nat) (option (map int (pair (pair nat nat) bytes)))) (pair (option (pair nat nat)) bytes))); 
                 DUP 11;     
                 UPDATE;     
                 DUG 8;      
@@ -395,7 +406,7 @@ code
                 SWAP;       
                 IF_NONE
                   {
-                    PUSH int 182; 
+                    PUSH int 183; 
                     FAILWITH;   
                   }
                   {}; 
@@ -404,7 +415,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 181; 
+                    PUSH int 182; 
                     FAILWITH;   
                   }
                   {}; 
@@ -412,7 +423,7 @@ code
                 DIG 4;      
                 IF_NONE
                   {
-                    PUSH int 183; 
+                    PUSH int 184; 
                     FAILWITH;   
                   }
                   {}; 
@@ -422,11 +433,11 @@ code
                 GET 6;      
                 DUP;        
                 CAR;        
-                NONE (map int (pair (pair string nat) bytes)); 
+                NONE (map int (pair (pair nat nat) bytes)); 
                 DIG 6;      
                 IF_NONE
                   {
-                    PUSH int 185; 
+                    PUSH int 186; 
                     FAILWITH;   
                   }
                   {}; 
@@ -447,7 +458,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 61; 
+                    PUSH int 62; 
                     FAILWITH;   
                   }
                   {}; 
@@ -457,7 +468,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 61; 
+                    PUSH int 62; 
                     FAILWITH;   
                   }
                   {}; 
@@ -476,7 +487,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 61; 
+                    PUSH int 62; 
                     FAILWITH;   
                   }
                   {}; 
@@ -486,7 +497,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 61; 
+                    PUSH int 62; 
                     FAILWITH;   
                   }
                   {}; 
@@ -496,7 +507,7 @@ code
                 DIG 2;      
                 IF_NONE
                   {
-                    PUSH int 188; 
+                    PUSH int 189; 
                     FAILWITH;   
                   }
                   {}; 
@@ -517,15 +528,13 @@ code
                 IF
                   {}
                   {
-                    PUSH string "Key length mismatch"; 
+                    PUSH string "KEY_LENGTH_MISMATCH"; 
                     FAILWITH;   
                   }; 
                 DUP 8;      
                 DUP 6;      
                 CAR;        
-                CAR;        
                 DUP 5;      
-                CAR;        
                 PAIR;       
                 EXEC;       
                 UNPAIR;     
@@ -588,7 +597,7 @@ code
                         DIG 2;      
                         EXEC;       
                         UNPAIR;     
-                        EMPTY_MAP int (pair (pair string nat) bytes); 
+                        EMPTY_MAP int (pair (pair nat nat) bytes); 
                         DIG 4;      
                         DIG 3;      
                         PAIR;       
@@ -631,7 +640,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 61; 
+                            PUSH int 62; 
                             FAILWITH;   
                           }
                           {}; 
@@ -641,7 +650,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 61; 
+                            PUSH int 62; 
                             FAILWITH;   
                           }
                           {}; 
@@ -660,7 +669,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 61; 
+                            PUSH int 62; 
                             FAILWITH;   
                           }
                           {}; 
@@ -670,7 +679,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 61; 
+                            PUSH int 62; 
                             FAILWITH;   
                           }
                           {}; 
@@ -707,7 +716,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 236; 
+                            PUSH int 237; 
                             FAILWITH;   
                           }
                           {}; 
@@ -736,7 +745,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 240; 
+                            PUSH int 241; 
                             FAILWITH;   
                           }
                           {}; 
@@ -761,7 +770,7 @@ code
         GET;        
         IF_NONE
           {
-            PUSH int 249; 
+            PUSH int 250; 
             FAILWITH;   
           }
           {}; 
@@ -771,22 +780,127 @@ code
     UNPAIR;     
     IF_LEFT
       {
-        DUP;        
+        LAMBDA
+          string
+          nat
+          {
+            PUSH nat 0; 
+            PUSH nat 1; 
+            DUP 3;      
+            SIZE;       
+            SUB;        
+            DUP;        
+            PUSH int 1; 
+            ADD;        
+            PUSH int 0; 
+            DUP;        
+            DUP 3;      
+            COMPARE;    
+            GT;         
+            LOOP
+              {
+                PUSH (option string) (Some "1"); 
+                DUP 6;      
+                PUSH nat 1; 
+                DUP 4;      
+                ABS;        
+                SLICE;      
+                COMPARE;    
+                EQ;         
+                IF
+                  {
+                    PUSH nat 1; 
+                    PUSH nat 2; 
+                    DUP 3;      
+                    DUP 6;      
+                    SUB;        
+                    ABS;        
+                    DUP;        
+                    PUSH nat 0; 
+                    COMPARE;    
+                    NEQ;        
+                    LOOP
+                      {
+                        PUSH nat 0; 
+                        PUSH nat 2; 
+                        DUP 3;      
+                        EDIV;       
+                        IF_NONE
+                          {
+                            PUSH int 77; 
+                            FAILWITH;   
+                          }
+                          {
+                            CDR;        
+                          }; 
+                        COMPARE;    
+                        NEQ;        
+                        IF
+                          {
+                            SWAP;       
+                            DUP;        
+                            DUG 2;      
+                            DIG 3;      
+                            MUL;        
+                            DUG 2;      
+                          }
+                          {}; 
+                        PUSH nat 1; 
+                        SWAP;       
+                        LSR;        
+                        SWAP;       
+                        DUP;        
+                        MUL;        
+                        SWAP;       
+                        DUP;        
+                        PUSH nat 0; 
+                        COMPARE;    
+                        NEQ;        
+                      }; 
+                    DROP 2;     
+                    DIG 4;      
+                    ADD;        
+                    DUG 3;      
+                  }
+                  {}; 
+                PUSH int 1; 
+                ADD;        
+                DUP;        
+                DUP 3;      
+                COMPARE;    
+                GT;         
+              }; 
+            DROP 3;     
+            SWAP;       
+            DROP;       
+          }; 
+        PUSH nat 1024; 
+        DUP 3;      
         CDR;        
         SIZE;       
-        PUSH nat 1000; 
         COMPARE;    
-        GT;         
+        LT;         
         IF
           {}
           {
             PUSH string "STATE_TOO_LARGE"; 
             FAILWITH;   
           }; 
-        DUP;        
-        CAR;        
+        PUSH nat 200; 
+        DUP 4;      
+        GET 12;     
+        SIZE;       
+        COMPARE;    
+        LT;         
+        IF
+          {}
+          {
+            PUSH string "TOO_MANY_STATES"; 
+            FAILWITH;   
+          }; 
         PUSH string ""; 
-        SWAP;       
+        DUP 3;      
+        CAR;        
         SENDER;     
         PACK;       
         CONCAT;     
@@ -799,9 +913,9 @@ code
         GT;         
         LOOP
           {
-            DUP 5;      
+            DUP 6;      
             GET 3;      
-            DUP 5;      
+            DUP 6;      
             CAR;        
             SENDER;     
             PACK;       
@@ -819,7 +933,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 29; 
+                PUSH int 41; 
                 FAILWITH;   
               }
               {}; 
@@ -835,10 +949,10 @@ code
           }; 
         DROP 2;     
         NIL bytes;  
-        DUP 3;      
+        DUP 4;      
         CDR;        
         CONS;       
-        DUP 3;      
+        DUP 4;      
         CAR;        
         CONS;       
         SENDER;     
@@ -846,38 +960,42 @@ code
         CONS;       
         CONCAT;     
         KECCAK;     
-        DIG 3;      
+        DIG 4;      
         DUP;        
         GET 6;      
         DUP;        
         GET 6;      
-        DUP 6;      
+        DUP 7;      
         CDR;        
         SOME;       
         DUP 5;      
         UPDATE;     
         UPDATE 6;   
         UPDATE 6;   
-        DUG 3;      
+        DUG 4;      
         DUP;        
         PUSH nat 256; 
-        DUP 4;      
+        DUP 5;      
+        DUP 5;      
+        EXEC;       
         PAIR;       
         PAIR;       
         PUSH bytes 0x; 
-        DUP 6;      
+        DUP 7;      
         GET 9;      
         COMPARE;    
         NEQ;        
         IF
           {
             DROP;       
-            DIG 2;      
-            DROP;       
             DIG 3;      
+            DROP;       
+            DIG 4;      
             SWAP;       
             PUSH nat 256; 
-            DIG 3;      
+            DIG 4;      
+            DIG 4;      
+            EXEC;       
             PAIR;       
             DUP 4;      
             GET 11;     
@@ -889,6 +1007,8 @@ code
             UNPAIR;     
           }
           {
+            SWAP;       
+            DROP;       
             SWAP;       
             DROP;       
             SWAP;       
@@ -950,9 +1070,9 @@ code
         UPDATE;     
         UPDATE 5;   
         EMPTY_MAP bytes bytes; 
-        PUSH (pair (pair string nat) bytes) (Pair (Pair "" 0) 0x); 
+        PUSH (pair (pair nat nat) bytes) (Pair (Pair 0 0) 0x); 
         PUSH bytes 0x; 
-        EMPTY_MAP bytes (map int (pair (pair string nat) bytes)); 
+        EMPTY_MAP bytes (map int (pair (pair nat nat) bytes)); 
         PAIR 4;     
         DIG 2;      
         DROP;       
@@ -968,8 +1088,8 @@ view
   {
     UNPAIR;     
     LAMBDA
-      (pair string nat)
-      (pair int (pair string nat))
+      (pair nat nat)
+      (pair int (pair nat nat))
       {
         DUP;        
         CDR;        
@@ -979,89 +1099,90 @@ view
         IF
           {}
           {
-            PUSH string "EMPTY_LABEL"; 
+            PUSH string "EMPTY_KEY"; 
             FAILWITH;   
           }; 
         DUP;        
-        CAR;        
-        PUSH string "0"; 
+        CDR;        
+        PUSH nat 1; 
         SWAP;       
-        PUSH nat 1; 
-        PUSH nat 0; 
-        SLICE;      
+        SUB;        
+        ISNAT;      
         IF_NONE
           {
             PUSH int 0; 
             FAILWITH;   
           }
           {}; 
-        COMPARE;    
-        EQ;         
-        IF
-          {
-            PUSH int 0; 
-          }
-          {
-            PUSH int 1; 
-          }; 
         PUSH nat 1; 
-        DUP 3;      
+        DUP;        
+        DUP 4;      
         CDR;        
         SUB;        
         ISNAT;      
         IF_NONE
           {
             PUSH int 0; 
+            FAILWITH;   
+          }
+          {}; 
+        PUSH nat 1; 
+        LSL;        
+        SUB;        
+        ISNAT;      
+        IF_NONE
+          {
+            PUSH int 86; 
             FAILWITH;   
           }
           {}; 
         DUP 3;      
         CAR;        
-        PUSH nat 1; 
-        DIG 4;      
-        CDR;        
-        SUB;        
-        ISNAT;      
-        IF_NONE
-          {
-            PUSH int 0; 
-            FAILWITH;   
-          }
-          {}; 
-        PUSH nat 1; 
-        SLICE;      
-        IF_NONE
-          {
-            PUSH string "OUT_OF_BOUNDS"; 
-            FAILWITH;   
-          }
-          {}; 
+        AND;        
         PAIR;       
-        SWAP;       
+        PUSH nat 1; 
+        DUP 3;      
+        CDR;        
+        SUB;        
+        ISNAT;      
+        IF_NONE
+          {
+            PUSH int 0; 
+            FAILWITH;   
+          }
+          {}; 
+        DIG 2;      
+        CAR;        
+        LSR;        
+        INT;        
         PAIR;       
       }; 
     LAMBDA
-      (pair string string)
-      (pair (pair string nat) (pair string nat))
+      (pair (pair nat nat) (pair nat nat))
+      (pair (pair nat nat) (pair nat nat))
       {
         DUP;        
         UNPAIR;     
+        SWAP;       
         DUP;        
-        SIZE;       
-        DUP 3;      
-        SIZE;       
+        DUG 2;      
+        CDR;        
+        SWAP;       
         DUP;        
-        DUP 3;      
+        DUG 2;      
+        CDR;        
         COMPARE;    
         LT;         
         IF
           {
+            DUP;        
+            CDR;        
+          }
+          {
             SWAP;       
             DUP;        
             DUG 2;      
-          }
-          {
-            DUP;        
+            CDR;        
           }; 
         PUSH nat 0; 
         PUSH bool False; 
@@ -1071,26 +1192,38 @@ view
         LT;         
         LOOP
           {
-            DUP 7;      
+            PUSH nat 1; 
+            DUP 3;      
+            ADD;        
+            DUP 6;      
+            CDR;        
+            SUB;        
+            ISNAT;      
+            IF_NONE
+              {
+                PUSH int 89; 
+                FAILWITH;   
+              }
+              {}; 
+            DUP 6;      
+            CAR;        
+            LSR;        
             PUSH nat 1; 
             DUP 4;      
-            SLICE;      
+            ADD;        
+            DUP 6;      
+            CDR;        
+            SUB;        
+            ISNAT;      
             IF_NONE
               {
-                PUSH string "OUT_OF_BOUNDS"; 
+                PUSH int 89; 
                 FAILWITH;   
               }
               {}; 
-            DUP 7;      
-            PUSH nat 1; 
-            DUP 5;      
-            SLICE;      
-            IF_NONE
-              {
-                PUSH string "OUT_OF_BOUNDS"; 
-                FAILWITH;   
-              }
-              {}; 
+            DUP 6;      
+            CAR;        
+            LSR;        
             COMPARE;    
             EQ;         
             IF
@@ -1119,28 +1252,20 @@ view
         DROP;       
         SWAP;       
         DROP;       
-        SWAP;       
-        DROP;       
-        SWAP;       
-        DROP;       
         DIG 2;      
         DROP;       
         DIG 2;      
         DROP;       
         SWAP;       
         DUP;        
-        DUG 2;      
-        SIZE;       
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        CDR;        
+        DUP 3;      
         COMPARE;    
         LE;         
         IF
           {
-            DUP;        
             PUSH nat 256; 
-            SWAP;       
+            DUP 3;      
             COMPARE;    
             LE;         
           }
@@ -1150,75 +1275,178 @@ view
         IF
           {}
           {
-            PUSH string "Bad pos"; 
+            PUSH string "BAD_POS"; 
             FAILWITH;   
           }; 
+        SWAP;       
         DUP;        
-        PUSH string ""; 
+        DUG 2;      
+        PUSH nat 0; 
         PAIR;       
         PUSH nat 0; 
-        DUP 3;      
+        DUP 4;      
         COMPARE;    
         NEQ;        
         IF
           {
             DUP 3;      
             DUP 3;      
-            PUSH nat 0; 
-            SLICE;      
+            CDR;        
+            SUB;        
+            ISNAT;      
             IF_NONE
               {
-                PUSH string "Out of bounds"; 
+                PUSH int 89; 
                 FAILWITH;   
               }
               {}; 
+            DUP 3;      
+            CAR;        
+            LSR;        
             UPDATE 1;   
           }
           {}; 
-        SWAP;       
-        DUP;        
-        DUG 2;      
-        DUP 4;      
-        SIZE;       
+        DUP 3;      
+        DUP 3;      
+        CDR;        
         SUB;        
         ISNAT;      
         IF_NONE
           {
-            PUSH string "underflow"; 
+            PUSH int 0; 
             FAILWITH;   
           }
           {}; 
-        DUP 4;      
-        DUP 4;      
-        DIG 5;      
-        SIZE;       
-        SUB;        
-        ISNAT;      
-        IF_NONE
-          {
-            PUSH string "underflow"; 
-            FAILWITH;   
-          }
-          {}; 
+        PUSH nat 1; 
         DIG 4;      
-        SLICE;      
+        DUP 5;      
+        CDR;        
+        SUB;        
+        ISNAT;      
         IF_NONE
           {
-            PUSH string "Out of bounds"; 
+            PUSH int 0; 
             FAILWITH;   
           }
           {}; 
+        PUSH nat 1; 
+        LSL;        
+        SUB;        
+        ISNAT;      
+        IF_NONE
+          {
+            PUSH int 86; 
+            FAILWITH;   
+          }
+          {}; 
+        DIG 3;      
+        CAR;        
+        AND;        
         PAIR;       
         SWAP;       
         PAIR;       
       }; 
+    LAMBDA
+      string
+      nat
+      {
+        PUSH nat 0; 
+        PUSH nat 1; 
+        DUP 3;      
+        SIZE;       
+        SUB;        
+        DUP;        
+        PUSH int 1; 
+        ADD;        
+        PUSH int 0; 
+        DUP;        
+        DUP 3;      
+        COMPARE;    
+        GT;         
+        LOOP
+          {
+            PUSH (option string) (Some "1"); 
+            DUP 6;      
+            PUSH nat 1; 
+            DUP 4;      
+            ABS;        
+            SLICE;      
+            COMPARE;    
+            EQ;         
+            IF
+              {
+                PUSH nat 1; 
+                PUSH nat 2; 
+                DUP 3;      
+                DUP 6;      
+                SUB;        
+                ABS;        
+                DUP;        
+                PUSH nat 0; 
+                COMPARE;    
+                NEQ;        
+                LOOP
+                  {
+                    PUSH nat 0; 
+                    PUSH nat 2; 
+                    DUP 3;      
+                    EDIV;       
+                    IF_NONE
+                      {
+                        PUSH int 77; 
+                        FAILWITH;   
+                      }
+                      {
+                        CDR;        
+                      }; 
+                    COMPARE;    
+                    NEQ;        
+                    IF
+                      {
+                        SWAP;       
+                        DUP;        
+                        DUG 2;      
+                        DIG 3;      
+                        MUL;        
+                        DUG 2;      
+                      }
+                      {}; 
+                    PUSH nat 1; 
+                    SWAP;       
+                    LSR;        
+                    SWAP;       
+                    DUP;        
+                    MUL;        
+                    SWAP;       
+                    DUP;        
+                    PUSH nat 0; 
+                    COMPARE;    
+                    NEQ;        
+                  }; 
+                DROP 2;     
+                DIG 4;      
+                ADD;        
+                DUG 3;      
+              }
+              {}; 
+            PUSH int 1; 
+            ADD;        
+            DUP;        
+            DUP 3;      
+            COMPARE;    
+            GT;         
+          }; 
+        DROP 3;     
+        SWAP;       
+        DROP;       
+      }; 
     PUSH string ""; 
-    DIG 3;      
+    DIG 4;      
     DUP;        
     CAR;        
     SWAP;       
     DUP;        
-    DUG 5;      
+    DUG 6;      
     GET 4;      
     PACK;       
     CONCAT;     
@@ -1231,14 +1459,14 @@ view
     GT;         
     LOOP
       {
-        DUP 7;      
+        DUP 8;      
         GET 3;      
-        DIG 6;      
+        DIG 7;      
         DUP;        
         CAR;        
         SWAP;       
         DUP;        
-        DUG 8;      
+        DUG 9;      
         GET 4;      
         PACK;       
         CONCAT;     
@@ -1255,7 +1483,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 29; 
+            PUSH int 41; 
             FAILWITH;   
           }
           {}; 
@@ -1270,18 +1498,19 @@ view
         GT;         
       }; 
     DROP 2;     
-    DUP;        
     PUSH nat 256; 
-    SWAP;       
+    DUP 3;      
+    DUP 3;      
+    EXEC;       
     PAIR;       
-    DUP 6;      
+    DUP 7;      
     GET 5;      
-    DUP 6;      
+    DUP 7;      
     GET 3;      
     GET;        
     IF_NONE
       {
-        PUSH int 317; 
+        PUSH int 322; 
         FAILWITH;   
       }
       {}; 
@@ -1292,12 +1521,10 @@ view
     DUP;        
     LOOP
       {
-        DUP 7;      
+        DUP 8;      
         DUP 4;      
         CAR;        
-        CAR;        
         DUP 7;      
-        CAR;        
         PAIR;       
         EXEC;       
         UNPAIR;     
@@ -1330,7 +1557,7 @@ view
           {
             DIG 6;      
             DROP 2;     
-            DUP 8;      
+            DUP 9;      
             SWAP;       
             EXEC;       
             UNPAIR;     
@@ -1347,7 +1574,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 355; 
+                    PUSH int 360; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1355,7 +1582,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 355; 
+                    PUSH int 360; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1370,7 +1597,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 363; 
+                    PUSH int 368; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1378,7 +1605,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 363; 
+                    PUSH int 368; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1396,7 +1623,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 369; 
+                PUSH int 374; 
                 FAILWITH;   
               }
               {}; 
@@ -1404,7 +1631,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 369; 
+                PUSH int 374; 
                 FAILWITH;   
               }
               {}; 
@@ -1415,6 +1642,8 @@ view
       }; 
     DROP;       
     SWAP;       
+    DROP;       
+    DIG 2;      
     DROP;       
     DIG 2;      
     DROP;       
@@ -1484,7 +1713,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 399; 
+            PUSH int 404; 
             FAILWITH;   
           }
           {}; 
