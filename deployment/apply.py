@@ -8,7 +8,6 @@ from termcolor import colored
 from configs import deployment
 from deployment.scripts.insert_multiple_states import insert_multiple_states
 
-
 def get_address(pytezos_admin_client, operation_hash):
     while True:
         try:
@@ -102,7 +101,9 @@ def run_actions(client: PyTezosClient):
 
             operation_group = client.origination(
                 script=code.script(initial_storage=storage)
-            ).send()
+            ).send(ttl = 120)
+
+            wait_applied(client, operation_group.hash())
 
             contract_address_map[action["name"]] = get_address(
                 client, operation_group.hash()
@@ -130,16 +131,16 @@ def run_actions(client: PyTezosClient):
                 print(f'\t{action["description"]}')
 
             if "script" in action:
-                Scripts[action["script"]](client, action)
+                Scripts[action["script"]](client, action, wait_applied)
             else:
-                op = client.contract(action["contract_address"]).parameter(
+                op = client.contract(action["contract_address"]).using(block_id="head").parameter(
                     action["entrypoint"], action["argument"]
                 )
 
                 if "amount" in action:
                     op = op.with_amount(action["amount"])
 
-                wait_applied(client, op.send().hash())
+                wait_applied(client, op.send(ttl=120).hash())
 
     return contract_address_map
 
@@ -148,6 +149,7 @@ pytezos_client = pytezos.using(
     key=deployment["pytezos"]["private_key"],
     shell=deployment["pytezos"]["rpc_endpoint"],
 )
+deployment["known_addresses"]["admin_address"] = pytezos_client.key.public_key_hash()
 results = run_actions(pytezos_client)
 
 # Save deployment results

@@ -1,8 +1,8 @@
 pytezos:
-  rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech/ # http://localhost:20000
+  rpc_endpoint: http://localhost:20000 #https://tezos-ithacanet-node-1.diamond.papers.tech
   private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
-    admin_address: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3 #tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
+    admin_address: tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
 actions:
     - kind: origination
       contract_kind: merkle_tree

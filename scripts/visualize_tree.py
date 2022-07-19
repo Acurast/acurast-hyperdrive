@@ -99,8 +99,6 @@ for node in tree["nodes"]:
 
     nodes[node.hex()] = {"left": left, "right": right}
 
-visualize(nodes, states, pp_bytes(tree["root"])).render(
-    "merkle_tree", format="png", view=False
-)
+visualize(nodes, states, pp_bytes(tree["root"])).render(filename="merkle_tree", format="svg", view=False, cleanup=True)
 
 print(f"total states: {len(states)}")
