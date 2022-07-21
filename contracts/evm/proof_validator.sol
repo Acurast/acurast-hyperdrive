@@ -1,13 +1,28 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.7.6;
+
+import {EllipticCurve} from "./secp256r1.sol";
+
+library Err {
+    string constant NOT_ADMIN = "NOT_ADMIN";
+    string constant PROOF_INVALID = "PROOF_INVALID";
+    string constant NOT_ALLOWED = "NOT_ALLOWED";
+    string constant SIGNATURE_INVALID = "SIGNATURE_INVALID";
+}
 
 contract IBCF_Validator {
-    address private administrator = 0xf17f52151EbEF6C7334FAD080c5704D77216b732;
+    address private administrator;
+    uint[2] private administrator_public_key;
     mapping(uint256 => bytes32) root_history;
+
+    constructor(address _administrator, uint[2] memory _administrator_public_key) {
+        administrator = _administrator;
+        administrator_public_key = _administrator_public_key;
+    }
 
     // modifier to check if caller is the administrator
     modifier isAdmin() {
-        require(msg.sender == administrator, "NOT_ADMIN");
+        require(msg.sender == administrator, Err.NOT_ADMIN);
         _;
     }
 
@@ -15,10 +30,16 @@ contract IBCF_Validator {
         administrator = new_admnistrator;
     }
 
-    function add_merkle_root_restricted(uint256 level, bytes32 merkle_root) public isAdmin {
+    function submit_merkle_root_restricted(uint256 level, bytes32 merkle_root) public isAdmin {
         root_history[level] = merkle_root;
     }
 
+    function submit_merkle_root(uint256 level, bytes32 merkle_root, uint[2] memory rs /* Signature */) public view {
+        bytes32 content_hash = sha256(abi.encodePacked(level, merkle_root));
+        require(EllipticCurve.validateSignature(content_hash, rs, administrator_public_key), Err.SIGNATURE_INVALID);
+    }
+
+    // TODO: Remove in favor of secp256r1
     function add_merkle_root(uint256 level, bytes32 merkle_root, uint8 v, bytes32 r, bytes32 s) public {
         // Encode and hash the payload (it is used to validate the signature)
         bytes memory prefix = "\x19Ethereum Signed Message:\n";
@@ -39,11 +60,11 @@ contract IBCF_Validator {
                 hash = keccak256(abi.encodePacked(proof[i][0], hash));
             }
         }
-        require(root_history[block_level] == hash, "PROOF_INVALID");
+        require(root_history[block_level] == hash, Err.PROOF_INVALID);
     }
 
     function verify_signature(bytes32 hash, uint8 v, bytes32 r, bytes32 s) private view {
-        return require(ecrecover(hash, v, r, s) == administrator, "NOT_ALLOWED");
+        return require(ecrecover(hash, v, r, s) == administrator, Err.NOT_ALLOWED);
     }
 }
 

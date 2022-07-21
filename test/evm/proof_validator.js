@@ -1,15 +1,9 @@
-//const chai = require('chai')
-//const assert = chai.assert
+const assert = require("assert");
+const crypto         = require('crypto');
+const ecPem          = require('ec-pem');
+const ethereumJSUtil = require('ethereumjs-util');
 
-const assert = require("assert")
-
-const ZERO = '0x0000000000000000000000000000000000000000000000000000000000000000'
-
-String.prototype.hex = function() {
-  return web3.utils.stringToHex(this)
-}
-
-var IBCF_Validator = artifacts.require('IBCF_Validator')
+const IBCF_Validator = artifacts.require('IBCF_Validator')
 
 async function expectsFailure(call, msg) {
     try {
@@ -21,23 +15,31 @@ async function expectsFailure(call, msg) {
     throw new Error(msg || "Expected to fail, but passed.")
 }
 
-contract('IBCF_Validator', async ([_, primary, nonPrimary]) => {
-    await web3.eth.accounts.wallet.add('0xe8529dd47ef64bf253e46ac47a572abe0e2c87a6ee441eef708dde07ee7a382c');
-    const admin_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
-
+contract('IBCF_Validator', async ([_, primary]) => {
     const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
 
+    let pemFormattedKeyPair;
     let instance;
     beforeEach('deploy proof validator', async () => {
-        instance = await IBCF_Validator.new({ from: primary })
+        // Create curve object for key and signature generation.
+        const prime256v1 = crypto.createECDH('prime256v1');
+        prime256v1.generateKeys();
+
+        // Reformat keys.
+        pemFormattedKeyPair = ecPem(prime256v1, 'prime256v1');
+        const public_key = [
+            '0x' + prime256v1.getPublicKey('hex').slice(2, 66),
+            '0x' + prime256v1.getPublicKey('hex').slice(-64)
+        ];
+        instance = await IBCF_Validator.new(primary, public_key, { from: primary })
     })
 
-    it('Call add_merkle_root_restricted (Valid)', async function() {
-        await instance.add_merkle_root_restricted(1, valid_merkle_root, {from: primary});
+    it('Call submit_merkle_root_restricted (Valid)', async function() {
+        await instance.submit_merkle_root_restricted(1, valid_merkle_root, {from: primary});
     })
 
-    it('Call add_merkle_root_restricted (Invalid)', async function() {
-        await expectsFailure(async () => await instance.add_merkle_root_restricted(1, valid_merkle_root));
+    it('Call submit_merkle_root_restricted (Invalid)', async function() {
+        await expectsFailure(async () => await instance.submit_merkle_root_restricted(1, valid_merkle_root));
     })
 
     it('Call add_merkle_root (Invalid signature)', async function() {
@@ -49,6 +51,7 @@ contract('IBCF_Validator', async ([_, primary, nonPrimary]) => {
     })
 
     it('Call add_merkle_root (Valid signature)', async function() {
+        const admin_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
         await instance.update_administrator(admin_address, {from: primary});
 
         v= 27
@@ -59,7 +62,7 @@ contract('IBCF_Validator', async ([_, primary, nonPrimary]) => {
 
     it('Call verify_proof (Valid proof)', async function() {
         const level = 867292;
-        await instance.add_merkle_root_restricted(level, valid_merkle_root, {from: primary})
+        await instance.submit_merkle_root_restricted(level, valid_merkle_root, {from: primary})
 
         const proof = [
             ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
@@ -78,11 +81,12 @@ contract('IBCF_Validator', async ([_, primary, nonPrimary]) => {
         const key = "0x0000000000000000000000000003e7";
         const value = "0x0000000000000000000000000003e7";
         await instance.verify_proof.call(level, owner, key, value, proof);
+        console.log("\n\tConsumed gas: ", await instance.verify_proof.estimateGas(level, owner, key, value, proof))
     })
 
     it('Call verify_proof (Invalid proof)', async function() {
         const level = 867292;
-        await instance.add_merkle_root_restricted(level, valid_merkle_root, {from: primary})
+        await instance.submit_merkle_root_restricted(level, valid_merkle_root, {from: primary})
 
         const proof = [
             ['0x19520b9dd118ede4c96c2f22718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
@@ -101,5 +105,36 @@ contract('IBCF_Validator', async ([_, primary, nonPrimary]) => {
         const key = "0x0000000000000000000000000003e7";
         const value = "0x0000000000000000000000000003e7";
         await expectsFailure(async () => await instance.verify_proof.call(level, owner, key, value, proof), "The merkle root does not match");
+    })
+
+    it('Verify secp256r1 signature (Valid)', async function() {
+        // Hex32Bytes(level = 1) + valid_merkle_root
+        const content = Buffer.from("0000000000000000000000000000000000000000000000000000000000000001fd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd", "hex");
+
+        // Create signature.
+        const signer = crypto.createSign('RSA-SHA256');
+        signer.update(content);
+        let sigString = signer.sign(pemFormattedKeyPair.encodePrivateKey(), 'hex');
+
+        // Reformat signature / extract coordinates.
+        const xlength = 2 * ('0x' + sigString.slice(6, 8));
+        sigString = sigString.slice(8)
+        const signature = [
+            '0x' + sigString.slice(0, xlength),
+            '0x' + sigString.slice(xlength + 4)
+        ];
+
+        let estimatedGasToAddNewValue = await instance.submit_merkle_root.estimateGas(1, valid_merkle_root, signature)
+        assert(await instance.submit_merkle_root.call(1, valid_merkle_root, signature), "Signature expected to be valid.")
+        console.log("\n\tConsumed gas: ", estimatedGasToAddNewValue)
+    })
+
+    it('Verify secp256r1 signature (Invalid)', async function() {
+        const signature = [
+            "0x7d5d392b8f88052321a2d90ae0834f78eabe04c746db08def160fe53add526ae",
+            "0x00e9c63d65b43492b646d94bc0cf8cc90e4f8b1eb92a06a90534ccf02d9d2d2b1b"
+        ];
+
+        await expectsFailure(async () => await instance.submit_merkle_root.call(1, valid_merkle_root, signature), "Signature expected to be invalid.");
     })
 })
