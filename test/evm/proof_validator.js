@@ -52,7 +52,14 @@ contract('IBCF_Validator', async ([_, primary]) => {
 
     it('Call add_merkle_root (Valid signature)', async function() {
         const admin_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
-        await instance.update_administrator(admin_address, {from: primary});
+        await instance.update_administrator(
+            admin_address,
+            [
+            '0x4b0824927ad826636d541d82f1b148580bef3541187404dc3cd3abe4c01ab96f',
+            '0x6e77bcb19f7efb86d562964e26f95997d60d4daad4534d6252fb06392cdc8da6'
+            ],
+            { from: primary}
+        );
 
         v= 27
         r="0x39115c1cf79bebc100767dd50f72132de818b9b55d40a65680a552eedc67195c"

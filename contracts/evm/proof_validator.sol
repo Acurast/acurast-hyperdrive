@@ -26,8 +26,9 @@ contract IBCF_Validator {
         _;
     }
 
-    function update_administrator(address new_admnistrator) public isAdmin {
+    function update_administrator(address new_admnistrator, uint[2] memory new_administrator_public_key) public isAdmin {
         administrator = new_admnistrator;
+        administrator_public_key = new_administrator_public_key;
     }
 
     function submit_merkle_root_restricted(uint256 level, bytes32 merkle_root) public isAdmin {
