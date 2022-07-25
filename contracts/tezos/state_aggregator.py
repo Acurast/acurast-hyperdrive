@@ -24,6 +24,7 @@ EMPTY_TREE = sp.record(
     ),
     nodes=sp.map(),
     states=sp.map(),
+    signatures=sp.set(),
 )
 
 
@@ -38,7 +39,7 @@ class Error:
     STATE_TOO_LARGE = "STATE_TOO_LARGE"
     LEVEL_ALREADY_USED = "LEVEL_ALREADY_USED"
     TOO_MANY_STATES = "TOO_MANY_STATES"
-    AT_LEAST_ONE_ADMIN_IS_REQUIRED = "AT_LEAST_ONE_ADMIN_IS_REQUIRED"
+    NOT_SIGNER = "NOT_SIGNER"
 
 
 #################
@@ -75,31 +76,51 @@ def replace_node(tree, old_hash, node):
     return insert_node(tree, node)
 
 
+def failIfNotAdministrator(self):
+    """
+    This method when used, ensures that only the administrator is allowed to call a given entrypoint
+    """
+    sp.verify(self.data.config.administrator == sp.sender, Error.NOT_ALLOWED)
+
+def failIfNotSigner(self):
+    """
+    This method when used, ensures that only signers are allowed to call a given entrypoint
+    """
+    sp.verify(self.data.config.signers.contains(sp.sender), Error.NOT_SIGNER)
+
+
 class Type:
     KeyMeta = sp.TRecord(data=sp.TNat, length=sp.TNat).right_comb()
     Edge = sp.TRecord(node=sp.TBytes, key=KeyMeta).right_comb()
     Node = sp.TRecord(children=sp.TMap(sp.TInt, Edge)).right_comb()
-    Tree = sp.TRecord(
-        root=sp.TBytes,
-        root_edge=Edge,
-        nodes=sp.TMap(sp.TBytes, Node),
-        states=sp.TMap(sp.TBytes, sp.TBytes),
-    ).right_comb()
     State = sp.TRecord(
         owner=sp.TBytes,
         key=sp.TBytes,
         value=sp.TBytes,
     ).right_comb()
+    Signature = sp.TRecord(
+        r=sp.TBytes,
+        s=sp.TBytes,
+    ).right_comb()
+    Tree = sp.TRecord(
+        root=sp.TBytes,
+        root_edge=Edge,
+        nodes=sp.TMap(sp.TBytes, Node),
+        states=sp.TMap(sp.TBytes, sp.TBytes),
+        signatures=sp.TSet(Signature)
+    ).right_comb()
     # Entry points
     InsertArgument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
+    SubmitSignature = sp.TRecord(level=sp.TNat, signature=Signature).right_comb()
     ConfigureArgument = sp.TVariant(
-        update_administrators=sp.TSet(
+        update_administrator=sp.TAddress,
+        update_signers=sp.TSet(
             sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
         ),
         update_history_ttl=sp.TNat,
         update_max_state_size=sp.TNat,
         update_max_states=sp.TNat,
-    )
+    ).right_comb()
 
     # Views
     GetProofArgument = sp.TRecord(
@@ -109,6 +130,7 @@ class Type:
         level=sp.TNat,
         merkle_root=sp.TBytes,
         proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
+        signatures=sp.TSet(Signature),
     ).right_comb()
     VerifyProofArgument = sp.TRecord(
         level=sp.TNat, proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
@@ -124,7 +146,10 @@ class IBCF(sp.Contract):
         self.init_type(
             sp.TRecord(
                 config=sp.TRecord(
-                    administrators=sp.TSet(sp.TAddress),
+                    # Multi-sig address allowed to manage the contract
+                    administrator=sp.TAddress,
+                    # State signers
+                    signers=sp.TSet(sp.TAddress),
                     # This constant sets a time to live for every entry in merkle_history
                     history_ttl=sp.TNat,
                     # This constant is used to limit the data length being inserted (in bytes).
@@ -343,27 +368,31 @@ class IBCF(sp.Contract):
         self.data.merkle_history[sp.level] = tree.value
 
     @sp.entry_point()
+    def submit_signature(self, param):
+        sp.set_type(param, Type.SubmitSignature)
+
+        # Only allowed addresses can call this entry point
+        failIfNotSigner(self)
+
+        self.data.merkle_history[param.level].signatures.add(param.signature)
+
+    @sp.entry_point()
     def configure(self, param):
         sp.set_type(param, Type.ConfigureArgument)
 
         # Only allowed addresses can call this entry point
-        sp.verify(
-            self.data.config.administrators.contains(sp.sender), Error.NOT_ALLOWED
-        )
+        failIfNotAdministrator(self)
 
         with param.match_cases() as action:
-            with action.match("update_administrators") as payload:
+            with action.match("update_signers") as payload:
                 with sp.for_("el", payload.elements()) as el:
                     with el.match_cases() as cases:
                         with cases.match("add") as add:
-                            self.data.config.administrators.add(add)
+                            self.data.config.signers.add(add)
                         with cases.match("remove") as remove:
-                            self.data.config.administrators.remove(remove)
-                # Make sure at least one admin remains
-                sp.verify(
-                    sp.len(self.data.config.administrators) > 0,
-                    Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED,
-                )
+                            self.data.config.signers.remove(remove)
+            with action.match("update_administrator") as administrator:
+                self.data.config.administrator = administrator
             with cases.match("update_history_ttl") as payload:
                 self.data.config.history_ttl = payload
             with cases.match("update_max_state_size") as payload:
@@ -460,6 +489,7 @@ class IBCF(sp.Contract):
                     level=arg.level,
                     merkle_root=tree.value.root,
                     proof=blinded_path.value,
+                    signatures=tree.value.signatures,
                 )
             )
 

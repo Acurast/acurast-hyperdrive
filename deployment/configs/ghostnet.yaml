@@ -2,7 +2,8 @@ pytezos:
   rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech #http://localhost:20000
   private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
-    admin_address: tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
+  merkle_tree: KT1NcgDpd3RANVoUqNKLDyDVsJKi8EV67uWo
+  signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
 actions:
     - kind: origination
       contract_kind: merkle_tree
@@ -11,8 +12,9 @@ actions:
       storage: __SNAPSHOTS__/compilation/tezos/IBCF/state_aggregator/step_000_cont_0_storage.tz
       overrides:
           config:
-              administrators:
-                  - admin_address
+              administrator: admin_address
+              signers:
+                - signer_1
               history_ttl: 4
               max_state_size: 32
               max_states: 5
@@ -21,8 +23,3 @@ actions:
       contract_address: merkle_tree
       entrypoint: insert
       script: insert_multiple_states
-
-    - kind: contract_call
-      contract_address: merkle_tree
-      entrypoint: snapshot_merkle_tree
-      argument:
