@@ -6,9 +6,11 @@ from contracts.tezos.utils.bytes import bytes_to_bits
 
 contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
 
+def update_signers(payload):
+    return sp.variant("update_signers", payload)
 
-def update_administrators(payload):
-    return sp.variant("update_administrators", payload)
+def update_administrator(payload):
+    return sp.variant("update_administrator", payload)
 
 
 def update_history_ttl(payload):
@@ -46,7 +48,8 @@ def test():
     ibcf.update_initial_storage(
         sp.record(
             config=sp.record(
-                administrators=sp.set([admin.address]),
+                administrator=admin.address,
+                signers=sp.set(),
                 history_ttl=5,
                 max_state_size=32,
                 max_states=1000,
@@ -59,30 +62,27 @@ def test():
 
     scenario += ibcf
 
-    # Add new administrator
-    ibcf.configure(
-        update_administrators(sp.set([sp.variant("add", alice.address)]))
-    ).run(sender=admin.address)
-    scenario.verify(ibcf.data.config.administrators.contains(alice.address))
-    # Remove administrator
-    ibcf.configure(
-        update_administrators(sp.set([sp.variant("remove", alice.address)]))
-    ).run(sender=admin.address)
-    scenario.verify(~ibcf.data.config.administrators.contains(alice.address))
+    # Update administrator
+    ibcf.configure(update_administrator(alice.address)).run(sender=admin.address)
+    scenario.verify(ibcf.data.config.administrator == alice.address)
+    ibcf.configure(update_administrator(admin.address)).run(sender=alice.address)
+    scenario.verify(ibcf.data.config.administrator == admin.address)
 
-    # Try to remove an administrator without having permissions
+    # Add signers
     ibcf.configure(
-        update_administrators(sp.set([sp.variant("remove", admin.address)]))
+        update_signers(sp.set([sp.variant("add", alice.address), sp.variant("add", bob.address), sp.variant("add", claus.address)]))
+    ).run(sender=admin.address)
+    scenario.verify(ibcf.data.config.signers.contains(claus.address))
+    # Remove signer
+    ibcf.configure(
+        update_signers(sp.set([sp.variant("remove", claus.address)]))
+    ).run(sender=admin.address)
+    scenario.verify(~ibcf.data.config.signers.contains(claus.address))
+
+    # Try to remove a signer without having permissions
+    ibcf.configure(
+        update_signers(sp.set([sp.variant("remove", alice.address)]))
     ).run(sender=bob.address, valid=False, exception=Error.NOT_ALLOWED)
-
-    # Try to remove all administrators
-    ibcf.configure(
-        update_administrators(sp.set([sp.variant("remove", admin.address)]))
-    ).run(
-        sender=admin.address,
-        valid=False,
-        exception=Error.AT_LEAST_ONE_ADMIN_IS_REQUIRED,
-    )
 
     # Update history_ttl
     ibcf.configure(update_history_ttl(10)).run(
@@ -129,6 +129,27 @@ def test():
     ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
         sender=claus.address, level=BLOCK_LEVEL_1
     )
+
+    # Submit a signature for a given level
+    proof = ibcf.submit_signature(
+        sp.record(
+            level=BLOCK_LEVEL_1,
+            signature=sp.record(
+                r=sp.bytes("0x01"),
+                s=sp.bytes("0x02"),
+            ),
+        )
+    ).run(sender=alice.address)
+    # Try to submit a signature for a given level without being a signer
+    proof = ibcf.submit_signature(
+        sp.record(
+            level=BLOCK_LEVEL_1,
+            signature=sp.record(
+                r=sp.bytes("0x01"),
+                s=sp.bytes("0x02"),
+            ),
+        )
+    ).run(sender=claus.address, valid = False, exception = Error.NOT_SIGNER)
 
     # Get proof of inclusion for key="price" and price="1"
     proof = ibcf.get_proof(

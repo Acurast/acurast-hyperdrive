@@ -10,7 +10,9 @@ from deployment.scripts.insert_multiple_states import insert_multiple_states
 
 
 def get_address(pytezos_admin_client, operation_hash):
-    while True:
+    max_tries = 50
+    while max_tries > 0:
+        max_tries -= 1
         try:
             opg = pytezos_admin_client.shell.blocks[-10:].find_operation(operation_hash)
             originated_contracts = OperationResult.originated_contracts(opg)
@@ -24,7 +26,9 @@ def get_address(pytezos_admin_client, operation_hash):
 
 
 def wait_applied(pytezos_admin_client: PyTezosClient, operation_hash):
-    while True:
+    max_tries = 50
+    while max_tries > 0:
+        max_tries -= 1
         try:
             opg = pytezos_admin_client.shell.blocks[-10:].find_operation(operation_hash)
 
@@ -102,7 +106,7 @@ def run_actions(client: PyTezosClient):
 
             operation_group = client.origination(
                 script=code.script(initial_storage=storage)
-            ).send(ttl=120)
+            ).send(ttl=115)
 
             wait_applied(client, operation_group.hash())
 
@@ -143,7 +147,7 @@ def run_actions(client: PyTezosClient):
                 if "amount" in action:
                     op = op.with_amount(action["amount"])
 
-                wait_applied(client, op.send(ttl=120).hash())
+                wait_applied(client, op.send(ttl=115).hash())
 
     return contract_address_map
 
@@ -152,7 +156,10 @@ pytezos_client = pytezos.using(
     key=deployment["pytezos"]["private_key"],
     shell=deployment["pytezos"]["rpc_endpoint"],
 )
-deployment["known_addresses"]["admin_address"] = pytezos_client.key.public_key_hash()
+deployment["known_addresses"] = {
+    **(deployment["known_addresses"] or {}),
+    "admin_address": pytezos_client.key.public_key_hash(),
+}
 results = run_actions(pytezos_client)
 
 # Save deployment results

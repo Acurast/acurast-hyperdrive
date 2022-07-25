@@ -19,7 +19,7 @@ def insert_multiple_states(client: PyTezosClient, action: dict, wait_applied):
         print("Sending batch:", i + 1)
         while True:
             try:
-                wait_applied(client, client.bulk(*ops).send(ttl=120).hash())
+                wait_applied(client, client.bulk(*ops).send(ttl=115).hash())
                 break
             except Exception as ex:
                 print("Failed:", ex)
