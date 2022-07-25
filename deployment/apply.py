@@ -95,9 +95,12 @@ def run_actions(client: PyTezosClient):
             code = ContractInterface.from_file(action["code_path"])
             storage = {}
 
-            if isinstance(action["storage"], str):
-                code.storage_from_file(action["storage"])
-                storage = code.storage.decode(code.storage.to_michelson())
+            if "storage" in action:
+                if isinstance(action["storage"], str) and action["storage"].endswith(".tz"):
+                    code.storage_from_file(action["storage"])
+                    storage = code.storage.decode(code.storage.to_michelson())
+                else:
+                    storage = action["storage"]
             else:
                 storage = code.storage.dummy()
 

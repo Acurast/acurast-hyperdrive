@@ -1,0 +1,40 @@
+parameter (or (pair %lock (nat %amount) (nat %token_id)) (pair %unlock (nat %amount) (nat %token_id)));
+storage   (pair (address %ibcf_address) (nat %locked));
+code
+  {
+    UNPAIR;     
+    IF_LEFT
+      {
+        DUP;        
+        DUG 2;      
+        CAR;        
+        UPDATE 2;   
+        SWAP;       
+        NIL operation; 
+        DUP 3;      
+        CAR;        
+        CONTRACT %insert (pair (bytes %key) (bytes %value)); 
+        IF_NONE
+          {
+            PUSH string "INVALID_CONTRACT"; 
+            FAILWITH;   
+          }
+          {}; 
+        PUSH mutez 0; 
+        DUP 4;      
+        CAR;        
+        PACK;       
+        DIG 4;      
+        CDR;        
+        PACK;       
+        PAIR;       
+        TRANSFER_TOKENS; 
+        CONS;       
+      }
+      {
+        CAR;        
+        UPDATE 2;   
+        NIL operation; 
+      }; 
+    PAIR;       
+  };
