@@ -6,18 +6,18 @@ import {EllipticCurve} from "./secp256r1.sol";
 library Err {
     string constant NOT_ADMIN = "NOT_ADMIN";
     string constant PROOF_INVALID = "PROOF_INVALID";
+    string constant MERKLE_ROOT_INVALID = "MERKLE_ROOT_INVALID";
     string constant NOT_ALLOWED = "NOT_ALLOWED";
     string constant SIGNATURE_INVALID = "SIGNATURE_INVALID";
 }
 
 contract IBCF_Validator {
     address private administrator;
-    uint[2] private administrator_public_key;
-    mapping(uint256 => bytes32) root_history;
+    address[] private signers;
+    mapping(address => uint[2]) signer_public_key;
 
-    constructor(address _administrator, uint[2] memory _administrator_public_key) {
+    constructor(address _administrator) {
         administrator = _administrator;
-        administrator_public_key = _administrator_public_key;
     }
 
     // modifier to check if caller is the administrator
@@ -26,33 +26,37 @@ contract IBCF_Validator {
         _;
     }
 
-    function update_administrator(address new_admnistrator, uint[2] memory new_administrator_public_key) public isAdmin {
+    function update_administrator(address new_admnistrator) public isAdmin {
         administrator = new_admnistrator;
-        administrator_public_key = new_administrator_public_key;
     }
 
-    function submit_merkle_root_restricted(uint256 level, bytes32 merkle_root) public isAdmin {
-        root_history[level] = merkle_root;
+    function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public isAdmin {
+        for (uint i=0; i<_signers.length; i++) {
+            signers.push(_signers[i]);
+            signer_public_key[_signers[i]] = _signer_public_key[i];
+        }
     }
 
-    function submit_merkle_root(uint256 level, bytes32 merkle_root, uint[2] memory rs /* Signature */) public view {
-        bytes32 content_hash = sha256(abi.encodePacked(level, merkle_root));
-        require(EllipticCurve.validateSignature(content_hash, rs, administrator_public_key), Err.SIGNATURE_INVALID);
+    function remove_signers(address[] memory _signers) public isAdmin {
+        for (uint i=0; i<_signers.length; i++) {
+            delete _signers[i];
+            delete signer_public_key[_signers[i]];
+        }
     }
 
-    // TODO: Remove in favor of secp256r1
-    function add_merkle_root(uint256 level, bytes32 merkle_root, uint8 v, bytes32 r, bytes32 s) public {
-        // Encode and hash the payload (it is used to validate the signature)
-        bytes memory prefix = "\x19Ethereum Signed Message:\n";
-        bytes memory content = abi.encodePacked(level, merkle_root);
-        bytes32 hash = keccak256(abi.encodePacked(prefix, Utils.string_of_uint(content.length), content));
-        // Make sure the contents were authorized by the administrator
-        verify_signature(hash, v, r, s);
+    function verify_proof(
+        uint block_level,
+        bytes32 merkle_root,
+        bytes memory owner,
+        bytes memory key,
+        bytes memory value,
+        bytes32[2][] memory proof,
+        address[] memory _signers,
+        uint[2][] memory signatures
+    ) public view {
+        // Validates the 'merkle_root' authenticity
+        validate_merkle_root(block_level, merkle_root, _signers, signatures);
 
-        root_history[level] = merkle_root;
-    }
-
-    function verify_proof(uint block_level, bytes memory owner, bytes memory key, bytes memory value, bytes32[2][] memory proof) public view {
         bytes32 hash = keccak256(abi.encodePacked(owner, key, value)); // starts with state_hash
         for (uint i=0; i<proof.length; i++) {
             if(proof[i][0] == 0x0) {
@@ -61,11 +65,30 @@ contract IBCF_Validator {
                 hash = keccak256(abi.encodePacked(proof[i][0], hash));
             }
         }
-        require(root_history[block_level] == hash, Err.PROOF_INVALID);
+        require(merkle_root == hash, Err.PROOF_INVALID);
     }
 
-    function verify_signature(bytes32 hash, uint8 v, bytes32 r, bytes32 s) private view {
-        return require(ecrecover(hash, v, r, s) == administrator, Err.NOT_ALLOWED);
+    /**
+     * Validate signatures
+     */
+    function validate_merkle_root(
+        uint block_level,
+        bytes32 merkle_root,
+        address[] memory _signers,
+        uint[2][] memory signatures
+    ) internal view {
+        bytes32 content_hash = sha256(abi.encodePacked(block_level, merkle_root));
+        uint valid_signatures = 0;
+        for (uint i=0; i<signatures.length; i++) {
+            if(validate_signature(content_hash, _signers[i], signatures[i])) {
+                valid_signatures += 1;
+            }
+        }
+        require(valid_signatures >= signers.length/2 + 1, Err.MERKLE_ROOT_INVALID);
+    }
+
+    function validate_signature(bytes32 content_hash, address signer, uint[2] memory rs /* Signature */) internal view returns(bool) {
+        return EllipticCurve.validateSignature(content_hash, rs, signer_public_key[signer]);
     }
 }
 

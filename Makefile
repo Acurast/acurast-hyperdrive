@@ -26,7 +26,10 @@ compile-tezos: $(COMPILATIONS:%.py=%) setup_env
 	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; > $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 	@cat $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 
-compile: clean_compilations compile-tezos
+compile-evm: setup_env
+	@npm run compile
+
+compile: clean_compilations compile-tezos compile-evm
 	@npm run compile
 	@echo "Compiled all contracts."
 ##
@@ -44,8 +47,10 @@ clean_tests:
 
 test-tezos: $(TESTS:%.py=%) setup_env
 
-test: clean_tests test-tezos
+test-evm: setup_env
 	@npm run test
+
+test: clean_tests test-tezos test-evm
 	@echo "Tested all contracts."
 ##
 ## - Tests
