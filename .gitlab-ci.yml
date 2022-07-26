@@ -44,7 +44,6 @@ compile_tezos_contracts:
     - make
   script:
     - make compile-tezos
-    - git diff --exit-code __SNAPSHOTS__
   tags:
     - docker
 
