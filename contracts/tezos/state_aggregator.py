@@ -82,6 +82,7 @@ def failIfNotAdministrator(self):
     """
     sp.verify(self.data.config.administrator == sp.sender, Error.NOT_ALLOWED)
 
+
 def failIfNotSigner(self):
     """
     This method when used, ensures that only signers are allowed to call a given entrypoint
@@ -107,7 +108,7 @@ class Type:
         root_edge=Edge,
         nodes=sp.TMap(sp.TBytes, Node),
         states=sp.TMap(sp.TBytes, sp.TBytes),
-        signatures=sp.TSet(Signature)
+        signatures=sp.TSet(Signature),
     ).right_comb()
     # Entry points
     InsertArgument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()

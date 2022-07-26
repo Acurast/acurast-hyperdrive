@@ -6,8 +6,10 @@ from contracts.tezos.utils.bytes import bytes_to_bits
 
 contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
 
+
 def update_signers(payload):
     return sp.variant("update_signers", payload)
+
 
 def update_administrator(payload):
     return sp.variant("update_administrator", payload)
@@ -70,19 +72,27 @@ def test():
 
     # Add signers
     ibcf.configure(
-        update_signers(sp.set([sp.variant("add", alice.address), sp.variant("add", bob.address), sp.variant("add", claus.address)]))
+        update_signers(
+            sp.set(
+                [
+                    sp.variant("add", alice.address),
+                    sp.variant("add", bob.address),
+                    sp.variant("add", claus.address),
+                ]
+            )
+        )
     ).run(sender=admin.address)
     scenario.verify(ibcf.data.config.signers.contains(claus.address))
     # Remove signer
-    ibcf.configure(
-        update_signers(sp.set([sp.variant("remove", claus.address)]))
-    ).run(sender=admin.address)
+    ibcf.configure(update_signers(sp.set([sp.variant("remove", claus.address)]))).run(
+        sender=admin.address
+    )
     scenario.verify(~ibcf.data.config.signers.contains(claus.address))
 
     # Try to remove a signer without having permissions
-    ibcf.configure(
-        update_signers(sp.set([sp.variant("remove", alice.address)]))
-    ).run(sender=bob.address, valid=False, exception=Error.NOT_ALLOWED)
+    ibcf.configure(update_signers(sp.set([sp.variant("remove", alice.address)]))).run(
+        sender=bob.address, valid=False, exception=Error.NOT_ALLOWED
+    )
 
     # Update history_ttl
     ibcf.configure(update_history_ttl(10)).run(
@@ -149,7 +159,7 @@ def test():
                 s=sp.bytes("0x02"),
             ),
         )
-    ).run(sender=claus.address, valid = False, exception = Error.NOT_SIGNER)
+    ).run(sender=claus.address, valid=False, exception=Error.NOT_SIGNER)
 
     # Get proof of inclusion for key="price" and price="1"
     proof = ibcf.get_proof(

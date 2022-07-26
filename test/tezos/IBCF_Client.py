@@ -8,6 +8,7 @@ from contracts.tezos.utils.bytes import bytes_to_bits
 
 contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
 
+
 @sp.add_test(name="IBCF")
 def test():
     admin = sp.test_account("admin")
@@ -34,15 +35,17 @@ def test():
     scenario += ibcf
 
     ibcf_client = IBCF_Client()
-    ibcf_client.update_initial_storage(
-        sp.record(
-            locked = 0,
-            ibcf_address = ibcf.address
-        )
-    )
+    ibcf_client.update_initial_storage(sp.record(locked=0, ibcf_address=ibcf.address))
 
     scenario += ibcf_client
 
-    ibcf_client.lock(sp.record(token_id=0, amount = 100)).run(level = BLOCK_LEVEL_1, source = admin.address)
+    ibcf_client.lock(sp.record(token_id=0, amount=100)).run(
+        level=BLOCK_LEVEL_1, source=admin.address
+    )
 
-    scenario.verify(ibcf.data.merkle_history[BLOCK_LEVEL_1].root == sp.bytes("0x9089f66e4428c41a5ec16631b921eade5bb82aa3953cff9f4e8f9c80b9124c9f"))
+    scenario.verify(
+        ibcf.data.merkle_history[BLOCK_LEVEL_1].root
+        == sp.bytes(
+            "0x9089f66e4428c41a5ec16631b921eade5bb82aa3953cff9f4e8f9c80b9124c9f"
+        )
+    )

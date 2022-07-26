@@ -1,33 +1,85 @@
-image: ubuntu:latest
+image: registry.gitlab.papers.tech/papers/customer-tezos-foundation/inter-blockchain-communication-framework/tezos-sc
+
+cache: &global_cache
+  key: $CI_COMMIT_REF_SLUG
+  paths:
+    - build
+    - node_modules
+  policy: pull-push
 
 stages:
+  - setup
+  - checks
   - compile
   - test
 
-compile_contracts:
+setup:
+  cache:
+    <<: *global_cache
+    policy: pull
+  stage: setup
+  script:
+    - make
+  tags:
+    - docker
+
+format-check:
+  cache:
+    <<: *global_cache
+    policy: pull
+  stage: checks
+  before_script:
+    - make
+  script:
+    - make fmt-check
+  tags:
+    - docker
+
+compile_tezos_contracts:
+  cache:
+    <<: *global_cache
+    policy: pull
   stage: compile
   before_script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev python3-pip python3-setuptools build-essential libsodium-dev libsecp256k1-dev libgmp3-dev npm git curl > log.txt # A custom image will be created later
     - make
   script:
-    - make compile
+    - make compile-tezos
     - git diff --exit-code __SNAPSHOTS__
-  artifacts:
-    when: always
-    paths:
-      - log.txt
+  tags:
+    - docker
 
-test_contracts:
+compile_evm_contracts:
+  cache:
+    <<: *global_cache
+    policy: pull
+  stage: compile
+  before_script:
+    - make
+  script:
+    - make compile-evm
+  tags:
+    - docker
+
+test_tezos_contracts:
+  cache:
+    <<: *global_cache
+    policy: pull
   stage: test
   before_script:
-    - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev python3-pip python3-setuptools build-essential libsodium-dev libsecp256k1-dev libgmp3-dev npm git curl > log.txt # A custom image will be created later
     - make
   script:
-    - make test
-    - git diff --exit-code __SNAPSHOTS__
-  artifacts:
-    when: always
-    paths:
-      - log.txt
+    - make test-tezos
+  tags:
+    - docker
+
+test_evm_contracts:
+  cache:
+    <<: *global_cache
+    policy: pull
+  stage: test
+  before_script:
+    - make
+  script:
+    - make test-evm
+  tags:
+    - docker

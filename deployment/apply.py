@@ -96,7 +96,9 @@ def run_actions(client: PyTezosClient):
             storage = {}
 
             if "storage" in action:
-                if isinstance(action["storage"], str) and action["storage"].endswith(".tz"):
+                if isinstance(action["storage"], str) and action["storage"].endswith(
+                    ".tz"
+                ):
                     code.storage_from_file(action["storage"])
                     storage = code.storage.decode(code.storage.to_michelson())
                 else:

@@ -59,9 +59,16 @@ test: clean_tests test-tezos test-evm
 ##
 ## + Deployment
 ##
+
 export CONFIG_PATH ?= deployment/configs/ghostnet.yaml
-deploy: install-dependencies
+deploy-tezos: setup_env
 	@python3 deployment/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
+
+export INFURA_URL ?= https://ropsten.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f
+deploy-evm: setup_env
+	@npm run deploy
+
+deploy: deploy-evm deploy-tezos
 ##
 ## + Deployment
 ##
@@ -82,7 +89,7 @@ stop-sandbox:
 	@docker stop "$(CONTAINER_NAME)"
 
 export PYTHONPATH
-setup_env: # Setup environment variables
+setup_env: install-dependencies
 
 clean:
 	@rm -rf $(BUILD_FOLDER)

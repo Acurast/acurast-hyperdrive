@@ -12,7 +12,7 @@ sp.add_compilation_target(
             signers=sp.set(),
             history_ttl=5,
             max_state_size=32,
-            max_states=1000
+            max_states=1000,
         ),
         bytes_to_bits=bytes_to_bits,
         merkle_history=sp.big_map(),

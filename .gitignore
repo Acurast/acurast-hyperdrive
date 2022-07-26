@@ -10,4 +10,6 @@ _build
 __SNAPSHOTS__/test
 __SNAPSHOTS__/**/*.*
 !__SNAPSHOTS__/**/*_contract.tz
+!__SNAPSHOTS__/**/sizes.txt
 !__SNAPSHOTS__/*.yaml
+!__SNAPSHOTS__/evm-deployment.txt
