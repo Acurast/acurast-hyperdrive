@@ -36,6 +36,7 @@ def test():
     ibcf_client = IBCF_Client()
     ibcf_client.update_initial_storage(
         sp.record(
+            locked = 0,
             ibcf_address = ibcf.address
         )
     )

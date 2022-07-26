@@ -1,60 +1,14 @@
-const crypto         = require('crypto');
-const ecPem          = require('ec-pem');
+const { signContent, buildBuffer, expectsFailure, createSecp256r1KeyPair} = require("./utils");
 
 const IBCF_Validator = artifacts.require('IBCF_Validator')
 
-async function expectsFailure(call, msg) {
-    try {
-        await call()
-    } catch {
-        return true;
-    }
-
-    throw new Error(msg || "Expected to fail, but passed.")
-}
-
-function signContent(keyPair, content) {
-    // Create signature.
-    const signer = crypto.createSign('RSA-SHA256');
-    signer.update(content);
-    let sigString = signer.sign(keyPair.encodePrivateKey(), 'hex');
-
-    // Reformat signature / extract coordinates.
-    const xlength = 2 * ('0x' + sigString.slice(6, 8));
-    sigString = sigString.slice(8)
-
-    return [
-        '0x' + sigString.slice(0, xlength),
-        '0x' + sigString.slice(xlength + 4)
-    ];
-}
-
-function buildBuffer(...args) {
-    return args.reduce((c, v) => {
-        if(typeof v == "number") {
-            return  Buffer.concat([c, Buffer.from((v).toString(16).padStart(64, "0"), "hex")])
-        }
-        return Buffer.concat([c, Buffer.from(v.slice(2), "hex")])
-    }, Buffer.from([]))
-}
+let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 
 contract('IBCF_Validator', async ([_, primary]) => {
-
-    let pemFormattedKeyPair;
     let instance;
     beforeEach('deploy proof validator', async () => {
         instance = await IBCF_Validator.new(primary, { from: primary })
 
-        // Create curve object for key and signature generation.
-        const prime256v1 = crypto.createECDH('prime256v1');
-        prime256v1.generateKeys();
-
-        // Reformat keys.
-        pemFormattedKeyPair = ecPem(prime256v1, 'prime256v1');
-        const public_key = [
-            '0x' + prime256v1.getPublicKey('hex').slice(2, 66),
-            '0x' + prime256v1.getPublicKey('hex').slice(-64)
-        ];
         // Add signers
         await instance.add_signers([primary], [public_key], { from: primary })
     })
