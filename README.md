@@ -147,3 +147,8 @@ python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.te
 # This will create a merkle_tree.png at $PWD
 python scripts/visualize_tree.py https://tezos-ithacanet-node-1.diamond.papers.tech KT1VPoRPnHyReNxQF3KzgUXyNcDy2EVJ2PU8
 ```
+
+
+## Bridges
+
+- [Tezos to Ethereum](./packages/bridge/README.md)

@@ -372,7 +372,7 @@ class IBCF_Aggregator(sp.Contract):
     def submit_signature(self, param):
         sp.set_type(param, Type.SubmitSignature)
 
-        #TODO signatures must use the chain_id to counter replay attacks
+        # TODO signatures must use the chain_id to counter replay attacks
 
         # Only allowed addresses can call this entry point
         failIfNotSigner(self)

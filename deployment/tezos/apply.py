@@ -10,7 +10,7 @@ from deployment.tezos.scripts.insert_multiple_states import insert_multiple_stat
 
 
 def get_address(pytezos_admin_client, operation_hash):
-    max_tries = 50
+    max_tries = 10
     while max_tries > 0:
         max_tries -= 1
         try:
@@ -26,7 +26,7 @@ def get_address(pytezos_admin_client, operation_hash):
 
 
 def wait_applied(pytezos_admin_client: PyTezosClient, operation_hash):
-    max_tries = 50
+    max_tries = 10
     while max_tries > 0:
         max_tries -= 1
         try:
