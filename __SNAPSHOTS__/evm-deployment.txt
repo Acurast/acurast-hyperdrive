@@ -11,59 +11,65 @@ Compiling your contracts...
 Starting migrations...
 ======================
 > Network name:    'ropsten'
-> Network id:      3
-> Block gas limit: 30000000 (0x1c9c380)
+> Network id:      5
+> Block gas limit: 29971701 (0x1c954f5)
 
 
 0_all.js
 ========
 
-   Replacing 'IBCF_Validator'
+   Deploying 'IBCF_Validator'
    --------------------------
-   > transaction hash:    0xd4fab3803d10faa451ac59af87f4dfce4d7d65b024fb5cad7ef66a8abaec8172
-   > Blocks: 1            Seconds: 8
-   > contract address:    0x5e1683ab15CE653994F2C063A6766e70fD2269d9
-   > block number:        12667360
-   > block timestamp:     1658828472
+   > transaction hash:    0x08230ae9da36b4ba8f3faf41ee97510d7e5fed56782f75b5c83f81c41df54412
+- Blocks: 0            Seconds: 0
+- Blocks: 0            Seconds: 4
+- Blocks: 0            Seconds: 8
+   > Blocks: 0            Seconds: 8
+   > contract address:    0x61296EB4297528407DEDc6611EE78067f4764f2E
+   > block number:        7299058
+   > block timestamp:     1658918153
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             0.808872026951723704
-   > gas used:            2172781 (0x21276d)
-   > gas price:           2.500000007 gwei
+   > balance:             0.24378337496767355
+   > gas used:            2486650 (0x25f17a)
+   > gas price:           2.500000013 gwei
    > value sent:          0 ETH
-   > total cost:          0.005431952515209467 ETH
+   > total cost:          0.00621662503232645 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 12667361)
-   > confirmation number: 2 (block: 12667362)
+   > confirmation number: 1 (block: 7299059)
+   > confirmation number: 2 (block: 7299060)
 
-   Replacing 'IBCF_Client'
+   Deploying 'IBCF_Client'
    -----------------------
-   > transaction hash:    0xae83e66d1d878bd4835906e3f45a0ba9e6f2b49f5291361ce556a06acaf4f4fb
-   > Blocks: 1            Seconds: 32
-   > contract address:    0xC951C199b38b4efd962436832D035792286CAf25
-   > block number:        12667364
-   > block timestamp:     1658828532
+   > transaction hash:    0x05049a9eda415203fa7c9696f65112d40e1dcf5bb9cff460daec3d075296423f
+- Blocks: 0            Seconds: 0
+- Blocks: 0            Seconds: 4
+- Blocks: 0            Seconds: 8
+   > Blocks: 0            Seconds: 8
+   > contract address:    0x136005B860b4E484f0E580777100e79bBe6e66DE
+   > block number:        7299061
+   > block timestamp:     1658918198
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             0.807439174447711717
-   > gas used:            573141 (0x8bed5)
-   > gas price:           2.500000007 gwei
+   > balance:             0.242276894959839854
+   > gas used:            602592 (0x931e0)
+   > gas price:           2.500000024 gwei
    > value sent:          0 ETH
-   > total cost:          0.001432852504011987 ETH
+   > total cost:          0.001506480014462208 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 12667365)
-   > confirmation number: 2 (block: 12667366)
+   > confirmation number: 1 (block: 7299062)
+   > confirmation number: 2 (block: 7299063)
    > Saving artifacts
    -------------------------------------
-   > Total cost:     0.006864805019221454 ETH
+   > Total cost:     0.007723105046788658 ETH
 
 Summary
 =======
 > Total deployments:   2
-> Final cost:          0.006864805019221454 ETH
+> Final cost:          0.007723105046788658 ETH
 
 

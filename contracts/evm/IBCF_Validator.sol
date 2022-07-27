@@ -9,15 +9,18 @@ library Err {
     string constant MERKLE_ROOT_INVALID = "MERKLE_ROOT_INVALID";
     string constant NOT_ALLOWED = "NOT_ALLOWED";
     string constant SIGNATURE_INVALID = "SIGNATURE_INVALID";
+    string constant SIGNER_EXISTS = "SIGNER_EXISTS";
 }
 
 contract IBCF_Validator {
     address private administrator;
+    uint8 signatures_threshold;
     address[] private signers;
     mapping(address => uint[2]) signer_public_key;
 
-    constructor(address _administrator) {
+    constructor(address _administrator, uint8 _signatures_threshold) {
         administrator = _administrator;
+        signatures_threshold = _signatures_threshold;
     }
 
     // modifier to check if caller is the administrator
@@ -30,8 +33,15 @@ contract IBCF_Validator {
         administrator = new_admnistrator;
     }
 
+    function update_signatures_threshold(uint8 _signatures_threshold) public isAdmin {
+        signatures_threshold = _signatures_threshold;
+    }
+
     function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public isAdmin {
         for (uint i=0; i<_signers.length; i++) {
+            // Fail if signer already exists
+            require(signer_public_key[_signers[i]][0] == 0, Err.SIGNER_EXISTS);
+            // Add signer
             signers.push(_signers[i]);
             signer_public_key[_signers[i]] = _signer_public_key[i];
         }
@@ -39,7 +49,11 @@ contract IBCF_Validator {
 
     function remove_signers(address[] memory _signers) public isAdmin {
         for (uint i=0; i<_signers.length; i++) {
-            delete _signers[i];
+            for(uint j=0; j<signers.length; j++) {
+                if(signers[j] == _signers[i]) {
+                    delete signers[j];
+                }
+            }
             delete signer_public_key[_signers[i]];
         }
     }
@@ -84,11 +98,20 @@ contract IBCF_Validator {
                 valid_signatures += 1;
             }
         }
-        require(valid_signatures >= signers.length/2 + 1, Err.MERKLE_ROOT_INVALID);
+        require(valid_signatures >= signatures_threshold, Err.MERKLE_ROOT_INVALID);
     }
 
     function validate_signature(bytes32 content_hash, address signer, uint[2] memory rs /* Signature */) internal view returns(bool) {
         return EllipticCurve.validateSignature(content_hash, rs, signer_public_key[signer]);
+    }
+
+    function getSigners() public view returns (address[] memory) {
+        return signers;
+    }
+
+
+    function getPublicKeys(address address1) public view returns (uint[2] memory) {
+        return signer_public_key[address1];
     }
 }
 

@@ -9,8 +9,9 @@ contract IBCF_Client {
     bytes tezos_source;
     address validator_address;
 
-    constructor(address _validator_address) {
+    constructor(address _validator_address, bytes memory source) {
         validator_address = _validator_address;
+        tezos_source = source;
     }
 
     function set_tezos_source(bytes memory source) public {

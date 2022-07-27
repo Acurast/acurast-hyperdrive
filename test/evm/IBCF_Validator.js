@@ -7,7 +7,7 @@ let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 contract('IBCF_Validator', async ([_, primary]) => {
     let instance;
     beforeEach('deploy proof validator', async () => {
-        instance = await IBCF_Validator.new(primary, { from: primary })
+        instance = await IBCF_Validator.new(primary, 1, { from: primary })
 
         // Add signers
         await instance.add_signers([primary], [public_key], { from: primary })
