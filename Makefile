@@ -23,10 +23,13 @@ clean_compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation
 
 compile-tezos: $(COMPILATIONS:%.py=%) setup_env
-	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; > $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
+	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; | sort -z > $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 	@cat $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 
-compile: clean_compilations compile-tezos
+compile-evm: setup_env
+	@npm run compile
+
+compile: clean_compilations compile-tezos compile-evm
 	@npm run compile
 	@echo "Compiled all contracts."
 ##
@@ -44,8 +47,10 @@ clean_tests:
 
 test-tezos: $(TESTS:%.py=%) setup_env
 
-test: clean_tests test-tezos
+test-evm: setup_env
 	@npm run test
+
+test: clean_tests test-tezos test-evm
 	@echo "Tested all contracts."
 ##
 ## - Tests
@@ -54,9 +59,16 @@ test: clean_tests test-tezos
 ##
 ## + Deployment
 ##
+
 export CONFIG_PATH ?= deployment/configs/ghostnet.yaml
-deploy: install-dependencies
+deploy-tezos: setup_env
 	@python3 deployment/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
+
+export INFURA_URL ?= https://ropsten.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f
+deploy-evm: setup_env
+	@npm run deploy > __SNAPSHOTS__/evm-deployment.txt
+
+deploy: deploy-evm deploy-tezos
 ##
 ## + Deployment
 ##
@@ -77,7 +89,7 @@ stop-sandbox:
 	@docker stop "$(CONTAINER_NAME)"
 
 export PYTHONPATH
-setup_env: # Setup environment variables
+setup_env: install-dependencies
 
 clean:
 	@rm -rf $(BUILD_FOLDER)

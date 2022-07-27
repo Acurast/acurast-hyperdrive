@@ -1,9 +1,8 @@
 pytezos:
-  rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech #http://localhost:20000
-  private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
+    rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech #http://localhost:20000
+    private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
-  merkle_tree: KT1NcgDpd3RANVoUqNKLDyDVsJKi8EV67uWo
-  signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
+    signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
 actions:
     - kind: origination
       contract_kind: merkle_tree
@@ -14,10 +13,25 @@ actions:
           config:
               administrator: admin_address
               signers:
-                - signer_1
+                  - signer_1
               history_ttl: 4
               max_state_size: 32
               max_states: 5
+
+    - kind: origination
+      contract_kind: ibcf_client
+      name: ibcf_client
+      code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Client/IBCF_Client/step_000_cont_0_contract.tz
+      storage:
+          ibcf_address: merkle_tree
+          locked: 0
+
+    - kind: contract_call
+      contract_address: ibcf_client
+      entrypoint: lock
+      argument:
+          token_id: 0
+          amount: 100
 
     - kind: contract_call
       contract_address: merkle_tree

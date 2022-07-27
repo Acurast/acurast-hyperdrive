@@ -1,0 +1,69 @@
+
+> ibcf-tezos@1.0.0 deploy
+> truffle deploy --network ropsten --reset
+
+
+Compiling your contracts...
+===========================
+> Everything is up to date, there is nothing to compile.
+
+
+Starting migrations...
+======================
+> Network name:    'ropsten'
+> Network id:      3
+> Block gas limit: 30000000 (0x1c9c380)
+
+
+0_all.js
+========
+
+   Replacing 'IBCF_Validator'
+   --------------------------
+   > transaction hash:    0xd4fab3803d10faa451ac59af87f4dfce4d7d65b024fb5cad7ef66a8abaec8172
+   > Blocks: 1            Seconds: 8
+   > contract address:    0x5e1683ab15CE653994F2C063A6766e70fD2269d9
+   > block number:        12667360
+   > block timestamp:     1658828472
+   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
+   > balance:             0.808872026951723704
+   > gas used:            2172781 (0x21276d)
+   > gas price:           2.500000007 gwei
+   > value sent:          0 ETH
+   > total cost:          0.005431952515209467 ETH
+
+   Pausing for 2 confirmations...
+
+   -------------------------------
+   > confirmation number: 1 (block: 12667361)
+   > confirmation number: 2 (block: 12667362)
+
+   Replacing 'IBCF_Client'
+   -----------------------
+   > transaction hash:    0xae83e66d1d878bd4835906e3f45a0ba9e6f2b49f5291361ce556a06acaf4f4fb
+   > Blocks: 1            Seconds: 32
+   > contract address:    0xC951C199b38b4efd962436832D035792286CAf25
+   > block number:        12667364
+   > block timestamp:     1658828532
+   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
+   > balance:             0.807439174447711717
+   > gas used:            573141 (0x8bed5)
+   > gas price:           2.500000007 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001432852504011987 ETH
+
+   Pausing for 2 confirmations...
+
+   -------------------------------
+   > confirmation number: 1 (block: 12667365)
+   > confirmation number: 2 (block: 12667366)
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:     0.006864805019221454 ETH
+
+Summary
+=======
+> Total deployments:   2
+> Final cost:          0.006864805019221454 ETH
+
+

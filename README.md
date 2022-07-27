@@ -18,7 +18,13 @@
 # Compile all contracts
 make compile
 
-# Run a single compilation
+# Compile only tezos contracts
+make compile-tezos
+
+# Compile only evm contracts
+make compile-evm
+
+# Run a single compilation (tezos only)
 make compilations/<compilation_file_without_extension>
 ```
 
@@ -30,7 +36,13 @@ make compilations/<compilation_file_without_extension>
 # Test all contracts
 make test
 
-# Run a single test
+# Test only tezos contracts
+make test-tezos
+
+# Test only evm contracts
+make test-evm
+
+# Run a single test (tezos only)
 make tests/<test_file_without_extension>
 ```
 
@@ -39,7 +51,11 @@ make tests/<test_file_without_extension>
 The deployment target outputs the results to `stdout` and creates a snapshot file at `__SNAPSHOTS__/deployment-*.yaml`.
 
 ```sh
-CONFIG_PATH=deployment/configs/ghostnet.yaml make deploy
+# Tezos deployment (CONFIG_PATH environment variable is optional)
+CONFIG_PATH=deployment/configs/ghostnet.yaml make deploy-tezos
+
+# Evm deployment (ETH_PRIVATE_KEY and INFURA_URL environment variables are not optional)
+ETH_PRIVATE_KEY=<private_key> INFURA_URL=https://ropsten.infura.io/v3/<project_api_key> make deploy-evm
 ```
 
 #### Configuration
@@ -47,6 +63,7 @@ CONFIG_PATH=deployment/configs/ghostnet.yaml make deploy
 New deployment configurations can be added by creating a [<config_name>.yaml](https://yaml.org/spec/1.2.2) file in [configs](./deployment/configs) folder.
 
 Have a look at the [deployment/configs/ghostnet.yaml](./deployment/configs/ghostnet.yaml) configuration file.
+
 
 ## Flextesa sandbox
 
