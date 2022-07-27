@@ -55,14 +55,14 @@ The deployment target outputs the results to `stdout` and creates a snapshot fil
 CONFIG_PATH=deployment/configs/ghostnet.yaml make deploy-tezos
 
 # Evm deployment (ETH_PRIVATE_KEY and INFURA_URL environment variables are not optional)
-ETH_PRIVATE_KEY=<private_key> INFURA_URL=https://ropsten.infura.io/v3/<project_api_key> make deploy-evm
+ETH_PRIVATE_KEY=<private_key> INFURA_URL=https://<network>.infura.io/v3/<project_api_key> make deploy-evm
 ```
 
-#### Configuration
+#### Tezos deployment configuration
 
-New deployment configurations can be added by creating a [<config_name>.yaml](https://yaml.org/spec/1.2.2) file in [configs](./deployment/configs) folder.
+New deployment configurations can be added by creating a [<config_name>.yaml](https://yaml.org/spec/1.2.2) file in [configs](./deployment/tezos/configs) folder.
 
-Have a look at the [deployment/configs/ghostnet.yaml](./deployment/configs/ghostnet.yaml) configuration file.
+Have a look at the [deployment/tezos/configs/ghostnet.yaml](./deployment/configs/ghostnet.yaml) configuration file.
 
 
 ## Flextesa sandbox

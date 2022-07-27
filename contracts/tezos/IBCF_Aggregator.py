@@ -138,7 +138,7 @@ class Type:
     ).right_comb()
 
 
-class IBCF(sp.Contract):
+class IBCF_Aggregator(sp.Contract):
     """
     Inter blockchain communication framework contract
     """

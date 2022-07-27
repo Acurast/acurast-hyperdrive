@@ -6,7 +6,7 @@ from pytezos.operation.result import OperationResult
 from termcolor import colored
 
 from configs import deployment
-from deployment.scripts.insert_multiple_states import insert_multiple_states
+from deployment.tezos.scripts.insert_multiple_states import insert_multiple_states
 
 
 def get_address(pytezos_admin_client, operation_hash):

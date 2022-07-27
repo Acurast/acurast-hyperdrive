@@ -1,12 +1,12 @@
 import smartpy as sp
 
-import contracts.tezos.state_aggregator
-from contracts.tezos.state_aggregator import EMPTY_TREE, IBCF, ENCODE, Error
+import contracts.tezos.IBCF_Aggregator
+from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
 from contracts.tezos.IBCF_Client import IBCF_Client
 
 from contracts.tezos.utils.bytes import bytes_to_bits
 
-contracts.tezos.state_aggregator.HASH_FUNCTION = sp.blake2b
+contracts.tezos.IBCF_Aggregator.HASH_FUNCTION = sp.blake2b
 
 
 @sp.add_test(name="IBCF")
@@ -16,7 +16,7 @@ def test():
     BLOCK_LEVEL_1 = 1
 
     scenario = sp.test_scenario()
-    ibcf = IBCF()
+    ibcf = IBCF_Aggregator()
     ibcf.update_initial_storage(
         sp.record(
             config=sp.record(
