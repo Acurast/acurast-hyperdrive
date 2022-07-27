@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "target": "es6",
+        "module": "commonjs",
+        "lib": ["esnext", "DOM"],
+        "strict": true,
+        "alwaysStrict": true,
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true,
+        "outDir": "./build"
+    },
+    "include": ["src"],
+    "exclude": ["node_modules"],
+}
