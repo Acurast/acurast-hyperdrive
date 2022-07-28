@@ -24,6 +24,7 @@ clean_compilations:
 
 compile-tezos: $(COMPILATIONS:%.py=%) setup_env
 	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; | sort -z > $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
+	@echo '\n=== TEZOS CONTRACTS ===\n' | cat - $(SNAPSHOTS_FOLDER)/compilation/sizes.txt > $(BUILD_FOLDER)/sizes.txt && mv $(BUILD_FOLDER)/sizes.txt $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 	@cat $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
 
 compile-evm: setup_env

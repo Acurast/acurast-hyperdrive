@@ -16,7 +16,7 @@ code
         GET;        
         IF_NONE
           {
-            PUSH int 19; 
+            PUSH int 17; 
             FAILWITH;   
           }
           {}; 
@@ -64,7 +64,7 @@ code
         GET;        
         IF_NONE
           {
-            PUSH int 33; 
+            PUSH int 30; 
             FAILWITH;   
           }
           {}; 
