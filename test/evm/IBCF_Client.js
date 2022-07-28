@@ -1,4 +1,6 @@
 const { signContent, buildBuffer , createSecp256r1KeyPair} = require("./utils");
+const crypto = require('crypto');
+const ecPem  = require('ec-pem');
 
 const IBCF_Client = artifacts.require('IBCF_Client');
 const IBCF_Validator = artifacts.require('IBCF_Validator');
@@ -7,12 +9,10 @@ let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 
 contract('IBCF_Client', async ([_, primary]) => {
     let client;
+    let validator;
     beforeEach('deploy proof validator', async () => {
-        validator = await IBCF_Validator.new(primary, { from: primary })
-        client = await IBCF_Client.new(validator.address, { from: primary })
-
-        // Set tezos source
-        await client.set_tezos_source("0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9")
+        validator = await IBCF_Validator.new(primary, 1, { from: primary })
+        client = await IBCF_Client.new(validator.address,"0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9", { from: primary })
 
         // Add signers
         await validator.add_signers([primary], [public_key], { from: primary })
@@ -38,7 +38,7 @@ contract('IBCF_Client', async ([_, primary]) => {
 
         const key = "0x0000000000000000000000000003e7";
         const value = "0x0000000000000000000000000003e7";
-        await client.mint.call(level, valid_merkle_root, key, value, proof, [primary], [signature]);
+        await client.mint(level, valid_merkle_root, key, value, proof, [primary], [signature]);
         console.log("\n\tConsumed gas: ", await client.mint.estimateGas(level, valid_merkle_root, key, value, proof, [primary], [signature]))
     })
 })

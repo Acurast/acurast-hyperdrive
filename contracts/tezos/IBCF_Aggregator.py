@@ -24,7 +24,7 @@ EMPTY_TREE = sp.record(
     ),
     nodes=sp.map(),
     states=sp.map(),
-    signatures=sp.set(),
+    signatures=sp.map(),
 )
 
 
@@ -108,7 +108,7 @@ class Type:
         root_edge=Edge,
         nodes=sp.TMap(sp.TBytes, Node),
         states=sp.TMap(sp.TBytes, sp.TBytes),
-        signatures=sp.TSet(Signature),
+        signatures=sp.TMap(sp.TAddress, Signature),
     ).right_comb()
     # Entry points
     InsertArgument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
@@ -131,14 +131,14 @@ class Type:
         level=sp.TNat,
         merkle_root=sp.TBytes,
         proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
-        signatures=sp.TSet(Signature),
+        signatures=sp.TMap(sp.TAddress, Signature),
     ).right_comb()
     VerifyProofArgument = sp.TRecord(
         level=sp.TNat, proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
     ).right_comb()
 
 
-class IBCF(sp.Contract):
+class IBCF_Aggregator(sp.Contract):
     """
     Inter blockchain communication framework contract
     """
@@ -372,10 +372,12 @@ class IBCF(sp.Contract):
     def submit_signature(self, param):
         sp.set_type(param, Type.SubmitSignature)
 
+        # TODO signatures must use the chain_id to counter replay attacks
+
         # Only allowed addresses can call this entry point
         failIfNotSigner(self)
 
-        self.data.merkle_history[param.level].signatures.add(param.signature)
+        self.data.merkle_history[param.level].signatures[sp.sender] = param.signature
 
     @sp.entry_point()
     def configure(self, param):

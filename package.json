@@ -1,15 +1,17 @@
 {
-  "name": "ibcf-tezos",
+  "name": "ibcf",
   "version": "1.0.0",
   "devDependencies": {
     "ganache": "7.3.2",
     "truffle": "5.5.22",
+    "@truffle/hdwallet-provider": "2.0.12",
     "ec-pem": "0.18.0",
     "ethers": "5.6.9",
     "web3": "1.7.4"
   },
   "scripts": {
     "compile": "truffle compile",
-    "test": "truffle test"
+    "test": "truffle test",
+    "deploy": "truffle deploy --network goerli --reset"
   }
 }

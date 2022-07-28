@@ -1,10 +1,10 @@
 parameter (or (or %configure (address %update_administrator) (or (nat %update_history_ttl) (or (nat %update_max_state_size) (or (nat %update_max_states) (set %update_signers (or (address %add) (address %remove))))))) (or (pair %insert (bytes %key) (bytes %value)) (pair %submit_signature (nat %level) (pair %signature (bytes %r) (bytes %s)))));
-storage   (pair (map %bytes_to_bits bytes string) (pair (pair %config (pair (address %administrator) (nat %history_ttl)) (pair (nat %max_state_size) (pair (nat %max_states) (set %signers address)))) (pair (big_map %merkle_history nat (pair (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node)))) (pair (bytes %root) (pair (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node)) (pair (set %signatures (pair (bytes %r) (bytes %s))) (map %states bytes bytes)))))) (list %merkle_history_indexes nat))));
+storage   (pair (map %bytes_to_bits bytes string) (pair (pair %config (pair (address %administrator) (nat %history_ttl)) (pair (nat %max_state_size) (pair (nat %max_states) (set %signers address)))) (pair (big_map %merkle_history nat (pair (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node)))) (pair (bytes %root) (pair (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node)) (pair (map %signatures address (pair (bytes %r) (bytes %s))) (map %states bytes bytes)))))) (list %merkle_history_indexes nat))));
 code
   {
     LAMBDA
-      (pair (pair (pair nat nat) (pair (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (set (pair bytes bytes)) (map bytes bytes))))) bytes)) (pair (map bytes string) (pair (pair (pair address nat) (pair nat (pair nat (set address)))) (pair (big_map nat (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (set (pair bytes bytes)) (map bytes bytes)))))) (list nat)))))
-      (pair (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (set (pair bytes bytes)) (map bytes bytes))))) (pair (map bytes string) (pair (pair (pair address nat) (pair nat (pair nat (set address)))) (pair (big_map nat (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (set (pair bytes bytes)) (map bytes bytes)))))) (list nat)))))
+      (pair (pair (pair nat nat) (pair (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (map address (pair bytes bytes)) (map bytes bytes))))) bytes)) (pair (map bytes string) (pair (pair (pair address nat) (pair nat (pair nat (set address)))) (pair (big_map nat (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (map address (pair bytes bytes)) (map bytes bytes)))))) (list nat)))))
+      (pair (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (map address (pair bytes bytes)) (map bytes bytes))))) (pair (map bytes string) (pair (pair (pair address nat) (pair nat (pair nat (set address)))) (pair (big_map nat (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (map address (pair bytes bytes)) (map bytes bytes)))))) (list nat)))))
       {
         UNPAIR;     
         DUP;        
@@ -993,7 +993,7 @@ code
                 DUP;        
                 GET 5;      
                 EMPTY_MAP bytes bytes; 
-                EMPTY_SET (pair bytes bytes); 
+                EMPTY_MAP address (pair bytes bytes); 
                 PUSH (pair (pair nat nat) bytes) (Pair (Pair 0 0) 0x); 
                 PUSH bytes 0x; 
                 EMPTY_MAP bytes (map int (pair (pair nat nat) bytes)); 
@@ -1074,7 +1074,7 @@ code
                     DIG 5;      
                     DUP;        
                     GET 5;      
-                    NONE (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (set (pair bytes bytes)) (map bytes bytes))))); 
+                    NONE (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (pair (map address (pair bytes bytes)) (map bytes bytes))))); 
                     DIG 3;      
                     UPDATE;     
                     UPDATE 5;   
@@ -1265,15 +1265,16 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 378; 
+                PUSH int 380; 
                 FAILWITH;   
               }
               {}; 
             DUP;        
             GET 7;      
-            PUSH bool True; 
-            DIG 6;      
+            DIG 5;      
             CDR;        
+            SOME;       
+            SENDER;     
             UPDATE;     
             UPDATE 7;   
             SOME;       
@@ -1286,7 +1287,7 @@ code
     PAIR;       
   };
 view
-  "get_proof" (pair (bytes %key) (pair (nat %level) (address %owner))) (pair (nat %level) (pair (bytes %merkle_root) (pair (list %proof (or (bytes %Left) (bytes %Right))) (set %signatures (pair (bytes %r) (bytes %s))))))
+  "get_proof" (pair (bytes %key) (pair (nat %level) (address %owner))) (pair (nat %level) (pair (bytes %merkle_root) (pair (list %proof (or (bytes %Left) (bytes %Right))) (map %signatures address (pair (bytes %r) (bytes %s))))))
   {
     UNPAIR;     
     LAMBDA
@@ -1712,7 +1713,7 @@ view
     GET;        
     IF_NONE
       {
-        PUSH int 432; 
+        PUSH int 434; 
         FAILWITH;   
       }
       {}; 
@@ -1776,7 +1777,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 470; 
+                    PUSH int 472; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1784,7 +1785,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 470; 
+                    PUSH int 472; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1799,7 +1800,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 478; 
+                    PUSH int 480; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1807,7 +1808,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 478; 
+                    PUSH int 480; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1825,7 +1826,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 484; 
+                PUSH int 486; 
                 FAILWITH;   
               }
               {}; 
@@ -1833,7 +1834,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 484; 
+                PUSH int 486; 
                 FAILWITH;   
               }
               {}; 
@@ -1925,7 +1926,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 515; 
+            PUSH int 517; 
             FAILWITH;   
           }
           {}; 

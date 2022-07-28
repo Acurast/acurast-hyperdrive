@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.state_aggregator import Type
+from contracts.tezos.IBCF_Aggregator import Type
 
 
 class IBCF_Client(sp.Contract):
