@@ -6,12 +6,13 @@ const IBCF_Client = artifacts.require('IBCF_Client');
 const IBCF_Validator = artifacts.require('IBCF_Validator');
 
 let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
+const chain_id = "0xaf1864d9"
 
 contract('IBCF_Client', async ([_, primary]) => {
     let client;
     let validator;
     beforeEach('deploy proof validator', async () => {
-        validator = await IBCF_Validator.new(primary, 1, { from: primary })
+        validator = await IBCF_Validator.new(primary, 1, chain_id, { from: primary })
         client = await IBCF_Client.new(validator.address,"0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9", { from: primary })
 
         // Add signers
@@ -21,7 +22,7 @@ contract('IBCF_Client', async ([_, primary]) => {
     it('Call mint (Valid proof)', async function() {
         const level = 1;
         const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const signature = signContent(pemFormattedKeyPair, buildBuffer(level, valid_merkle_root));
+        const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
 
         const proof = [
             ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],

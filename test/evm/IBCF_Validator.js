@@ -3,11 +3,12 @@ const { signContent, buildBuffer, expectsFailure, createSecp256r1KeyPair} = requ
 const IBCF_Validator = artifacts.require('IBCF_Validator')
 
 let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
+const chain_id = "0xaf1864d9"
 
 contract('IBCF_Validator', async ([_, primary]) => {
     let instance;
     beforeEach('deploy proof validator', async () => {
-        instance = await IBCF_Validator.new(primary, 1, { from: primary })
+        instance = await IBCF_Validator.new(primary, 1, chain_id, { from: primary })
 
         // Add signers
         await instance.add_signers([primary], [public_key], { from: primary })
@@ -16,7 +17,7 @@ contract('IBCF_Validator', async ([_, primary]) => {
     it('Call verify_proof (Valid proof)', async function() {
         const level = 1;
         const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const signature = signContent(pemFormattedKeyPair, buildBuffer(level, valid_merkle_root));
+        const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
 
         const proof = [
             ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
@@ -68,7 +69,7 @@ contract('IBCF_Validator', async ([_, primary]) => {
     it('Call verify_proof (Invalid proof)', async function() {
         const level = 1;
         const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const content = buildBuffer(level, valid_merkle_root);
+        const content = buildBuffer(chain_id, level, valid_merkle_root);
         const signature = signContent(pemFormattedKeyPair, content);
         const proof = [
             ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],

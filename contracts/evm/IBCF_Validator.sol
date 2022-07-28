@@ -15,12 +15,14 @@ library Err {
 contract IBCF_Validator {
     address private administrator;
     uint8 signatures_threshold;
+    bytes tezos_chain_id;
     address[] private signers;
     mapping(address => uint[2]) signer_public_key;
 
-    constructor(address _administrator, uint8 _signatures_threshold) {
+    constructor(address _administrator, uint8 _signatures_threshold, bytes memory _tezos_chain_id) {
         administrator = _administrator;
         signatures_threshold = _signatures_threshold;
+        tezos_chain_id = _tezos_chain_id;
     }
 
     // modifier to check if caller is the administrator
@@ -91,7 +93,7 @@ contract IBCF_Validator {
         address[] memory _signers,
         uint[2][] memory signatures
     ) internal view {
-        bytes32 content_hash = sha256(abi.encodePacked(block_level, merkle_root));
+        bytes32 content_hash = sha256(abi.encodePacked(tezos_chain_id, block_level, merkle_root));
         uint valid_signatures = 0;
         for (uint i=0; i<signatures.length; i++) {
             if(validate_signature(content_hash, _signers[i], signatures[i])) {
@@ -105,13 +107,8 @@ contract IBCF_Validator {
         return EllipticCurve.validateSignature(content_hash, rs, signer_public_key[signer]);
     }
 
-    function getSigners() public view returns (address[] memory) {
-        return signers;
-    }
-
-
-    function getPublicKeys(address address1) public view returns (uint[2] memory) {
-        return signer_public_key[address1];
+    function getContent(uint block_level, bytes32 merkle_root) public view returns (bytes32) {
+        return sha256(abi.encodePacked(tezos_chain_id, block_level, merkle_root));
     }
 }
 
