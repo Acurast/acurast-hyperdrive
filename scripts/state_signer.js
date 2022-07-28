@@ -1,13 +1,14 @@
 const crypto = require('crypto');
 const ecPem  = require('ec-pem');
 const { packDataBytes } = require("@taquito/michel-codec");
-const { encodeExpr } = require("@taquito/utils");
+const { encodeExpr, b58cdecode, b58cencode } = require("@taquito/utils");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 
-const eth_private_key = "e8529dd47ef64bf253e46ac47a572abe0e2c87a6ee441eef708dde07ee7a382c"
+const eth_private_key = "e8529dd47ef64bf253e46ac47a572abe0e2c87a6ee441eef708dde07ee7a382c";
 const Tezos = new TezosToolkit("https://tezos-ithacanet-node-1.diamond.papers.tech");
-const ibcf_tezos_aggregator = process.env["ADDRESS"] || "KT1WqukWsyFWWmZ5LRFqApNeRyXAeuciVphi";
+const ibcf_tezos_aggregator = process.env["ADDRESS"] || "KT1UtaDDuiN1sMgpqMq2Wo4pVe1z7poZ4Loo";
+let chain_id = ""
 
 let big_map_id = -1;
 const pending = new Map();
@@ -30,8 +31,7 @@ function buildContent(...args) {
 function signContent(level, merkle_root) {
     // Create signature.
     const signer = crypto.createSign('RSA-SHA256');
-    console.log(buildContent(level, merkle_root).toString("hex"))
-    signer.update(buildContent(level, merkle_root));
+    signer.update(buildContent(chain_id, level, merkle_root));
     let sigString = signer.sign(private_key, 'hex');
 
     // Reformat signature / extract coordinates.
@@ -89,6 +89,7 @@ async function monitor() {
 
 (async () => {
     Tezos.setProvider({ signer: await InMemorySigner.fromSecretKey(process.env["PRIVATE_KEY"]) });
+    chain_id = b58cdecode(await Tezos.rpc.getChainId(), new Uint8Array([0x87,0x82,0x00])).toString("hex");
 
     const storage = await Tezos.rpc.getStorage(ibcf_tezos_aggregator);
     big_map_id = storage["args"][2]["int"];

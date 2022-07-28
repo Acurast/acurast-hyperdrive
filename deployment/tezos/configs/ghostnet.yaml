@@ -1,40 +1,45 @@
 pytezos:
-    rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech #http://localhost:20000
+    rpc_endpoint: https://tezos-ithacanet-node-1.diamond.papers.tech
     private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 known_addresses:
     signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
+    signer_2: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3
+    IBCF_Aggragator: KT1UtaDDuiN1sMgpqMq2Wo4pVe1z7poZ4Loo
+    IBCF_Client: KT1J7RrwXjdzWTpyjU6p736FviaYDsQnPb2m
 actions:
-    - kind: origination
-      contract_kind: merkle_tree
-      name: merkle_tree
-      code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
-      storage: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_storage.tz
-      overrides:
-          config:
-              administrator: admin_address
-              signers:
-                  - signer_1
-                  - admin_address
-              history_ttl: 4
-              max_state_size: 32
-              max_states: 5
+    # - kind: origination
+    #   contract_kind: IBCF_Aggragator
+    #   name: IBCF_Aggragator
+    #   code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
+    #   storage: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_storage.tz
+    #   overrides:
+    #       config:
+    #           administrator: admin_address
+    #           signers:
+    #               - signer_1
+    #               - signer_2
+    #               - admin_address
+    #           history_ttl: 4
+    #           max_state_size: 32
+    #           max_states: 5
 
-    - kind: origination
-      contract_kind: ibcf_client
-      name: ibcf_client
-      code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Client/IBCF_Client/step_000_cont_0_contract.tz
-      storage:
-          ibcf_address: merkle_tree
-          locked: 0
+    # - kind: origination
+    #   contract_kind: IBCF_Client
+    #   name: IBCF_Client
+    #   code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Client/IBCF_Client/step_000_cont_0_contract.tz
+    #   storage:
+    #       ibcf_address: IBCF_Aggragator
+    #       locked:
+    #           0: 0
 
     - kind: contract_call
-      contract_address: ibcf_client
+      contract_address: IBCF_Client
       entrypoint: lock
       argument:
           token_id: 0
           amount: 100
 
-    - kind: contract_call
-      contract_address: merkle_tree
-      entrypoint: insert
-      script: insert_multiple_states
+    # - kind: contract_call
+    #   contract_address: IBCF_Aggragator
+    #   entrypoint: insert
+    #   script: insert_multiple_states

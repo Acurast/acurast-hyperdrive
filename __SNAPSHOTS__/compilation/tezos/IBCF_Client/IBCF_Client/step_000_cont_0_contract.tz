@@ -1,13 +1,31 @@
 parameter (or (pair %lock (nat %amount) (nat %token_id)) (pair %unlock (nat %amount) (nat %token_id)));
-storage   (pair (address %ibcf_address) (nat %locked));
+storage   (pair (address %ibcf_address) (map %locked nat nat));
 code
   {
     UNPAIR;     
     IF_LEFT
       {
+        SWAP;       
+        DUP;        
+        CDR;        
+        DUP;        
+        DUP 4;      
+        CDR;        
         DUP;        
         DUG 2;      
+        GET;        
+        IF_NONE
+          {
+            PUSH int 17; 
+            FAILWITH;   
+          }
+          {}; 
+        DUP 5;      
         CAR;        
+        ADD;        
+        SOME;       
+        SWAP;       
+        UPDATE;     
         UPDATE 2;   
         SWAP;       
         NIL operation; 
@@ -32,7 +50,36 @@ code
         CONS;       
       }
       {
+        SWAP;       
+        DUP;        
+        DUG 2;      
+        DUP;        
+        CDR;        
+        DUP 3;      
         CAR;        
+        DIG 4;      
+        CDR;        
+        DUP 5;      
+        CDR;        
+        GET;        
+        IF_NONE
+          {
+            PUSH int 30; 
+            FAILWITH;   
+          }
+          {}; 
+        SUB;        
+        ISNAT;      
+        IF_NONE
+          {
+            PUSH string "AMOUNT_TOO_HIGH"; 
+            FAILWITH;   
+          }
+          {}; 
+        SOME;       
+        DIG 3;      
+        CDR;        
+        UPDATE;     
         UPDATE 2;   
         NIL operation; 
       }; 

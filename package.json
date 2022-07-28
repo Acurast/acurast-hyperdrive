@@ -11,7 +11,7 @@
   },
   "scripts": {
     "compile": "truffle compile",
-    "test": "truffle test",
+    "test": "truffle test --migrations_directory migrations_null",
     "deploy": "truffle deploy --network goerli --reset"
   }
 }

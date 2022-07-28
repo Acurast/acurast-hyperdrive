@@ -35,7 +35,9 @@ def test():
     scenario += ibcf
 
     ibcf_client = IBCF_Client()
-    ibcf_client.update_initial_storage(sp.record(locked=0, ibcf_address=ibcf.address))
+    ibcf_client.update_initial_storage(
+        sp.record(locked=sp.map({0: 0}), ibcf_address=ibcf.address)
+    )
 
     scenario += ibcf_client
 
