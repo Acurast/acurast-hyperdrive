@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import {IBCF_Validator} from "./IBCF_Validator.sol";
 
 contract IBCF_Client {
-    uint msg_counter = 0;
+    uint counter = 0;
     uint balance = 0;
     bytes tezos_source;
     address validator_address;
@@ -38,10 +38,53 @@ contract IBCF_Client {
             signatures
         );
 
-        balance = 100;
+        balance += bytesToUint(sliceBytes(value, 2));
+        counter += 1;
     }
 
     function getBalance() public view returns (uint) {
         return balance;
+    }
+
+    function getCounter() public view returns (uint) {
+        return counter;
+    }
+
+    function sliceBytes(bytes memory b, uint offset) public pure returns (bytes memory){
+        bytes memory _bytes;
+        for(uint i=offset;i<b.length;i++){
+            _bytes = abi.encodePacked(_bytes, b[i]);
+        }
+        return _bytes;
+    }
+
+    function bytesToUint(bytes memory b) public pure returns (uint256){
+        uint256 number;
+        for(uint i=0;i<b.length;i++){
+            number = number + uint8(b[i]);
+        }
+        return number;
+    }
+
+    function decodeNibbles(bytes memory compact, uint skipNibbles) public view returns (bytes memory nibbles) {
+        require(compact.length > 0, "Empty bytes array");
+
+        uint length = compact.length * 2;
+        require(skipNibbles <= length, "Skip nibbles amount too large");
+        length -= skipNibbles;
+
+        nibbles = new bytes(length);
+        uint nibblesLength = 0;
+
+        for (uint i = skipNibbles; i < skipNibbles + length; i += 1) {
+            if (i % 2 == 0) {
+                nibbles[nibblesLength] = bytes1((uint8(compact[i/2]) >> 4) & 0xF);
+            } else {
+                nibbles[nibblesLength] = bytes1((uint8(compact[i/2]) >> 0) & 0xF);
+            }
+            nibblesLength += 1;
+        }
+
+        assert(nibblesLength == nibbles.length);
     }
 }
