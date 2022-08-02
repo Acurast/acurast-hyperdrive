@@ -87,8 +87,10 @@ def item_length(item):
         with sp.if_(byte0 < STRING_LONG_START):
             sp.result(
                 sp.as_nat(
-                    (int_of_bytes_lambda(byte0)
-                    - int_of_bytes_lambda(STRING_SHORT_START))
+                    (
+                        int_of_bytes_lambda(byte0)
+                        - int_of_bytes_lambda(STRING_SHORT_START)
+                    )
                     + 1
                 )
             )
@@ -106,8 +108,10 @@ def item_length(item):
                 with sp.if_(byte0 < LIST_LONG_START):
                     sp.result(
                         sp.as_nat(
-                            (int_of_bytes_lambda(byte0)
-                            - int_of_bytes_lambda(LIST_SHORT_START))
+                            (
+                                int_of_bytes_lambda(byte0)
+                                - int_of_bytes_lambda(LIST_SHORT_START)
+                            )
                             + 1
                         )
                     )
@@ -143,20 +147,6 @@ def num_items(item):
         count.value += 1
 
     sp.result(count.value)
-
-
-def to_uint(item):
-    payload_offset_lambda = sp.compute(sp.build_lambda(payload_offset))
-
-    offset = sp.compute(payload_offset_lambda(item))
-    length = sp.as_nat(sp.len(item) - offset)
-
-    sp.trace("-----------")
-    sp.trace("-----------")
-    sp.trace(sp.slice(item, 0, length).open_some())
-    sp.trace("-----------")
-    sp.trace("-----------")
-    sp.result(sp.slice(item, 0, length).open_some())
 
 
 def remove_offset(item):

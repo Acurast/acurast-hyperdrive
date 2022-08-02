@@ -113,8 +113,12 @@ $(BUILD_FOLDER)/npm-packages: package.json
 	@npm i --silent
 	$(touch_done)
 
-install-dependencies: install-smartpy install-npm-packages
+install-pip-packages: $(BUILD_FOLDER)/pip-packages
+$(BUILD_FOLDER)/pip-packages: requirements.txt
 	@pip install -r requirements.txt --quiet
+	$(touch_done)
+
+install-dependencies: install-smartpy install-npm-packages install-pip-packages
 ##
 ## - Install dependencies
 ##

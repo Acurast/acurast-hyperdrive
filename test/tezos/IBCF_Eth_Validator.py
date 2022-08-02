@@ -17,17 +17,12 @@ def test():
     ibcf.update_initial_storage(
         config=sp.record(
             administrator=admin.address,
-            validators=sp.set(
-                [
-                    alice.address,
-                    bob.address, claus.address
-                ]
-            ),
+            validators=sp.set([alice.address, bob.address, claus.address]),
             eth_accounts=sp.set(
                 [sp.bytes("0x9cc9bf39a84998089050a90087e597c26758685d")]
             ),
         ),
-        storage_root=sp.big_map()
+        storage_root=sp.big_map(),
     )
 
     scenario += ibcf
@@ -80,7 +75,8 @@ def test():
                     "0xf879f8518080a036bb5f2fd6f99b186600638644e2f0396989955e201672f7e81e8c8f466ed5b98080808080808080808080a0f70bd5b82fa5222804070e8400da42b4ae39eb527a42f19106acf68ea58a4eb38080e5a0390decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563838204d2"
                 ),
             )
-        ) == sp.bytes("0x8204d2")
+        )
+        == sp.bytes("0x8204d2")
     )
 
     scenario.verify(sp.build_lambda(int_of_bytes)(sp.bytes("0x0211")) == 529)

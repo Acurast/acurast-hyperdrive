@@ -14,8 +14,8 @@ HASH_FUNCTION = sp.keccak
 EMPTY_TRIE_ROOT_HASH = sp.bytes(
     "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
 )
-BLOCK_HEADER_STATE_ROOT_INDEX=3
-BLOCK_HEADER_LEVEL_INDEX=8
+BLOCK_HEADER_STATE_ROOT_INDEX = 3
+BLOCK_HEADER_LEVEL_INDEX = 8
 ACCOUNT_STORAGE_ROOT_INDEX = 2
 
 
@@ -25,18 +25,20 @@ class Error:
     NOT_VALIDATOR = "NOT_VALIDATOR"
     UNPROCESSED_STORAGE_ROOT = "UNPROCESSED_STORAGE_ROOT"
 
+
 class Type:
     # Views
     VerifyArgument = sp.TRecord(
-                        rlp=sp.TRecord(
-                            to_list = sp.TLambda(sp.TBytes, sp.TMap(sp.TNat, sp.TBytes)),
-                            is_list = sp.TLambda(sp.TBytes, sp.TBool),
-                            remove_offset = sp.TLambda(sp.TBytes, sp.TBytes),
-                        ).right_comb(),
-                        proof_rlp=sp.TBytes,
-                        state_root=sp.TBytes,
-                        path=sp.TBytes
-                    ).right_comb()
+        rlp=sp.TRecord(
+            to_list=sp.TLambda(sp.TBytes, sp.TMap(sp.TNat, sp.TBytes)),
+            is_list=sp.TLambda(sp.TBytes, sp.TBool),
+            remove_offset=sp.TLambda(sp.TBytes, sp.TBytes),
+        ).right_comb(),
+        proof_rlp=sp.TBytes,
+        state_root=sp.TBytes,
+        path=sp.TBytes,
+    ).right_comb()
+
 
 def get_info_from_block_header(rlp, block_header, block_hash):
     """
@@ -51,13 +53,14 @@ def get_info_from_block_header(rlp, block_header, block_hash):
     # Get state root hash
     state_root = rlp.remove_offset(header_fields[BLOCK_HEADER_STATE_ROOT_INDEX])
     # Get block level
-    block_number = int_of_bytes(rlp.remove_offset(header_fields[BLOCK_HEADER_LEVEL_INDEX]))
+    block_number = int_of_bytes(
+        rlp.remove_offset(header_fields[BLOCK_HEADER_LEVEL_INDEX])
+    )
 
     return sp.record(
         state_root=state_root,
         block_number=block_number,
     )
-
 
 
 class IBCF_Eth_Validator(sp.Contract):
@@ -70,9 +73,12 @@ class IBCF_Eth_Validator(sp.Contract):
                     # Validators
                     validators=sp.TSet(sp.TAddress),
                     # Ethereum addresses being monitored
-                    eth_accounts=sp.TSet(sp.TBytes)
+                    eth_accounts=sp.TSet(sp.TBytes),
                 ),
-                storage_root=sp.TBigMap(sp.TPair(sp.TBytes, sp.TNat), sp.TMap(sp.TBytes, sp.TSet(sp.TAddress))),
+                storage_root=sp.TBigMap(
+                    sp.TPair(sp.TBytes, sp.TNat),
+                    sp.TMap(sp.TAddress, sp.TBytes),
+                ),
             )
         )
 
@@ -88,7 +94,6 @@ class IBCF_Eth_Validator(sp.Contract):
             "state_root",
             "path",
         )
-
 
         proof_nodes = sp.compute(rlp.to_list(proof_rlp))
 
@@ -231,33 +236,40 @@ class IBCF_Eth_Validator(sp.Contract):
             sp.result(result.value)
 
     @sp.entry_point()
-    def submit_account_proof(
-        self,
-        arg
-    ):
+    def submit_account_proof(self, arg):
         (account, block_hash, block_header, account_state_proof) = sp.match_record(
             sp.set_type_expr(
                 arg,
-                sp.TRecord(account=sp.TBytes, block_hash=sp.TBytes, block_header=sp.TBytes, account_state_proof=sp.TBytes).right_comb(),
+                sp.TRecord(
+                    account=sp.TBytes,
+                    block_hash=sp.TBytes,
+                    block_header=sp.TBytes,
+                    account_state_proof=sp.TBytes,
+                ).right_comb(),
             ),
             "account",
             "block_hash",
             "block_header",
-            "account_state_proof"
+            "account_state_proof",
         )
         rlp = sp.record(
-            to_list = sp.compute(sp.build_lambda(RLP.to_list)),
-            is_list = sp.compute(sp.build_lambda(RLP.is_list)),
-            remove_offset = sp.compute(sp.build_lambda(RLP.remove_offset))
+            to_list=sp.compute(sp.build_lambda(RLP.to_list)),
+            is_list=sp.compute(sp.build_lambda(RLP.is_list)),
+            remove_offset=sp.compute(sp.build_lambda(RLP.remove_offset)),
         )
 
         # Check if address is allowed
-        sp.verify(self.data.config.eth_accounts.contains(account), Error.NOT_REGISTERED_ACCOUNT)
+        sp.verify(
+            self.data.config.eth_accounts.contains(account),
+            Error.NOT_REGISTERED_ACCOUNT,
+        )
         # Check if sender is validator
         sp.verify(self.data.config.validators.contains(sp.sender), Error.NOT_VALIDATOR)
 
         # Decode block header and extract the state_root and block_number
-        block_header = sp.compute(get_info_from_block_header(rlp, block_header, block_hash))
+        block_header = sp.compute(
+            get_info_from_block_header(rlp, block_header, block_hash)
+        )
 
         # The path to the contract state is the hash of the contract address
         account_state_path = HASH_FUNCTION(account)
@@ -280,11 +292,19 @@ class IBCF_Eth_Validator(sp.Contract):
             ).open_some("Invalid view")
         )
         # Get account storage root hash and store it
-        account_storage_root = rlp.remove_offset(rlp.to_list(account_state_rlp_encoded)[ACCOUNT_STORAGE_ROOT_INDEX])
-        with sp.if_(self.data.storage_root.contains((account, block_header.block_number))):
-            self.data.storage_root[(account, block_header.block_number)][account_storage_root].add(sp.sender)
+        account_storage_root = rlp.remove_offset(
+            rlp.to_list(account_state_rlp_encoded)[ACCOUNT_STORAGE_ROOT_INDEX]
+        )
+        with sp.if_(
+            self.data.storage_root.contains(sp.pair(account, block_header.block_number))
+        ):
+            self.data.storage_root[sp.pair(account, block_header.block_number)][
+                sp.sender
+            ] = account_storage_root
         with sp.else_():
-            self.data.storage_root[(account, block_header.block_number)] = sp.map({ account_storage_root : sp.set([sp.sender]) })
+            self.data.storage_root[(account, block_header.block_number)] = sp.map(
+                {sp.sender: account_storage_root}
+            )
 
     @sp.onchain_view()
     def get_storage(self, arg):
@@ -304,24 +324,22 @@ class IBCF_Eth_Validator(sp.Contract):
             "storage_proof",
         )
 
-        key = (account, block_number)
+        key = sp.pair(account, block_number)
+        contract_root_state = sp.compute(
+            self.data.storage_root.get(key, message=Error.UNPROCESSED_STORAGE_ROOT)
+        )
         root_hash = sp.local("root_hash", sp.bytes("0x"))
         most_validated_count = sp.local("submission_count", 0)
-        with sp.for_("entry", self.data.storage_root.get(key, message=Error.UNPROCESSED_STORAGE_ROOT).items()) as entry:
+        with sp.for_("entry", contract_root_state.items()) as entry:
             length = sp.compute(sp.len(entry.value))
             with sp.if_(length > most_validated_count.value):
                 root_hash.value = entry.key
                 most_validated_count.value = length
 
-
-        sp.compute(
-            self.data.storage_root.get(key, message=Error.UNPROCESSED_STORAGE_ROOT)
-        )
-
         rlp = sp.record(
-            to_list = sp.compute(sp.build_lambda(RLP.to_list)),
-            is_list = sp.compute(sp.build_lambda(RLP.is_list)),
-            remove_offset = sp.compute(sp.build_lambda(RLP.remove_offset))
+            to_list=sp.compute(sp.build_lambda(RLP.to_list)),
+            is_list=sp.compute(sp.build_lambda(RLP.is_list)),
+            remove_offset=sp.compute(sp.build_lambda(RLP.remove_offset)),
         )
 
         sp.result(
