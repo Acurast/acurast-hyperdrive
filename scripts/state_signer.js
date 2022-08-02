@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const ecPem  = require('ec-pem');
 const { packDataBytes } = require("@taquito/michel-codec");
-const { encodeExpr, b58cdecode, b58cencode } = require("@taquito/utils");
+const { encodeExpr, b58cdecode } = require("@taquito/utils");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 

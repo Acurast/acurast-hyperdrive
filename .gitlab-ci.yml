@@ -1,11 +1,14 @@
-image: registry.gitlab.papers.tech/papers/customer-tezos-foundation/inter-blockchain-communication-framework/tezos-sc
+default:
+  image: docker/compose:alpine-1.29.2
+  tags:
+    - docker
 
-cache: &global_cache
-  key: $CI_COMMIT_REF_SLUG
-  paths:
-    - build
-    - node_modules
-  policy: pull-push
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GOOGLE_TAG_LATEST: eu.gcr.io/papers-dev-kubernetes/$CI_PROJECT_NAMESPACE/ci_$CI_PROJECT_NAME:latest
+
+services:
+  - docker:dind
 
 stages:
   - setup
@@ -13,72 +16,63 @@ stages:
   - compile
   - test
 
-setup:
-  cache:
-    <<: *global_cache
-    policy: pull
+.before_docker_build:
+  image: google/cloud-sdk
+  before_script:
+    - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
+    - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
+    - gcloud config set account $GCLOUD_ACCOUNT_DEV
+    - gcloud config set project $GCLOUD_PROJECT_DEV
+    - gcloud config set compute/zone $GCLOUD_ZONE_DEV
+    - gcloud container clusters get-credentials papers-cluster-development
+    - gcloud auth configure-docker
+  tags:
+    - docker
+
+docker_build:
+  extends: .before_docker_build
   stage: setup
   script:
+    - docker build -t $GOOGLE_TAG_LATEST .
+    - docker push $GOOGLE_TAG_LATEST
+  when: manual
+
+.setup:
+  image: $GOOGLE_TAG_LATEST
+  before_script:
+    - cp -r /_build .
+    - cp -r /node_modules .
     - make
+  when: always
   tags:
     - docker
 
 format-check:
-  cache:
-    <<: *global_cache
-    policy: pull
+  extends: .setup
   stage: checks
-  before_script:
-    - make
   script:
     - make fmt-check
-  tags:
-    - docker
 
 compile_tezos_contracts:
-  cache:
-    <<: *global_cache
-    policy: pull
+  extends: .setup
   stage: compile
-  before_script:
-    - make
   script:
     - make compile-tezos
-  tags:
-    - docker
 
 compile_evm_contracts:
-  cache:
-    <<: *global_cache
-    policy: pull
+  extends: .setup
   stage: compile
-  before_script:
-    - make
   script:
     - make compile-evm
-  tags:
-    - docker
 
 test_tezos_contracts:
-  cache:
-    <<: *global_cache
-    policy: pull
+  extends: .setup
   stage: test
-  before_script:
-    - make
   script:
     - make test-tezos
-  tags:
-    - docker
 
 test_evm_contracts:
-  cache:
-    <<: *global_cache
-    policy: pull
+  extends: .setup
   stage: test
-  before_script:
-    - make
   script:
     - make test-evm
-  tags:
-    - docker

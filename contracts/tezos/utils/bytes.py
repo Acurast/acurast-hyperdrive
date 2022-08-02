@@ -95,3 +95,24 @@ def get_prefix(b, full_length, prefix_length):
 
 def is_bit_set(i, n):
     return (i >> n) & 1
+
+
+def int_of_bytes(b):
+    _bytes = sp.local("bytes", sp.bytes("0x"))
+    # Reverse bytes for (little-endian)
+    size = sp.compute(sp.len(b))
+    with sp.for_("pos", sp.range(0, size)) as pos:
+        byte0 = sp.slice(b, pos, 1).open_some()
+        _bytes.value = byte0 + _bytes.value
+    # Pad 0x to the right until bytes length is 32
+    with sp.while_(sp.len(_bytes.value) < 32):
+        _bytes.value = _bytes.value + sp.bytes("0x00")
+    # Append (packed prefix) + (Data identifier) + (Length) + (Data)
+    # - Packed prefix: 0x05 (1 byte)
+    # - Data identifier: (bls12_381_fr = 0x0a) (1 byte)
+    # - Length ("0x00000020" = 32) (4 bytes)
+    # - Data
+    packedBytes = sp.bytes("0x050a00000020") + _bytes.value
+    sp.result(
+        sp.as_nat(sp.to_int(sp.unpack(packedBytes, sp.TBls12_381_fr).open_some()))
+    )

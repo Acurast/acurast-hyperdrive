@@ -19,19 +19,20 @@ all: install-dependencies
 compilation/%: compilation/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh compile $< $(SNAPSHOTS_FOLDER)/compilation/$* --erase-comments
 
-clean_compilations:
-	@rm -rf $(SNAPSHOTS_FOLDER)/compilation
+clean_tezos_compilations:
+	@rm -rf $(SNAPSHOTS_FOLDER)/compilation/tezos
 
-compile-tezos: $(COMPILATIONS:%.py=%) setup_env
-	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; | sort -z > $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
-	@echo '\n=== TEZOS CONTRACTS ===\n' | cat - $(SNAPSHOTS_FOLDER)/compilation/sizes.txt > $(BUILD_FOLDER)/sizes.txt && mv $(BUILD_FOLDER)/sizes.txt $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
-	@cat $(SNAPSHOTS_FOLDER)/compilation/sizes.txt
+clean_evm_compilations:
+	@rm -rf $(SNAPSHOTS_FOLDER)/compilation/evm
 
-compile-evm: setup_env
+compile-tezos: clean_tezos_compilations $(COMPILATIONS:%.py=%) setup_env
+	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; | sort > $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
+	@cat $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
+
+compile-evm: setup_env clean_evm_compilations
 	@npm run compile
 
-compile: clean_compilations compile-tezos compile-evm
-	@npm run compile
+compile: compile-tezos compile-evm
 	@echo "Compiled all contracts."
 ##
 ## - Compilations
@@ -43,15 +44,18 @@ compile: clean_compilations compile-tezos compile-evm
 test/%: test/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh test $< $(SNAPSHOTS_FOLDER)/test/$* --html
 
-clean_tests:
-	@rm -rf $(SNAPSHOTS_FOLDER)/test
+clean_tezos_tests:
+	@rm -rf $(SNAPSHOTS_FOLDER)/test/tezos
 
-test-tezos: $(TESTS:%.py=%) setup_env
+clean_evm_tests:
+	@rm -rf $(SNAPSHOTS_FOLDER)/test/evm
 
-test-evm: setup_env
+test-tezos: clean_tezos_tests $(TESTS:%.py=%) setup_env
+
+test-evm: setup_env clean_evm_tests
 	@npm run test
 
-test: clean_tests test-tezos test-evm
+test: test-tezos test-evm
 	@echo "Tested all contracts."
 ##
 ## - Tests
@@ -109,8 +113,12 @@ $(BUILD_FOLDER)/npm-packages: package.json
 	@npm i --silent
 	$(touch_done)
 
-install-dependencies: install-smartpy install-npm-packages
+install-pip-packages: $(BUILD_FOLDER)/pip-packages
+$(BUILD_FOLDER)/pip-packages: requirements.txt
 	@pip install -r requirements.txt --quiet
+	$(touch_done)
+
+install-dependencies: install-smartpy install-npm-packages install-pip-packages
 ##
 ## - Install dependencies
 ##

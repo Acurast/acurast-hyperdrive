@@ -1,7 +1,7 @@
 import smartpy as sp
 
 import contracts.tezos.IBCF_Aggregator
-from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
+from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator
 from contracts.tezos.IBCF_Client import IBCF_Client
 
 from contracts.tezos.utils.bytes import bytes_to_bits
@@ -9,7 +9,7 @@ from contracts.tezos.utils.bytes import bytes_to_bits
 contracts.tezos.IBCF_Aggregator.HASH_FUNCTION = sp.blake2b
 
 
-@sp.add_test(name="IBCF")
+@sp.add_test(name="IBCF_Client")
 def test():
     admin = sp.test_account("admin")
 
