@@ -24,6 +24,7 @@ class Error:
     NOT_REGISTERED_ACCOUNT = "NOT_REGISTERED_ACCOUNT"
     NOT_VALIDATOR = "NOT_VALIDATOR"
     UNPROCESSED_STORAGE_ROOT = "UNPROCESSED_STORAGE_ROOT"
+    NO_CONSENSUS_FOR_STATE = "NO_CONSENSUS_FOR_STATE"
 
 
 class Type:
@@ -40,12 +41,12 @@ class Type:
     ).right_comb()
 
 
-def get_info_from_block_header(rlp, block_header, block_hash):
+def get_info_from_block_header(rlp, block_header):
     """
     Extract state root from block header, verifying block hash
-    """
-    sp.verify(HASH_FUNCTION(block_header) == block_hash, Error.INVALID_BLOCK_HEADER)
 
+    block_hash = sp.keccak(block_header)
+    """
     int_of_bytes = sp.compute(sp.build_lambda(Bytes.int_of_bytes))
 
     header_fields = sp.compute(rlp.to_list(block_header))
@@ -72,6 +73,8 @@ class IBCF_Eth_Validator(sp.Contract):
                     administrator=sp.TAddress,
                     # Validators
                     validators=sp.TSet(sp.TAddress),
+                    # Minimum expected endorsements for a given state root to be considered valid
+                    minimum_endorsements=sp.TNat,
                     # Ethereum addresses being monitored
                     eth_accounts=sp.TSet(sp.TBytes),
                 ),
@@ -237,18 +240,16 @@ class IBCF_Eth_Validator(sp.Contract):
 
     @sp.entry_point()
     def submit_account_proof(self, arg):
-        (account, block_hash, block_header, account_state_proof) = sp.match_record(
+        (account, block_header, account_state_proof) = sp.match_record(
             sp.set_type_expr(
                 arg,
                 sp.TRecord(
                     account=sp.TBytes,
-                    block_hash=sp.TBytes,
                     block_header=sp.TBytes,
                     account_state_proof=sp.TBytes,
                 ).right_comb(),
             ),
             "account",
-            "block_hash",
             "block_header",
             "account_state_proof",
         )
@@ -267,9 +268,7 @@ class IBCF_Eth_Validator(sp.Contract):
         sp.verify(self.data.config.validators.contains(sp.sender), Error.NOT_VALIDATOR)
 
         # Decode block header and extract the state_root and block_number
-        block_header = sp.compute(
-            get_info_from_block_header(rlp, block_header, block_hash)
-        )
+        block_header = sp.compute(get_info_from_block_header(rlp, block_header))
 
         # The path to the contract state is the hash of the contract address
         account_state_path = HASH_FUNCTION(account)
@@ -328,13 +327,30 @@ class IBCF_Eth_Validator(sp.Contract):
         contract_root_state = sp.compute(
             self.data.storage_root.get(key, message=Error.UNPROCESSED_STORAGE_ROOT)
         )
-        root_hash = sp.local("root_hash", sp.bytes("0x"))
-        most_validated_count = sp.local("submission_count", 0)
+
+        root_states = sp.local("root_states", sp.map(tkey=sp.TBytes, tvalue=sp.TNat))
         with sp.for_("entry", contract_root_state.items()) as entry:
-            length = sp.compute(sp.len(entry.value))
-            with sp.if_(length > most_validated_count.value):
-                root_hash.value = entry.key
-                most_validated_count.value = length
+            root_states.value[entry.value] = (
+                root_states.value.get(entry.value, default_value=0) + 1
+            )
+
+        most_endorsed = sp.local("most_endorsed", sp.bytes("0x"))
+        with sp.for_("root_state", root_states.value.keys()) as root_state:
+            with sp.if_(
+                root_states.value[root_state]
+                > root_states.value.get(most_endorsed.value, default_value=0)
+            ):
+                most_endorsed.value = root_state
+
+        # Make sure the consensus has been reached
+        sp.verify(
+            (sp.len(root_states.value) != 0)
+            & (
+                root_states.value[most_endorsed.value]
+                >= self.data.config.minimum_endorsements
+            ),
+            Error.NO_CONSENSUS_FOR_STATE,
+        )
 
         rlp = sp.record(
             to_list=sp.compute(sp.build_lambda(RLP.to_list)),
@@ -350,7 +366,7 @@ class IBCF_Eth_Validator(sp.Contract):
                     sp.record(
                         rlp=rlp,
                         proof_rlp=storage_proof,
-                        state_root=root_hash.value,
+                        state_root=most_endorsed.value,
                         path=HASH_FUNCTION(storage_slot),
                     ),
                     Type.VerifyArgument,

@@ -1,10 +1,10 @@
-parameter (pair %submit_account_proof (bytes %account) (pair (bytes %account_state_proof) (pair (bytes %block_hash) (bytes %block_header))));
-storage   (pair (pair %config (address %administrator) (pair (set %eth_accounts bytes) (set %validators address))) (big_map %storage_root (pair bytes nat) (map bytes (set address))));
+parameter (pair %submit_account_proof (bytes %account) (pair (bytes %account_state_proof) (bytes %block_header)));
+storage   (pair (pair %config (pair (address %administrator) (set %eth_accounts bytes)) (pair (nat %minimum_endorsements) (set %validators address))) (big_map %storage_root (pair bytes nat) (map address bytes)));
 code
   {
     UNPAIR;     
     DUP;        
-    UNPAIR 4;   
+    UNPAIR 3;   
     LAMBDA
       bytes
       (map nat bytes)
@@ -154,7 +154,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 97; 
+                                PUSH int 99; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -170,7 +170,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 99; 
+                                PUSH int 101; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -178,7 +178,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 99; 
+                                PUSH int 101; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -187,7 +187,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 102; 
+                                PUSH int 104; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -217,7 +217,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 108; 
+                                    PUSH int 110; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -232,7 +232,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 116; 
+                                    PUSH int 120; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -248,7 +248,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 119; 
+                                    PUSH int 123; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -256,7 +256,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 119; 
+                                    PUSH int 123; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -265,7 +265,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 122; 
+                                    PUSH int 126; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -488,7 +488,7 @@ code
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 140; 
+                    PUSH int 144; 
                     FAILWITH;   
                   }
                   {}; 
@@ -496,7 +496,7 @@ code
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 141; 
+                    PUSH int 145; 
                     FAILWITH;   
                   }
                   {}; 
@@ -662,7 +662,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 97; 
+                            PUSH int 99; 
                             FAILWITH;   
                           }
                           {}; 
@@ -678,7 +678,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 99; 
+                            PUSH int 101; 
                             FAILWITH;   
                           }
                           {}; 
@@ -686,7 +686,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 99; 
+                            PUSH int 101; 
                             FAILWITH;   
                           }
                           {}; 
@@ -695,7 +695,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 102; 
+                            PUSH int 104; 
                             FAILWITH;   
                           }
                           {}; 
@@ -725,7 +725,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 108; 
+                                PUSH int 110; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -740,7 +740,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 116; 
+                                PUSH int 120; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -756,7 +756,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 119; 
+                                PUSH int 123; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -764,7 +764,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 119; 
+                                PUSH int 123; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -773,7 +773,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 122; 
+                                PUSH int 126; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1301,7 +1301,7 @@ code
         ISNAT;      
         IF_NONE
           {
-            PUSH int 166; 
+            PUSH int 156; 
             FAILWITH;   
           }
           {}; 
@@ -1309,14 +1309,15 @@ code
         SLICE;      
         IF_NONE
           {
-            PUSH int 168; 
+            PUSH int 158; 
             FAILWITH;   
           }
           {}; 
       }; 
-    DUP 9;      
+    DUP 8;      
     CAR;        
-    GET 3;      
+    CAR;        
+    CDR;        
     DUP 5;      
     MEM;        
     IF
@@ -1325,7 +1326,7 @@ code
         PUSH string "NOT_REGISTERED_ACCOUNT"; 
         FAILWITH;   
       }; 
-    DUP 9;      
+    DUP 8;      
     CAR;        
     GET 4;      
     SENDER;     
@@ -1334,17 +1335,6 @@ code
       {}
       {
         PUSH string "NOT_VALIDATOR"; 
-        FAILWITH;   
-      }; 
-    DUP 6;      
-    DUP 8;      
-    KECCAK;     
-    COMPARE;    
-    EQ;         
-    IF
-      {}
-      {
-        PUSH string "INVALID_BLOCK_HEADER"; 
         FAILWITH;   
       }; 
     LAMBDA
@@ -1423,7 +1413,7 @@ code
           {}; 
       }; 
     DUP 4;      
-    DUP 9;      
+    DUP 8;      
     EXEC;       
     DUP 3;      
     SWAP;       
@@ -1433,7 +1423,7 @@ code
     GET;        
     IF_NONE
       {
-        PUSH int 52; 
+        PUSH int 55; 
         FAILWITH;   
       }
       {}; 
@@ -1445,7 +1435,7 @@ code
     GET;        
     IF_NONE
       {
-        PUSH int 54; 
+        PUSH int 58; 
         FAILWITH;   
       }
       {}; 
@@ -1469,8 +1459,6 @@ code
     DIG 3;      
     DROP;       
     DIG 4;      
-    DROP;       
-    DIG 6;      
     DROP;       
     DIG 6;      
     DROP;       
@@ -1507,38 +1495,25 @@ code
         GET;        
         IF_NONE
           {
-            PUSH int 285; 
+            PUSH int 302; 
             FAILWITH;   
           }
           {}; 
-        DUP;        
+        DIG 5;      
         DIG 6;      
-        DIG 7;      
-        DIG 7;      
+        DIG 6;      
         EXEC;       
         PUSH nat 2; 
         GET;        
         IF_NONE
           {
-            PUSH int 283; 
+            PUSH int 297; 
             FAILWITH;   
           }
           {}; 
         EXEC;       
-        DUP;        
-        DUG 2;      
-        GET;        
-        IF_NONE
-          {
-            PUSH int 285; 
-            FAILWITH;   
-          }
-          {}; 
-        PUSH bool True; 
-        SENDER;     
-        UPDATE;     
         SOME;       
-        SWAP;       
+        SENDER;     
         UPDATE;     
         SOME;       
         SWAP;       
@@ -1549,25 +1524,22 @@ code
         DIG 5;      
         DUP;        
         CDR;        
-        EMPTY_MAP bytes (set address); 
-        EMPTY_SET address; 
-        PUSH bool True; 
-        SENDER;     
-        UPDATE;     
-        SOME;       
+        EMPTY_MAP address bytes; 
+        DIG 5;      
         DIG 6;      
-        DIG 7;      
-        DIG 6;      
+        DIG 5;      
         EXEC;       
         PUSH nat 2; 
         GET;        
         IF_NONE
           {
-            PUSH int 283; 
+            PUSH int 297; 
             FAILWITH;   
           }
           {}; 
         EXEC;       
+        SOME;       
+        SENDER;     
         UPDATE;     
         SOME;       
         DIG 3;      
@@ -1677,7 +1649,7 @@ view
     EDIV;       
     IF_NONE
       {
-        PUSH int 457; 
+        PUSH int 481; 
         FAILWITH;   
       }
       {
@@ -1686,7 +1658,7 @@ view
     SLICE;      
     IF_NONE
       {
-        PUSH int 457; 
+        PUSH int 481; 
         FAILWITH;   
       }
       {}; 
@@ -1697,7 +1669,7 @@ view
     EDIV;       
     IF_NONE
       {
-        PUSH int 460; 
+        PUSH int 484; 
         FAILWITH;   
       }
       {
@@ -1725,12 +1697,10 @@ view
     UNPAIR;     
     DIG 2;      
     UNPAIR;     
-    PUSH bytes 0x; 
-    PUSH nat 0; 
-    DUP 8;      
+    DUP 6;      
     CDR;        
-    DUP 7;      
-    DUP 7;      
+    DUP 5;      
+    DUP 5;      
     PAIR;       
     GET;        
     IF_NONE
@@ -1739,43 +1709,95 @@ view
         FAILWITH;   
       }
       {}; 
+    DUP;        
+    EMPTY_MAP bytes nat; 
+    SWAP;       
     ITER
       {
-        DUP;        
-        CDR;        
-        SIZE;       
-        DUP 3;      
         SWAP;       
         DUP;        
         DUG 2;      
+        PUSH nat 1; 
+        DIG 3;      
+        DUP 4;      
+        CDR;        
+        GET;        
+        IF_NONE
+          {
+            PUSH nat 0; 
+          }
+          {}; 
+        ADD;        
+        SOME;       
+        DIG 2;      
+        CDR;        
+        UPDATE;     
+      }; 
+    DUP;        
+    PUSH bytes 0x; 
+    SWAP;       
+    ITER
+      {
+        CAR;        
+        DUP 3;      
+        DUP 3;      
+        GET;        
+        IF_NONE
+          {
+            PUSH nat 0; 
+          }
+          {}; 
+        DUP 4;      
+        DUP 3;      
+        GET;        
+        IF_NONE
+          {
+            PUSH int 339; 
+            FAILWITH;   
+          }
+          {}; 
         COMPARE;    
         GT;         
         IF
           {
-            DIG 2;      
-            DROP;       
-            DIG 2;      
-            DROP;       
             SWAP;       
-            CAR;        
-            SWAP;       
+            DROP;       
           }
           {
-            DROP 2;     
+            DROP;       
           }; 
       }; 
-    DUP 8;      
-    CDR;        
-    DUP 7;      
-    DUP 7;      
-    PAIR;       
-    GET;        
-    IF_NONE
+    PUSH nat 0; 
+    DUP 3;      
+    SIZE;       
+    COMPARE;    
+    NEQ;        
+    IF
       {
-        PUSH string "UNPROCESSED_STORAGE_ROOT"; 
-        FAILWITH;   
+        DUP 9;      
+        CAR;        
+        GET 3;      
+        DUP 3;      
+        DUP 3;      
+        GET;        
+        IF_NONE
+          {
+            PUSH int 343; 
+            FAILWITH;   
+          }
+          {}; 
+        COMPARE;    
+        GE;         
       }
-      {}; 
+      {
+        PUSH bool False; 
+      }; 
+    IF
+      {}
+      {
+        PUSH string "NO_CONSENSUS_FOR_STATE"; 
+        FAILWITH;   
+      }; 
     LAMBDA
       bytes
       (map nat bytes)
@@ -1925,7 +1947,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 97; 
+                                PUSH int 99; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1941,7 +1963,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 99; 
+                                PUSH int 101; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1949,7 +1971,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 99; 
+                                PUSH int 101; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1958,7 +1980,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 102; 
+                                PUSH int 104; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1988,7 +2010,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 108; 
+                                    PUSH int 110; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -2003,7 +2025,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 116; 
+                                    PUSH int 120; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -2019,7 +2041,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 119; 
+                                    PUSH int 123; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -2027,7 +2049,7 @@ view
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 119; 
+                                    PUSH int 123; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -2036,7 +2058,7 @@ view
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 122; 
+                                    PUSH int 126; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -2259,7 +2281,7 @@ view
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 140; 
+                    PUSH int 144; 
                     FAILWITH;   
                   }
                   {}; 
@@ -2267,7 +2289,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 141; 
+                    PUSH int 145; 
                     FAILWITH;   
                   }
                   {}; 
@@ -2433,7 +2455,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 97; 
+                            PUSH int 99; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2449,7 +2471,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 99; 
+                            PUSH int 101; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2457,7 +2479,7 @@ view
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 99; 
+                            PUSH int 101; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2466,7 +2488,7 @@ view
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 102; 
+                            PUSH int 104; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2496,7 +2518,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 108; 
+                                PUSH int 110; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -2511,7 +2533,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 116; 
+                                PUSH int 120; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -2527,7 +2549,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 119; 
+                                PUSH int 123; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -2535,7 +2557,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 119; 
+                                PUSH int 123; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -2544,7 +2566,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 122; 
+                                PUSH int 126; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -3072,7 +3094,7 @@ view
         ISNAT;      
         IF_NONE
           {
-            PUSH int 166; 
+            PUSH int 156; 
             FAILWITH;   
           }
           {}; 
@@ -3080,13 +3102,13 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 168; 
+            PUSH int 158; 
             FAILWITH;   
           }
           {}; 
       }; 
     SELF_ADDRESS; 
-    DUP 7;      
+    DUP 5;      
     DUP 5;      
     DUP 4;      
     DUP 6;      
@@ -3224,7 +3246,7 @@ view
     SLICE;      
     IF_NONE
       {
-        PUSH int 350; 
+        PUSH int 374; 
         FAILWITH;   
       }
       {}; 
@@ -3432,7 +3454,7 @@ view
         EDIV;       
         IF_NONE
           {
-            PUSH int 401; 
+            PUSH int 425; 
             FAILWITH;   
           }
           {
@@ -3441,7 +3463,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 401; 
+            PUSH int 425; 
             FAILWITH;   
           }
           {}; 
@@ -3453,7 +3475,7 @@ view
         EDIV;       
         IF_NONE
           {
-            PUSH int 405; 
+            PUSH int 429; 
             FAILWITH;   
           }
           {
@@ -3462,7 +3484,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 405; 
+            PUSH int 429; 
             FAILWITH;   
           }
           {}; 
@@ -3475,7 +3497,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 406; 
+            PUSH int 430; 
             FAILWITH;   
           }
           {}; 
@@ -3550,7 +3572,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 431; 
+            PUSH int 455; 
             FAILWITH;   
           }
           {}; 
@@ -3562,7 +3584,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 430; 
+            PUSH int 454; 
             FAILWITH;   
           }
           {}; 
@@ -3686,7 +3708,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 119; 
+                PUSH int 127; 
                 FAILWITH;   
               }
               {}; 
@@ -3746,7 +3768,7 @@ view
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 140; 
+                        PUSH int 148; 
                         FAILWITH;   
                       }
                       {}; 
@@ -3805,7 +3827,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 163; 
+                            PUSH int 171; 
                             FAILWITH;   
                           }
                           {}; 
@@ -3823,7 +3845,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 168; 
+                            PUSH int 176; 
                             FAILWITH;   
                           }
                           {}; 
@@ -3855,7 +3877,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 470; 
+                                PUSH int 494; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -3903,7 +3925,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 181; 
+                                PUSH int 189; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -3929,7 +3951,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 199; 
+                                PUSH int 207; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -3978,7 +4000,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 220; 
+                            PUSH int 228; 
                             FAILWITH;   
                           }
                           {}; 
@@ -4014,7 +4036,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 470; 
+                                PUSH int 494; 
                                 FAILWITH;   
                               }
                               {}; 

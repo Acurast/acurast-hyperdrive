@@ -35,9 +35,7 @@ docker_build:
   script:
     - docker build -t $GOOGLE_TAG_LATEST .
     - docker push $GOOGLE_TAG_LATEST
-  rules:
-    - changes:
-        - Dockerfile
+  when: manual
 
 .setup:
   image: $GOOGLE_TAG_LATEST
