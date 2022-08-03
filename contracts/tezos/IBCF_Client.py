@@ -9,64 +9,55 @@ import smartpy as sp
 from contracts.tezos.IBCF_Aggregator import Type
 from contracts.tezos.IBCF_Eth_Validator import Type as ValidatiorInterface
 
+
 class Error:
     EXPECTING_PONG = "EXPECTING_PONG"
     EXPECTING_PING = "EXPECTING_PING"
     INVALID_COUNTER = "INVALID_COUNTER"
+    INVALID_CONTRACT = "INVALID_CONTRACT"
+    INVALID_VIEW = "INVALID_VIEW"
 
 
-def string_of_nat(number):
-    """Convert an int into a string"""
-    c = sp.map({x: str(x) for x in range(0, 10)})
-    x = sp.local("x", number)
-    arr = sp.local("arr", [])
+class Inlined:
+    @staticmethod
+    def string_of_nat(number):
+        """Convert an int into a string"""
+        c = sp.map({x: str(x) for x in range(0, 10)})
+        x = sp.local("x", number)
+        arr = sp.local("arr", [])
 
-    with sp.if_(x.value == 0):
-        arr.value.push("0")
-    with sp.while_(0 < x.value):
-        arr.value.push(c[x.value % 10])
-        x.value //= 10
+        with sp.if_(x.value == 0):
+            arr.value.push("0")
+        with sp.while_(0 < x.value):
+            arr.value.push(c[x.value % 10])
+            x.value //= 10
 
-    result = sp.local("result", sp.concat(arr.value))
+        result = sp.local("result", sp.concat(arr.value))
 
-    return result.value
+        return result.value
 
-def nat_of_string(s):
-    """Convert a string into a int"""
-    c = sp.map({str(x): x for x in range(0, 10)})
+    @staticmethod
+    def bytes_of_string(text):
+        b = sp.pack(text)
+        # Remove (packed prefix), (Data identifier) and (string length)
+        # - Packed prefix: 0x05 (1 byte)
+        # - Data identifier: (string = 0x01) (1 byte)
+        # - String length (4 bytes)
+        return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
+            "Could not encode string to bytes."
+        )
 
-    text = sp.local("text", s)
-
-    result = sp.local("result", 0)
-    with sp.for_("idx", sp.range(0, sp.len(text.value))) as idx:
-        result.value = 10 * result.value + c[sp.slice(text.value, idx, 1).open_some()]
-
-    return result.value
-
-
-def bytes_of_string(text):
-    b = sp.pack(text)
-    # Remove (packed prefix), (Data identifier) and (string length)
-    # - Packed prefix: 0x05 (1 byte)
-    # - Data identifier: (string = 0x01) (1 byte)
-    # - String length (4 bytes)
-    return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
-        "Could not encode string to bytes."
-    )
-
-
-def ascii_string_of_bytes(b):
-    packedBytes = sp.concat(
-        [
-            sp.bytes("0x05"),
-            sp.bytes("0x01"),
-            sp.bytes("0x00000001"),
-            sp.slice(b, 1, 1).open_some(),
-        ]
-    )
-    return sp.unpack(packedBytes, sp.TString).open_some(
-        "Could not decode bytes to string"
-    )
+    @staticmethod
+    def string_of_bytes(b):
+        packedBytes = sp.concat(
+            [
+                sp.bytes("0x05"),
+                sp.bytes("0x01"),
+                sp.bytes("0x00000001"),
+                sp.slice(b, 1, 1).open_some(),
+            ]
+        )
+        return sp.unpack(packedBytes, sp.TString).open_some(sp.unit)
 
 
 class IBCF_Client(sp.Contract):
@@ -93,17 +84,23 @@ class IBCF_Client(sp.Contract):
         # Increase counter
         self.data.counter += 1
 
-        packed_counter = sp.compute(bytes_of_string(string_of_nat(self.data.counter)))
+        packed_counter = sp.compute(
+            Inlined.bytes_of_string(Inlined.string_of_nat(self.data.counter))
+        )
 
         # Send ping
-        param = sp.record(key=bytes_of_string("counter"), value=packed_counter)
+        param = sp.record(key=Inlined.bytes_of_string("counter"), value=packed_counter)
         contract = sp.contract(
             Type.InsertArgument, self.data.ibcf_tezos_state, "insert"
-        ).open_some("INVALID_CONTRACT")
+        ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(param, sp.mutez(0), contract)
 
     @sp.entry_point(
-        parameter_type=sp.TRecord(block_number=sp.TNat, account_proof_rlp=sp.TBytes, storage_proof_rlp=sp.TBytes)
+        parameter_type=sp.TRecord(
+            block_number=sp.TNat,
+            account_proof_rlp=sp.TBytes,
+            storage_proof_rlp=sp.TBytes,
+        )
     )
     def pong(self, param):
         # Pongs can only happen when counter is odd
@@ -126,11 +123,10 @@ class IBCF_Client(sp.Contract):
                 ValidatiorInterface.Validate_storage_proof_argument,
             ),
             t=sp.TBytes,
-        ).open_some("INVALID_VIEW")
+        ).open_some(Error.INVALID_VIEW)
 
         sp.verify(
-            ascii_string_of_bytes(response) == string_of_nat(self.data.counter),
-            (
-                Error.INVALID_COUNTER
-            ),
+            Inlined.string_of_bytes(response)
+            == Inlined.string_of_nat(self.data.counter),
+            (Error.INVALID_COUNTER),
         )

@@ -4,8 +4,6 @@ import contracts.tezos.IBCF_Aggregator
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
 from contracts.tezos.utils.bytes import bytes_to_bits
 
-contracts.tezos.IBCF_Aggregator.HASH_FUNCTION = sp.blake2b
-
 
 def update_signers(payload):
     return sp.variant("update_signers", payload)

@@ -146,7 +146,10 @@ def run_actions(client: PyTezosClient):
                 op = (
                     client.contract(action["contract_address"])
                     .using(block_id="head")
-                    .parameter(action["entrypoint"], action["argument"])
+                    .parameter(
+                        action["entrypoint"],
+                        action["argument"] if "argument" in action else None,
+                    )
                 )
 
                 if "amount" in action:

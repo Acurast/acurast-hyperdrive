@@ -9,37 +9,36 @@ let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 const chain_id = "0xaf1864d9"
 
 contract('IBCF_Client', async ([_, primary]) => {
+    const signer_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
+    const signer_public_key = ["0x80b156abc1b94075eb95ba6c397d50e987acf2bb8107dd1adb0c1691dee56bcb", "0x6379608d6db8f328b9e50f74778d2bf34d31e523ef4c72e8c2c7355264003f5a"];
     let client;
     let validator;
     beforeEach('deploy proof validator', async () => {
         validator = await IBCF_Validator.new(primary, 1, chain_id, { from: primary })
-        client = await IBCF_Client.new(validator.address,"0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9", { from: primary })
+        client = await IBCF_Client.new(validator.address,"0x050a0000001601cf2a14662a31d76af69fe71ab045187b0965eb7600", { from: primary })
 
         // Add signers
-        await validator.add_signers([primary], [public_key], { from: primary })
+        await validator.add_signers([signer_address], [signer_public_key], { from: primary })
+
+        // Set counter
+        await client.set_counter("4", { from: primary })
     })
 
-    it('Call mint (Valid proof)', async function() {
-        const level = 1;
-        const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
-
-        const proof = [
-            ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
-            ['0x29ac39fe8a6f05c0296b2f57769dae6a261e75a668c5b75bb96f43426e738a7d', '0x0000000000000000000000000000000000000000000000000000000000000000'],
-            ['0x0000000000000000000000000000000000000000000000000000000000000000', '0x7e6f448ed8ceff132d032cc923dcd3f49fa7e702316a3db73e09b1ba2beea812'],
-            ['0x47811eb10e0e7310f8e6c47b736de67b9b68f018d9dc7a224a5965a7fe90d405', '0x0000000000000000000000000000000000000000000000000000000000000000'],
-            ['0x0000000000000000000000000000000000000000000000000000000000000000', '0x7646d25d9a992b6ebb996c2c4e5530ffc18f350747c12683ce90a1535305859c'],
-            ['0x0000000000000000000000000000000000000000000000000000000000000000', '0xfe9181cc5392bc544a245964b1d39301c9ebd75c2128765710888ba4de9e61ea'],
-            ['0x0000000000000000000000000000000000000000000000000000000000000000', '0x12f6db53d79912f90fd2a58ec4c30ebd078c490a6c5bd68c32087a3439ba111a'],
-            ['0x0000000000000000000000000000000000000000000000000000000000000000', '0xefac0c32a7c7ab5ee5140850b5d7cbd6ebfaa406964a7e1c10239ccb816ea75e'],
-            ['0xceceb700876e9abc4848969882032d426e67b103dc96f55eeab84f773a7eeb5c', '0x0000000000000000000000000000000000000000000000000000000000000000'],
-            ['0xabce2c418c92ca64a98baf9b20a3fcf7b5e9441e1166feedf4533b57c4bfa6a4', '0x0000000000000000000000000000000000000000000000000000000000000000']
+    it('Call ping (Valid proof)', async function() {
+        const level = 956480;
+        const valid_merkle_root = "0x0fc1154b3a871e52ef7a03c6a45962609a45e0659b9fb1e391b9532d0465a9fb";
+        //const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
+        const signatures = [
+            [
+              '0x00f149e30b7d45f15b02ac122e746a3e50e12df4b286c49809e26a06499fe28e91',
+              '0x79c63076e4faf7c01ed83b39e1433dc92d6e797bed87af1c22f30272912d5e13'
+            ]
         ]
 
-        const key = "0x0000000000000000000000000003e7";
-        const value = "0x0000000000000000000000000003e7";
-        await client.mint(level, valid_merkle_root, key, value, proof, [primary], [signature]);
-        console.log("\n\tConsumed gas: ", await client.mint.estimateGas(level, valid_merkle_root, key, value, proof, [primary], [signature]))
+        const proof = []
+
+        const key = "0x636f756e746572";
+        const value = "0x35";
+        await client.ping(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
     })
 })

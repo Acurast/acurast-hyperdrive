@@ -16,6 +16,7 @@ EMPTY_TRIE_ROOT_HASH = sp.bytes(
 )
 BLOCK_HEADER_STATE_ROOT_INDEX = 3
 BLOCK_HEADER_LEVEL_INDEX = 8
+ACCOUNT_STATE_ROOT_INDEX = 2
 
 
 class Error:
@@ -66,42 +67,23 @@ class Type:
 
 
 class Inlined:
+    @staticmethod
     def failIfNotAdministrator(self):
         """
         This method when used, ensures that only the administrator is allowed to call a given entrypoint
         """
         sp.verify(self.data.config.administrator == sp.sender, Error.NOT_ADMINISTRATOR)
 
+    @staticmethod
     def failIfNotValidator(self):
         """
         This method when used, ensures that only validators are allowed to call a given entrypoint
         """
         sp.verify(self.data.config.validators.contains(sp.sender), Error.NOT_VALIDATOR)
 
-    def get_info_from_block_header(rlp_to_list, rlp_remove_offset, block_header):
-        """
-        Extract state root from block header, verifying block hash
-
-        block_hash = sp.keccak(block_header)
-        """
-        int_of_bytes = sp.compute(sp.build_lambda(Bytes.int_of_bytes))
-
-        header_fields = sp.compute(rlp_to_list(block_header))
-
-        # Get state root hash
-        state_root = rlp_remove_offset(header_fields[BLOCK_HEADER_STATE_ROOT_INDEX])
-        # Get block level
-        block_number = int_of_bytes(
-            rlp_remove_offset(header_fields[BLOCK_HEADER_LEVEL_INDEX])
-        )
-
-        return sp.record(
-            state_root=state_root,
-            block_number=block_number,
-        )
-
 
 class Lambdas:
+    @staticmethod
     def validate_block_state_root(arg):
         (state_roots, minimum_endorsements) = sp.match_record(
             arg,
@@ -136,12 +118,15 @@ class Lambdas:
 
 
 class RLP_utils:
+    @staticmethod
     def to_list():
         return sp.compute(sp.build_lambda(RLP.to_list))
 
+    @staticmethod
     def is_list():
         return sp.compute(sp.build_lambda(RLP.is_list))
 
+    @staticmethod
     def remove_offset():
         return sp.compute(sp.build_lambda(RLP.remove_offset))
 
@@ -376,13 +361,12 @@ class IBCF_Eth_Validator(sp.Contract):
             "storage_proof_rlp",
         )
 
-        validate_block_state_root = sp.build_lambda(Lambdas.validate_block_state_root)
-
         block_state_roots = sp.compute(
             self.data.block_state_root.get(
                 block_number, message=Error.UNPROCESSED_BLOCK_STATE
             )
         )
+        validate_block_state_root = sp.build_lambda(Lambdas.validate_block_state_root)
         block_state_root = sp.compute(
             validate_block_state_root(
                 sp.record(
@@ -405,20 +389,24 @@ class IBCF_Eth_Validator(sp.Contract):
 
         # Validate proof and extract the account state
         account_state_root = sp.compute(
-            sp.view(
-                "verify",
-                sp.self_address,
-                sp.set_type_expr(
-                    sp.record(
-                        path=account_state_path,
-                        proof_rlp=account_proof_rlp,
-                        rlp=rlp,
-                        state_root=block_state_root,
-                    ),
-                    Type.Verify_argument,
-                ),
-                t=sp.TBytes,
-            ).open_some(sp.unit)
+            rlp.remove_offset(
+                rlp.to_list(
+                    sp.view(
+                        "verify",
+                        sp.self_address,
+                        sp.set_type_expr(
+                            sp.record(
+                                path=account_state_path,
+                                proof_rlp=account_proof_rlp,
+                                rlp=rlp,
+                                state_root=block_state_root,
+                            ),
+                            Type.Verify_argument,
+                        ),
+                        t=sp.TBytes,
+                    ).open_some(sp.unit)
+                )[ACCOUNT_STATE_ROOT_INDEX]
+            )
         )
 
         sp.result(

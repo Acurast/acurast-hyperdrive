@@ -4,40 +4,60 @@ pytezos:
 known_addresses:
     signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
     signer_2: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3
-    IBCF_Aggragator: KT1UtaDDuiN1sMgpqMq2Wo4pVe1z7poZ4Loo
-    IBCF_Client: KT1J7RrwXjdzWTpyjU6p736FviaYDsQnPb2m
 actions:
-    # - kind: origination
-    #   contract_kind: IBCF_Aggragator
-    #   name: IBCF_Aggragator
-    #   code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
-    #   storage: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_storage.tz
-    #   overrides:
-    #       config:
-    #           administrator: admin_address
-    #           signers:
-    #               - signer_1
-    #               - signer_2
-    #               - admin_address
-    #           history_ttl: 4
-    #           max_state_size: 32
-    #           max_states: 5
+    - kind: origination
+      contract_kind: IBCF_Aggragator
+      name: IBCF_Aggragator
+      code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
+      storage: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_storage.tz
+      overrides:
+          config:
+              administrator: admin_address
+              signers:
+                  - signer_1
+                  - signer_2
+                  - admin_address
+              history_ttl: 4
+              max_state_size: 32
+              max_states: 5
 
-    # - kind: origination
-    #   contract_kind: IBCF_Client
-    #   name: IBCF_Client
-    #   code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Client/IBCF_Client/step_000_cont_0_contract.tz
-    #   storage:
-    #       ibcf_address: IBCF_Aggragator
-    #       locked:
-    #           0: 0
+    - kind: origination
+      contract_kind: IBCF_Eth_Validator
+      name: IBCF_Eth_Validator
+      code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Eth_Validator/IBCF_Eth_Validator/step_000_cont_0_contract.tz
+      overrides:
+          config:
+              administrator: admin_address
+              validators:
+                  - signer_1
+                  - signer_2
+                  - admin_address
+              minimum_endorsements: 1
+
+    - kind: origination
+      contract_kind: IBCF_Client
+      name: IBCF_Client
+      code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Client/IBCF_Client/step_000_cont_0_contract.tz
+      storage:
+            eth_contract: "0x91Fb61cc7EDC7f2875a4f8a72f0FA019c7e349a5"
+            storage_slot: "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ibcf_tezos_state: IBCF_Aggragator
+            ibcf_eth_validator: IBCF_Eth_Validator
+            counter: 0
+
+    # - kind: contract_call
+    #   contract_address: IBCF_Client
+    #   entrypoint: update_storage
+    #   argument:
+    #         eth_contract: "0x91Fb61cc7EDC7f2875a4f8a72f0FA019c7e349a5"
+    #         storage_slot: "0x0000000000000000000000000000000000000000000000000000000000000000"
+    #         ibcf_tezos_state: IBCF_Aggragator
+    #         ibcf_eth_validator: IBCF_Eth_Validator
+    #         counter: 0
 
     - kind: contract_call
       contract_address: IBCF_Client
-      entrypoint: lock
-      argument:
-          token_id: 0
-          amount: 100
+      entrypoint: ping
 
     # - kind: contract_call
     #   contract_address: IBCF_Aggragator
