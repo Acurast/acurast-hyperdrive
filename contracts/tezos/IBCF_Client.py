@@ -91,7 +91,7 @@ class IBCF_Client(sp.Contract):
         # Send ping
         param = sp.record(key=Inlined.bytes_of_string("counter"), value=packed_counter)
         contract = sp.contract(
-            Type.InsertArgument, self.data.ibcf_tezos_state, "insert"
+            Type.Insert_argument, self.data.ibcf_tezos_state, "insert"
         ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(param, sp.mutez(0), contract)
 
