@@ -8,6 +8,7 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type
 from contracts.tezos.IBCF_Eth_Validator import Type as ValidatiorInterface
+from contracts.tezos.utils.bytes import bytes_of_string
 
 
 class Error:
@@ -35,17 +36,6 @@ class Inlined:
         result = sp.local("result", sp.concat(arr.value))
 
         return result.value
-
-    @staticmethod
-    def bytes_of_string(text):
-        b = sp.pack(text)
-        # Remove (packed prefix), (Data identifier) and (string length)
-        # - Packed prefix: 0x05 (1 byte)
-        # - Data identifier: (string = 0x01) (1 byte)
-        # - String length (4 bytes)
-        return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
-            "Could not encode string to bytes."
-        )
 
     @staticmethod
     def string_of_bytes(b):
@@ -85,11 +75,11 @@ class IBCF_Client(sp.Contract):
         self.data.counter += 1
 
         packed_counter = sp.compute(
-            Inlined.bytes_of_string(Inlined.string_of_nat(self.data.counter))
+            bytes_of_string(Inlined.string_of_nat(self.data.counter))
         )
 
         # Send ping
-        param = sp.record(key=Inlined.bytes_of_string("counter"), value=packed_counter)
+        param = sp.record(key=bytes_of_string("counter"), value=packed_counter)
         contract = sp.contract(
             Type.Insert_argument, self.data.ibcf_tezos_state, "insert"
         ).open_some(Error.INVALID_CONTRACT)
@@ -102,7 +92,7 @@ class IBCF_Client(sp.Contract):
             storage_proof_rlp=sp.TBytes,
         )
     )
-    def pong(self, param):
+    def confirm_pong(self, param):
         # Pongs can only happen when counter is odd
         sp.verify(self.data.counter % 2 == 1, Error.EXPECTING_PING)
 
@@ -110,7 +100,7 @@ class IBCF_Client(sp.Contract):
         self.data.counter += 1
 
         response = sp.view(
-            "validate_proof",
+            "validate_storage_proof",
             self.data.ibcf_eth_validator,
             sp.set_type_expr(
                 sp.record(

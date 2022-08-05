@@ -1,44 +1,55 @@
-const { signContent, buildBuffer , createSecp256r1KeyPair} = require("./utils");
-const crypto = require('crypto');
-const ecPem  = require('ec-pem');
+const { signContent, buildBuffer, createSecp256r1KeyPair, expectsFailure } = require("./utils");
 
 const IBCF_Client = artifacts.require('IBCF_Client');
 const IBCF_Validator = artifacts.require('IBCF_Validator');
 
 let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
-const chain_id = "0xaf1864d9"
 
 contract('IBCF_Client', async ([_, primary]) => {
     const signer_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
     const signer_public_key = ["0x80b156abc1b94075eb95ba6c397d50e987acf2bb8107dd1adb0c1691dee56bcb", "0x6379608d6db8f328b9e50f74778d2bf34d31e523ef4c72e8c2c7355264003f5a"];
+    const chain_id = "0xaf1864d9"
+    const packed_tezos_client_address = "0x050a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467";
     let client;
     let validator;
-    beforeEach('deploy proof validator', async () => {
+
+    beforeEach('Deploy contracts', async () => {
         validator = await IBCF_Validator.new(primary, 1, chain_id, { from: primary })
-        client = await IBCF_Client.new(validator.address,"0x050a0000001601cf2a14662a31d76af69fe71ab045187b0965eb7600", { from: primary })
+        client = await IBCF_Client.new(validator.address, packed_tezos_client_address, { from: primary })
 
         // Add signers
-        await validator.add_signers([signer_address], [signer_public_key], { from: primary })
+        await validator.add_signers([signer_address], [public_key], { from: primary })
 
         // Set counter
-        await client.set_counter("4", { from: primary })
+        await client.set_counter("0", { from: primary })
     })
 
-    it('Call ping (Valid proof)', async function() {
-        const level = 956480;
-        const valid_merkle_root = "0x0fc1154b3a871e52ef7a03c6a45962609a45e0659b9fb1e391b9532d0465a9fb";
-        //const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
-        const signatures = [
-            [
-              '0x00f149e30b7d45f15b02ac122e746a3e50e12df4b286c49809e26a06499fe28e91',
-              '0x79c63076e4faf7c01ed83b39e1433dc92d6e797bed87af1c22f30272912d5e13'
-            ]
-        ]
+    it('Call pong (Counter invalid)', async function() {
+        expectsFailure(async () => await client.pong(), "Expected fail from wrong counter.");
+    });
 
-        const proof = []
+    it('Call confirm_ping (Valid proof)', async function() {
+        const level = 1;
+        const valid_merkle_root = "0x03fb6489062fe9474620ba4a55debfc6cbc295aefe4696999267402a2e8d54c1";
+        const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
+
+        const signatures = [
+            signature
+        ];
+
+        const proof = [
+            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0xee92f395cb07c5f75880971a8303899f9bdd71c9a15e3df3c755d946a65226f0"],
+            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0xcaf65ad810916d8806b6489cf56b2a92cb6497e3e63cfdf8987066b60bb8151d"],
+            ["0x7149b45c8811e303bdafc8bac168ff42aeee1908705fb025ef454b7a5121fc17", "0x0000000000000000000000000000000000000000000000000000000000000000"],
+            ["0x74220814f5b91d9b71bcce3950557719b4fa2634f1535e32f0e57e2174846dd1", "0x0000000000000000000000000000000000000000000000000000000000000000"],
+            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0x5e799ae27bc21362ef510ea126403823afbab41bf15bef8fe71d5be51ccd5496"],
+            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0xb71f9a155c40787bffbeac19861f3dd2f5f948282c1dd64f3b15904182a2f05a"]
+        ];
 
         const key = "0x636f756e746572";
-        const value = "0x35";
-        await client.ping(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
+        const value = "0x31";
+        await client.confirm_ping(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
+        // Test pong
+        await client.pong();
     })
 })

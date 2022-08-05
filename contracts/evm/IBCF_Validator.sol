@@ -26,20 +26,20 @@ contract IBCF_Validator {
     }
 
     // modifier to check if caller is the administrator
-    modifier isAdmin() {
+    modifier is_admin() {
         require(msg.sender == administrator, Err.NOT_ADMIN);
         _;
     }
 
-    function update_administrator(address new_admnistrator) public isAdmin {
+    function update_administrator(address new_admnistrator) public is_admin {
         administrator = new_admnistrator;
     }
 
-    function update_signatures_threshold(uint8 _signatures_threshold) public isAdmin {
+    function update_signatures_threshold(uint8 _signatures_threshold) public is_admin {
         signatures_threshold = _signatures_threshold;
     }
 
-    function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public isAdmin {
+    function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public is_admin {
         for (uint i=0; i<_signers.length; i++) {
             // Fail if signer already exists
             require(signer_public_key[_signers[i]][0] == 0, Err.SIGNER_EXISTS);
@@ -49,7 +49,7 @@ contract IBCF_Validator {
         }
     }
 
-    function remove_signers(address[] memory _signers) public isAdmin {
+    function remove_signers(address[] memory _signers) public is_admin {
         for (uint i=0; i<_signers.length; i++) {
             for(uint j=0; j<signers.length; j++) {
                 if(signers[j] == _signers[i]) {

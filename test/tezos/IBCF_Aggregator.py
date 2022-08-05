@@ -1,8 +1,7 @@
 import smartpy as sp
 
-import contracts.tezos.IBCF_Aggregator
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
-from contracts.tezos.utils.bytes import bytes_to_bits
+from contracts.tezos.utils.bytes import bytes_to_bits, bytes_of_string
 
 
 def update_signers(payload):
@@ -35,10 +34,10 @@ def test():
     encoded_alice_address = ENCODE(alice.address)
     encoded_claus_address = ENCODE(claus.address)
 
-    encoded_price_key = ENCODE("price")
-    encoded_price_value_1 = ENCODE("1")
-    encoded_price_value_2 = ENCODE("2")
-    encoded_price_value_3 = ENCODE("3")
+    encoded_counter_key = bytes_of_string("counter")
+    encoded_counter_value_1 = bytes_of_string("1")
+    encoded_counter_value_2 = bytes_of_string("2")
+    encoded_counter_value_3 = bytes_of_string("3")
 
     BLOCK_LEVEL_1 = 1
     BLOCK_LEVEL_2 = 2
@@ -62,60 +61,65 @@ def test():
 
     scenario += ibcf
 
-    # Update administrator
-    ibcf.configure(update_administrator(alice.address)).run(sender=admin.address)
+    # Try to set alice as administrator
+    ibcf.configure([update_administrator(alice.address)]).run(
+        sender=alice.address, valid=False, exception=Error.NOT_ADMINISTRATOR
+    )
+    # Set alice as administrator
+    ibcf.configure([update_administrator(alice.address)]).run(sender=admin.address)
     scenario.verify(ibcf.data.config.administrator == alice.address)
-    ibcf.configure(update_administrator(admin.address)).run(sender=alice.address)
+    # Revert to original administrator
+    ibcf.configure([update_administrator(admin.address)]).run(sender=alice.address)
     scenario.verify(ibcf.data.config.administrator == admin.address)
 
+    # Verify that there are no signers
+    scenario.verify(sp.len(ibcf.data.config.signers) == 0)
     # Add signers
     ibcf.configure(
-        update_signers(
-            sp.set(
-                [
-                    sp.variant("add", alice.address),
-                    sp.variant("add", bob.address),
-                    sp.variant("add", claus.address),
-                ]
+        [
+            update_signers(
+                sp.set(
+                    [
+                        sp.variant("add", alice.address),
+                        sp.variant("add", bob.address),
+                        sp.variant("add", claus.address),
+                    ]
+                )
             )
-        )
+        ]
     ).run(sender=admin.address)
+    # Verify that signer claus was added
     scenario.verify(ibcf.data.config.signers.contains(claus.address))
     # Remove signer
-    ibcf.configure(update_signers(sp.set([sp.variant("remove", claus.address)]))).run(
+    ibcf.configure([update_signers(sp.set([sp.variant("remove", claus.address)]))]).run(
         sender=admin.address
     )
+    # Verify that signer was removed
     scenario.verify(~ibcf.data.config.signers.contains(claus.address))
 
     # Try to remove a signer without having permissions
-    ibcf.configure(update_signers(sp.set([sp.variant("remove", alice.address)]))).run(
-        sender=bob.address, valid=False, exception=Error.NOT_ALLOWED
+    ibcf.configure([update_signers(sp.set([sp.variant("remove", alice.address)]))]).run(
+        sender=bob.address, valid=False, exception=Error.NOT_ADMINISTRATOR
     )
 
-    # Update history_ttl
-    ibcf.configure(update_history_ttl(10)).run(
+    # Update history_ttl and max_state_size
+    ibcf.configure(
+        [update_history_ttl(10), update_max_state_size(16), update_max_states(100)]
+    ).run(
         sender=admin.address,
     )
     scenario.verify(ibcf.data.config.history_ttl == 10)
-
-    # Update max_state_size
-    ibcf.configure(update_max_state_size(16)).run(
-        sender=admin.address,
-    )
     scenario.verify(ibcf.data.config.max_state_size == 16)
-    ibcf.configure(update_max_state_size(32)).run(
-        sender=admin.address,
-    )
+    scenario.verify(ibcf.data.config.max_states == 100)
 
-    # Update max_states
-    ibcf.configure(update_max_states(15)).run(
+    # Revert max_state_size change
+    ibcf.configure([update_max_state_size(32)]).run(
         sender=admin.address,
     )
-    scenario.verify(ibcf.data.config.max_states == 15)
 
     # Do not allow states bigger than 32 bytes
     ibcf.insert(
-        sp.record(key=encoded_price_key, value=sp.bytes("0x" + ("00" * 33)))
+        sp.record(key=encoded_counter_key, value=sp.bytes("0x" + ("00" * 33)))
     ).run(
         sender=alice.address,
         level=BLOCK_LEVEL_1,
@@ -124,17 +128,17 @@ def test():
     )
     # states with 32 bytes or less are allowed
     ibcf.insert(
-        sp.record(key=encoded_price_key, value=sp.bytes("0x" + ("00" * 32)))
+        sp.record(key=encoded_counter_key, value=sp.bytes("0x" + ("00" * 32)))
     ).run(sender=alice.address, level=BLOCK_LEVEL_1)
 
     # Insert multiple states
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_1)).run(
         sender=alice.address, level=BLOCK_LEVEL_1
     )
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_2)).run(
         sender=bob.address, level=BLOCK_LEVEL_1
     )
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_2)).run(
         sender=claus.address, level=BLOCK_LEVEL_1
     )
 
@@ -161,20 +165,23 @@ def test():
 
     # Get proof of inclusion for key="price" and price="1"
     proof = ibcf.get_proof(
-        sp.record(owner=alice.address, key=encoded_price_key, level=BLOCK_LEVEL_1)
+        sp.record(owner=alice.address, key=encoded_counter_key, level=BLOCK_LEVEL_1)
     )
 
     # Verify proof for block 1 (Valid)
-    ibcf.verify_proof(
-        sp.record(
-            level=BLOCK_LEVEL_1,
-            proof=proof.proof,
-            state=sp.record(
-                owner=encoded_alice_address,
-                key=encoded_price_key,
-                value=encoded_price_value_1,
-            ),
+    scenario.verify(
+        ibcf.verify_proof(
+            sp.record(
+                level=BLOCK_LEVEL_1,
+                proof=proof.proof,
+                state=sp.record(
+                    owner=encoded_alice_address,
+                    key=encoded_counter_key,
+                    value=encoded_counter_value_1,
+                ),
+            )
         )
+        == sp.unit
     )
 
     # Verify proof for block 2 (Invalid)
@@ -185,8 +192,8 @@ def test():
                 proof=proof.proof,
                 state=sp.record(
                     owner=encoded_alice_address,
-                    key=encoded_price_key,
-                    value=encoded_price_value_1,
+                    key=encoded_counter_key,
+                    value=encoded_counter_value_1,
                 ),
             )
         ),
@@ -195,13 +202,13 @@ def test():
     scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 
     # Insert multiple new states
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_2)).run(
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_2)).run(
         sender=alice.address, level=BLOCK_LEVEL_2
     )
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_1)).run(
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_1)).run(
         sender=bob.address, level=BLOCK_LEVEL_2
     )
-    ibcf.insert(sp.record(key=encoded_price_key, value=encoded_price_value_3)).run(
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_3)).run(
         sender=claus.address, level=BLOCK_LEVEL_2
     )
 
@@ -213,8 +220,8 @@ def test():
                 proof=proof.proof,
                 state=sp.record(
                     owner=encoded_alice_address,
-                    key=encoded_price_key,
-                    value=encoded_price_value_1,
+                    key=encoded_counter_key,
+                    value=encoded_counter_value_1,
                 ),
             )
         ),
@@ -224,18 +231,21 @@ def test():
 
     # Get proof of inclusion for key="price" and price="1" on block 2
     proof = ibcf.get_proof(
-        sp.record(owner=claus.address, key=encoded_price_key, level=BLOCK_LEVEL_2)
+        sp.record(owner=claus.address, key=encoded_counter_key, level=BLOCK_LEVEL_2)
     )
 
     # Verify proof for block 2 (Valid)
-    ibcf.verify_proof(
-        sp.record(
-            level=BLOCK_LEVEL_2,
-            proof=proof.proof,
-            state=sp.record(
-                owner=encoded_claus_address,
-                key=encoded_price_key,
-                value=encoded_price_value_3,
-            ),
+    scenario.verify(
+        ibcf.verify_proof(
+            sp.record(
+                level=BLOCK_LEVEL_2,
+                proof=proof.proof,
+                state=sp.record(
+                    owner=encoded_claus_address,
+                    key=encoded_counter_key,
+                    value=encoded_counter_value_3,
+                ),
+            )
         )
+        == sp.unit
     )

@@ -1,11 +1,11 @@
-parameter (or (unit %ping) (or (pair %pong (bytes %account_proof_rlp) (pair (nat %block_number) (bytes %storage_proof_rlp))) (pair %update_storage (pair (nat %counter) (bytes %eth_contract)) (pair (address %ibcf_eth_validator) (pair (address %ibcf_tezos_state) (bytes %storage_slot))))));
+parameter (or (pair %confirm_pong (bytes %account_proof_rlp) (pair (nat %block_number) (bytes %storage_proof_rlp))) (or (unit %ping) (pair %update_storage (pair (nat %counter) (bytes %eth_contract)) (pair (address %ibcf_eth_validator) (pair (address %ibcf_tezos_state) (bytes %storage_slot))))));
 storage   (pair (pair (nat %counter) (bytes %eth_contract)) (pair (address %ibcf_eth_validator) (pair (address %ibcf_tezos_state) (bytes %storage_slot))));
 code
   {
     UNPAIR;     
     IF_LEFT
       {
-        PUSH nat 0; 
+        PUSH nat 1; 
         PUSH nat 2; 
         DUP 4;      
         CAR;        
@@ -13,7 +13,7 @@ code
         EDIV;       
         IF_NONE
           {
-            PUSH int 82; 
+            PUSH int 97; 
             FAILWITH;   
           }
           {
@@ -24,7 +24,7 @@ code
         IF
           {}
           {
-            PUSH string "EXPECTING_PONG"; 
+            PUSH string "EXPECTING_PING"; 
             FAILWITH;   
           }; 
         SWAP;       
@@ -61,7 +61,7 @@ code
             EDIV;       
             IF_NONE
               {
-                PUSH int 32; 
+                PUSH int 33; 
                 FAILWITH;   
               }
               {
@@ -70,7 +70,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 32; 
+                PUSH int 33; 
                 FAILWITH;   
               }
               {}; 
@@ -80,7 +80,7 @@ code
             EDIV;       
             IF_NONE
               {
-                PUSH int 33; 
+                PUSH int 34; 
                 FAILWITH;   
               }
               {
@@ -92,75 +92,84 @@ code
             COMPARE;    
             GT;         
           }; 
-        SWAP;       
-        DROP;       
-        SWAP;       
-        DROP;       
+        DUP;        
         CONCAT;     
         DUP;        
-        PACK;       
-        PUSH nat 6; 
-        DIG 2;      
-        PACK;       
-        SIZE;       
-        SUB;        
-        ISNAT;      
+        NIL bytes;  
+        DIG 6;      
+        DUP;        
+        GET 3;      
+        SWAP;       
+        DUP;        
+        DUG 8;      
+        GET 6;      
+        DIG 7;      
+        DUP;        
+        GET 4;      
+        SWAP;       
+        DUP;        
+        GET 3;      
+        SWAP;       
+        DUP;        
+        DUG 10;     
+        CAR;        
+        DUP 12;     
+        CAR;        
+        CDR;        
+        PAIR 5;     
+        DIG 4;      
+        DROP;       
+        DIG 4;      
+        DROP;       
+        DIG 4;      
+        DROP;       
+        DIG 4;      
+        DROP;       
+        VIEW "validate_storage_proof" bytes; 
         IF_NONE
           {
-            PUSH int 46; 
+            PUSH string "INVALID_VIEW"; 
             FAILWITH;   
           }
           {}; 
-        PUSH nat 6; 
+        PUSH nat 1; 
+        DUP;        
         SLICE;      
         IF_NONE
           {
-            PUSH string "Could not encode string to bytes."; 
+            PUSH int 47; 
             FAILWITH;   
           }
           {}; 
-        NIL operation; 
-        DUP 3;      
-        GET 5;      
-        CONTRACT %insert (pair (bytes %key) (bytes %value)); 
-        IF_NONE
-          {
-            PUSH string "INVALID_CONTRACT"; 
-            FAILWITH;   
-          }
-          {}; 
-        PUSH mutez 0; 
-        DIG 3;      
-        PUSH string "counter"; 
-        PACK;       
-        PUSH nat 6; 
-        PUSH string "counter"; 
-        PACK;       
-        SIZE;       
-        SUB;        
-        ISNAT;      
-        IF_NONE
-          {
-            PUSH int 46; 
-            FAILWITH;   
-          }
-          {}; 
-        PUSH nat 6; 
-        SLICE;      
-        IF_NONE
-          {
-            PUSH string "Could not encode string to bytes."; 
-            FAILWITH;   
-          }
-          {}; 
-        PAIR;       
-        TRANSFER_TOKENS; 
         CONS;       
+        PUSH bytes 0x00000001; 
+        CONS;       
+        PUSH bytes 0x01; 
+        CONS;       
+        PUSH bytes 0x05; 
+        CONS;       
+        CONCAT;     
+        UNPACK string; 
+        IF_NONE
+          {
+            UNIT;       
+            FAILWITH;   
+          }
+          {}; 
+        COMPARE;    
+        EQ;         
+        IF
+          {}
+          {
+            PUSH string "INVALID_COUNTER"; 
+            FAILWITH;   
+          }; 
+        NIL operation; 
       }
       {
         IF_LEFT
           {
-            PUSH nat 1; 
+            PUSH nat 0; 
             PUSH nat 2; 
             DUP 4;      
             CAR;        
@@ -168,7 +177,7 @@ code
             EDIV;       
             IF_NONE
               {
-                PUSH int 107; 
+                PUSH int 72; 
                 FAILWITH;   
               }
               {
@@ -179,7 +188,7 @@ code
             IF
               {}
               {
-                PUSH string "EXPECTING_PING"; 
+                PUSH string "EXPECTING_PONG"; 
                 FAILWITH;   
               }; 
             SWAP;       
@@ -216,7 +225,7 @@ code
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 32; 
+                    PUSH int 33; 
                     FAILWITH;   
                   }
                   {
@@ -225,7 +234,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 32; 
+                    PUSH int 33; 
                     FAILWITH;   
                   }
                   {}; 
@@ -235,7 +244,7 @@ code
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 33; 
+                    PUSH int 34; 
                     FAILWITH;   
                   }
                   {
@@ -247,84 +256,76 @@ code
                 COMPARE;    
                 GT;         
               }; 
-            DUP;        
+            SWAP;       
+            DROP;       
+            SWAP;       
+            DROP;       
             CONCAT;     
             DUP;        
-            NIL bytes;  
-            DIG 6;      
-            DUP;        
-            GET 3;      
-            SWAP;       
-            DUP;        
-            DUG 8;      
-            GET 6;      
-            DIG 7;      
-            DUP;        
-            GET 4;      
-            SWAP;       
-            DUP;        
-            GET 3;      
-            SWAP;       
-            DUP;        
-            DUG 10;     
-            CAR;        
-            DUP 12;     
-            CAR;        
-            CDR;        
-            PAIR 5;     
-            DIG 4;      
-            DROP;       
-            DIG 4;      
-            DROP;       
-            DIG 4;      
-            DROP;       
-            DIG 4;      
-            DROP;       
-            VIEW "validate_proof" bytes; 
+            PACK;       
+            PUSH nat 6; 
+            DIG 2;      
+            PACK;       
+            SIZE;       
+            SUB;        
+            ISNAT;      
             IF_NONE
               {
-                PUSH string "INVALID_VIEW"; 
+                PUSH int 127; 
                 FAILWITH;   
               }
               {}; 
-            PUSH nat 1; 
-            DUP;        
+            PUSH nat 6; 
             SLICE;      
             IF_NONE
               {
-                PUSH int 57; 
+                PUSH string "Could not encode string to bytes."; 
                 FAILWITH;   
               }
               {}; 
-            CONS;       
-            PUSH bytes 0x00000001; 
-            CONS;       
-            PUSH bytes 0x01; 
-            CONS;       
-            PUSH bytes 0x05; 
-            CONS;       
-            CONCAT;     
-            UNPACK string; 
+            NIL operation; 
+            DUP 3;      
+            GET 5;      
+            CONTRACT %insert (pair (bytes %key) (bytes %value)); 
             IF_NONE
               {
-                UNIT;       
+                PUSH string "INVALID_CONTRACT"; 
                 FAILWITH;   
               }
               {}; 
-            COMPARE;    
-            EQ;         
-            IF
-              {}
+            PUSH mutez 0; 
+            DIG 3;      
+            PUSH string "counter"; 
+            PACK;       
+            PUSH nat 6; 
+            PUSH string "counter"; 
+            PACK;       
+            SIZE;       
+            SUB;        
+            ISNAT;      
+            IF_NONE
               {
-                PUSH string "INVALID_COUNTER"; 
+                PUSH int 127; 
                 FAILWITH;   
-              }; 
+              }
+              {}; 
+            PUSH nat 6; 
+            SLICE;      
+            IF_NONE
+              {
+                PUSH string "Could not encode string to bytes."; 
+                FAILWITH;   
+              }
+              {}; 
+            PAIR;       
+            TRANSFER_TOKENS; 
+            CONS;       
           }
           {
             SWAP;       
             DROP;       
+            NIL operation; 
           }; 
-        NIL operation; 
       }; 
     PAIR;       
   };

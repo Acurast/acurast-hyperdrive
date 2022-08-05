@@ -21,7 +21,7 @@ contract IBCF_Client {
         counter = _counter;
     }
 
-    function ping(
+    function confirm_ping(
         uint block_level,
         bytes32 merkle_root,
         bytes memory key,
@@ -41,12 +41,22 @@ contract IBCF_Client {
             signatures
         );
 
-        require(keccak256(key) == keccak256(bytes("counter")), "key must be counter");
-        string memory payload = Utils.string_of_bytes(value);
-        string memory _counter = Utils.string_of_uint(Utils.uint_of_string(counter) + 1);
-        require(keccak256(bytes(payload)) == keccak256(bytes(_counter)), "invalid counter");
+        uint _counter = Utils.uint_of_string(counter) + 1;
+        require(_counter % 2 == 1, "EXPECTED_ODD_COUNTER");
 
-        counter = Utils.string_of_uint(Utils.uint_of_string(_counter) + 1);
+        require(keccak256(key) == keccak256(bytes("counter")), "key must be counter");
+
+        string memory payload = Utils.string_of_bytes(value);
+        require(Utils.uint_of_string(payload) == _counter, "invalid counter");
+
+        counter = Utils.string_of_uint(_counter);
+    }
+
+    function pong() public {
+        uint _counter = Utils.uint_of_string(counter) + 1;
+        require(_counter % 2 == 0, "EXPECTED_EVEN_COUNTER");
+
+        counter = Utils.string_of_uint(_counter);
     }
 }
 

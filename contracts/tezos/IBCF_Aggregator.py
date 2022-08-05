@@ -16,11 +16,6 @@ HASH_FUNCTION = sp.keccak
 HASH_LENGTH = 256
 NULL_HASH = sp.bytes("0x")
 
-# This constant is used to limit the data length being inserted.
-MAX_STATE_LENGTH = 32
-# This constant is used to limit the amount of states being stored per merkle tree.
-MAX_STATES = 10
-
 EMPTY_TREE = sp.record(
     root=sp.bytes("0x"),
     root_edge=sp.record(
@@ -48,40 +43,41 @@ class Error:
     UNPROCESSED_BLOCK_STATE = "UNPROCESSED_BLOCK_STATE"
 
 
-#################
-# Inlined methods
-#################
-
-
-def hash_state(owner, key, value):
-    return HASH_FUNCTION(sp.concat([owner, key, value]))
-
-
-def hash_key(owner, key):
-    return HASH_FUNCTION(sp.concat([owner, key]))
-
-
-def hash_edge(edge):
-    # return HASH_FUNCTION(edge.node + sp.pack(edge.key))
-    return edge.node
-
-
-def hash_node(node):
-    return HASH_FUNCTION(hash_edge(node.children[0]) + hash_edge(node.children[1]))
-
-
-def insert_node(tree, node):
-    node_hash = hash_node(node)
-    tree.value.nodes[node_hash] = node
-
-    return node_hash
-
-
-def replace_node(tree, old_hash, node):
-    del tree.value.nodes[old_hash]
-    return insert_node(tree, node)
-
 class Inlined:
+    @staticmethod
+    def hash_state(owner, key, value):
+        return sp.compute(HASH_FUNCTION(sp.concat([owner, key, value])))
+
+    @staticmethod
+    def hash_key(owner, key):
+        return sp.compute(HASH_FUNCTION(sp.concat([owner, key])))
+
+    @staticmethod
+    def hash_edge(edge):
+        # return HASH_FUNCTION(edge.node + sp.pack(edge.key))
+        return edge.node
+
+    @staticmethod
+    def hash_node(node):
+        return sp.compute(
+            HASH_FUNCTION(
+                Inlined.hash_edge(node.children[0])
+                + Inlined.hash_edge(node.children[1])
+            )
+        )
+
+    @staticmethod
+    def insert_node(tree, node):
+        node_hash = Inlined.hash_node(node)
+        tree.value.nodes[node_hash] = node
+
+        return node_hash
+
+    @staticmethod
+    def replace_node(tree, old_hash, node):
+        del tree.value.nodes[old_hash]
+        return Inlined.insert_node(tree, node)
+
     @staticmethod
     def failIfNotAdministrator(self):
         """
@@ -95,6 +91,7 @@ class Inlined:
         This method when used, ensures that only signers are allowed to call a given entrypoint
         """
         sp.verify(self.data.config.signers.contains(sp.sender), Error.NOT_SIGNER)
+
 
 class Type:
     KeyMeta = sp.TRecord(data=sp.TNat, length=sp.TNat).right_comb()
@@ -120,15 +117,17 @@ class Type:
     # Entry points
     Insert_argument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
     Submit_signature = sp.TRecord(level=sp.TNat, signature=Signature).right_comb()
-    Configure_argument = sp.TVariant(
-        update_administrator=sp.TAddress,
-        update_signers=sp.TSet(
-            sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
-        ),
-        update_history_ttl=sp.TNat,
-        update_max_state_size=sp.TNat,
-        update_max_states=sp.TNat,
-    ).right_comb()
+    Configure_argument = sp.TList(
+        sp.TVariant(
+            update_administrator=sp.TAddress,
+            update_signers=sp.TSet(
+                sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
+            ),
+            update_history_ttl=sp.TNat,
+            update_max_state_size=sp.TNat,
+            update_max_states=sp.TNat,
+        ).right_comb()
+    )
 
     # Views
     Get_proof_argument = sp.TRecord(
@@ -239,7 +238,9 @@ class IBCF_Aggregator(sp.Contract):
                     n = sp.local("n", node.open_some())
                     n.value.children[head.open_some()] = r_stack.value[r_size.value]
 
-                    new_node_hash = replace_node(tree, edge_node.open_some(), n.value)
+                    new_node_hash = Inlined.replace_node(
+                        tree, edge_node.open_some(), n.value
+                    )
 
                     r_stack.value[r_size.value] = sp.compute(
                         sp.record(node=new_node_hash, key=prefix.open_some())
@@ -284,7 +285,9 @@ class IBCF_Aggregator(sp.Contract):
                                 r_size.value += 1
                                 r_stack.value[r_size.value] = sp.compute(
                                     sp.record(
-                                        node=insert_node(tree, branch_node.value),
+                                        node=Inlined.insert_node(
+                                            tree, branch_node.value
+                                        ),
                                         key=prefix,
                                     )
                                 )
@@ -311,12 +314,12 @@ class IBCF_Aggregator(sp.Contract):
 
             # Update root node
             edge = sp.compute(r_stack.value[r_size.value])
-            tree.value.root = hash_edge(edge)
+            tree.value.root = Inlined.hash_edge(edge)
             tree.value.root_edge = edge
 
             sp.result(tree.value)
 
-    @sp.entry_point(parameter_type = Type.Insert_argument)
+    @sp.entry_point(parameter_type=Type.Insert_argument)
     def insert(self, param):
         """
         Include new state into the merkle tree.
@@ -333,7 +336,10 @@ class IBCF_Aggregator(sp.Contract):
             sp.len(param.value) <= self.data.config.max_state_size,
             Error.STATE_TOO_LARGE,
         )
-        sp.verify(sp.len(tree.value.states) < MAX_STATES, Error.TOO_MANY_STATES)
+        sp.verify(
+            sp.len(tree.value.states) < self.data.config.max_states,
+            Error.TOO_MANY_STATES,
+        )
 
         latest_indexes = sp.local("latest_indexes", [])
         with sp.for_("el", self.data.merkle_history_indexes) as el:
@@ -348,22 +354,22 @@ class IBCF_Aggregator(sp.Contract):
         self.data.merkle_history_indexes = latest_indexes.value
         self.data.merkle_history_indexes.push(sp.level)
 
-        key_hash = sp.compute(hash_key(ENCODE(sp.sender), param.key))
+        key_hash = sp.compute(Inlined.hash_key(ENCODE(sp.sender), param.key))
         key = sp.compute(
             sp.record(
                 data=int_of_bits_lambda(
-                    bits_of_bytes(
-                        self.data.bytes_to_bits, key_hash
-                    )
+                    bits_of_bytes(self.data.bytes_to_bits, key_hash)
                 ),
                 length=HASH_LENGTH,
             )
         )
 
         # Set new state
-        tree.value.states[key_hash] = param.value
+        state_hash = sp.compute(
+            Inlined.hash_state(ENCODE(sp.sender), param.key, param.value)
+        )
+        tree.value.states[state_hash] = param.value
 
-        state_hash = sp.compute(hash_state(ENCODE(sp.sender), param.key, param.value))
         with sp.if_(tree.value.root != NULL_HASH):
             # Skip on first insertion
             tree.value = self.insert_at_edge(
@@ -371,7 +377,7 @@ class IBCF_Aggregator(sp.Contract):
             )
         with sp.else_():
             edge = sp.compute(sp.record(key=key, node=state_hash))
-            tree.value.root = hash_edge(edge)
+            tree.value.root = Inlined.hash_edge(edge)
             tree.value.root_edge = edge
 
         self.data.merkle_history[sp.level] = tree.value
@@ -382,36 +388,39 @@ class IBCF_Aggregator(sp.Contract):
         Inlined.failIfNotSigner(self)
 
         with sp.if_(self.data.merkle_history.contains(param.level)):
-            self.data.merkle_history[param.level].signatures[sp.sender] = param.signature
+            self.data.merkle_history[param.level].signatures[
+                sp.sender
+            ] = param.signature
         with sp.else_():
             sp.failwith(Error.UNPROCESSED_BLOCK_STATE)
 
     @sp.entry_point(parameter_type=Type.Configure_argument)
-    def configure(self, param):
+    def configure(self, actions):
         # Only allowed addresses can call this entry point
         Inlined.failIfNotAdministrator(self)
 
-        with param.match_cases() as action:
-            with action.match("update_signers") as payload:
-                with sp.for_("el", payload.elements()) as el:
-                    with el.match_cases() as cases:
-                        with cases.match("add") as add:
-                            self.data.config.signers.add(add)
-                        with cases.match("remove") as remove:
-                            self.data.config.signers.remove(remove)
-            with action.match("update_administrator") as administrator:
-                self.data.config.administrator = administrator
-            with cases.match("update_history_ttl") as payload:
-                self.data.config.history_ttl = payload
-            with cases.match("update_max_state_size") as payload:
-                self.data.config.max_state_size = payload
-            with cases.match("update_max_states") as payload:
-                self.data.config.max_states = payload
+        with sp.for_("action", actions) as action:
+            with action.match_cases() as action:
+                with action.match("update_signers") as payload:
+                    with sp.for_("el", payload.elements()) as el:
+                        with el.match_cases() as cases:
+                            with cases.match("add") as add:
+                                self.data.config.signers.add(add)
+                            with cases.match("remove") as remove:
+                                self.data.config.signers.remove(remove)
+                with action.match("update_administrator") as administrator:
+                    self.data.config.administrator = administrator
+                with cases.match("update_history_ttl") as payload:
+                    self.data.config.history_ttl = payload
+                with cases.match("update_max_state_size") as payload:
+                    self.data.config.max_state_size = payload
+                with cases.match("update_max_states") as payload:
+                    self.data.config.max_states = payload
 
     @sp.onchain_view()
     def get_proof(self, arg):
         """
-        Returns the Merkle-proof for the given key
+        Returns the Merkle-proof for the given key.
 
         :returns: sp.TRecord(
             level       = sp.TNat,
@@ -427,14 +436,12 @@ class IBCF_Aggregator(sp.Contract):
         split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
         int_of_bits_lambda = sp.compute(sp.build_lambda(int_of_bits))
 
-        key_hash = sp.compute(hash_key(ENCODE(arg.owner), arg.key))
+        key_hash = sp.compute(Inlined.hash_key(ENCODE(arg.owner), arg.key))
         key = sp.local(
             "key",
             sp.record(
                 data=int_of_bits_lambda(
-                    bits_of_bytes(
-                        self.data.bytes_to_bits, key_hash
-                    )
+                    bits_of_bytes(self.data.bytes_to_bits, key_hash)
                 ),
                 length=HASH_LENGTH,
             ),
@@ -477,7 +484,7 @@ class IBCF_Aggregator(sp.Contract):
                     with sp.if_(head == 0):
                         sp.result(
                             sp.right(
-                                hash_edge(
+                                Inlined.hash_edge(
                                     tree.value.nodes[root_edge.value.node].children[1]
                                 )
                             )
@@ -485,7 +492,7 @@ class IBCF_Aggregator(sp.Contract):
                     with sp.else_():
                         sp.result(
                             sp.left(
-                                hash_edge(
+                                Inlined.hash_edge(
                                     tree.value.nodes[root_edge.value.node].children[0]
                                 )
                             )
@@ -500,7 +507,7 @@ class IBCF_Aggregator(sp.Contract):
                 sp.record(
                     level=arg.level,
                     key=arg.key,
-                    value=tree.value.states[key_hash],
+                    value=tree.value.states[root_edge.value.node],
                     merkle_root=tree.value.root,
                     proof=blinded_path.value,
                     signatures=tree.value.signatures,
@@ -514,7 +521,7 @@ class IBCF_Aggregator(sp.Contract):
         """
         sp.set_type(arg, Type.Verify_proof_argument)
 
-        state_hash = hash_state(arg.state.owner, arg.state.key, arg.state.value)
+        state_hash = Inlined.hash_state(arg.state.owner, arg.state.key, arg.state.value)
         derived_hash = sp.local("derived_hash", state_hash)
         with sp.for_("el", arg.proof) as el:
             with el.match_cases() as cases:
