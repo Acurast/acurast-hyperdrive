@@ -4,8 +4,7 @@ pragma solidity 0.7.6;
 import {IBCF_Validator} from "./IBCF_Validator.sol";
 
 contract IBCF_Client {
-    uint counter = 0;
-    uint balance = 0;
+    string counter = "0";
     bytes tezos_source;
     address validator_address;
 
@@ -18,7 +17,11 @@ contract IBCF_Client {
         tezos_source = source;
     }
 
-    function mint(
+    function set_counter(string memory _counter) public {
+        counter = _counter;
+    }
+
+    function confirm_ping(
         uint block_level,
         bytes32 merkle_root,
         bytes memory key,
@@ -38,53 +41,58 @@ contract IBCF_Client {
             signatures
         );
 
-        balance += bytesToUint(sliceBytes(value, 2));
-        counter += 1;
+        uint _counter = Utils.uint_of_string(counter) + 1;
+        require(_counter % 2 == 1, "EXPECTED_ODD_COUNTER");
+
+        require(keccak256(key) == keccak256(bytes("counter")), "key must be counter");
+
+        string memory payload = Utils.string_of_bytes(value);
+        require(Utils.uint_of_string(payload) == _counter, "invalid counter");
+
+        counter = Utils.string_of_uint(_counter);
     }
 
-    function getBalance() public view returns (uint) {
-        return balance;
-    }
+    function pong() public {
+        uint _counter = Utils.uint_of_string(counter) + 1;
+        require(_counter % 2 == 0, "EXPECTED_EVEN_COUNTER");
 
-    function getCounter() public view returns (uint) {
-        return counter;
+        counter = Utils.string_of_uint(_counter);
     }
+}
 
-    function sliceBytes(bytes memory b, uint offset) public pure returns (bytes memory){
-        bytes memory _bytes;
-        for(uint i=offset;i<b.length;i++){
-            _bytes = abi.encodePacked(_bytes, b[i]);
+library Utils {
+    function string_of_bytes(bytes memory b) internal pure returns(string memory) {
+        return string(b);
+    }
+    function string_of_uint(uint value) internal pure returns (string memory) {
+        // @credits https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d50e608a4f0a74c75715258556e131a8e7e00f2d/contracts/utils/Strings.sol
+
+        if (value == 0) {
+            return "0";
         }
-        return _bytes;
-    }
-
-    function bytesToUint(bytes memory b) public pure returns (uint256){
-        uint256 number;
-        for(uint i=0;i<b.length;i++){
-            number = number + uint8(b[i]);
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
         }
-        return number;
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
     }
 
-    function decodeNibbles(bytes memory compact, uint skipNibbles) public view returns (bytes memory nibbles) {
-        require(compact.length > 0, "Empty bytes array");
-
-        uint length = compact.length * 2;
-        require(skipNibbles <= length, "Skip nibbles amount too large");
-        length -= skipNibbles;
-
-        nibbles = new bytes(length);
-        uint nibblesLength = 0;
-
-        for (uint i = skipNibbles; i < skipNibbles + length; i += 1) {
-            if (i % 2 == 0) {
-                nibbles[nibblesLength] = bytes1((uint8(compact[i/2]) >> 4) & 0xF);
-            } else {
-                nibbles[nibblesLength] = bytes1((uint8(compact[i/2]) >> 0) & 0xF);
+    function uint_of_string(string memory value) internal pure returns (uint) {
+        bytes memory b = bytes(value);
+        uint result = 0;
+        for (uint i = 0; i < b.length; i++) {
+            if (b[i] >= byte(uint8(48)) && b[i] <= byte(uint8(57))) {
+                result = result * 10 + (uint8(b[i]) - 48);
             }
-            nibblesLength += 1;
         }
-
-        assert(nibblesLength == nibbles.length);
+        return result;
     }
 }

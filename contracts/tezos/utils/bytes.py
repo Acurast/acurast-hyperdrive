@@ -116,3 +116,14 @@ def int_of_bytes(b):
     sp.result(
         sp.as_nat(sp.to_int(sp.unpack(packedBytes, sp.TBls12_381_fr).open_some()))
     )
+
+
+def bytes_of_string(text):
+    b = sp.pack(text)
+    # Remove (packed prefix), (Data identifier) and (string length)
+    # - Packed prefix: 0x05 (1 byte)
+    # - Data identifier: (string = 0x01) (1 byte)
+    # - String length (4 bytes)
+    return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
+        "Could not encode string to bytes."
+    )

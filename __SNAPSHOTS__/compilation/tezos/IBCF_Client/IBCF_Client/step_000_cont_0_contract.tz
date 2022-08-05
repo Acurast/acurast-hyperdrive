@@ -1,87 +1,331 @@
-parameter (or (pair %lock (nat %amount) (nat %token_id)) (pair %unlock (nat %amount) (nat %token_id)));
-storage   (pair (address %ibcf_address) (map %locked nat nat));
+parameter (or (pair %confirm_pong (bytes %account_proof_rlp) (pair (nat %block_number) (bytes %storage_proof_rlp))) (or (unit %ping) (pair %update_storage (pair (nat %counter) (bytes %eth_contract)) (pair (address %ibcf_eth_validator) (pair (address %ibcf_tezos_state) (bytes %storage_slot))))));
+storage   (pair (pair (nat %counter) (bytes %eth_contract)) (pair (address %ibcf_eth_validator) (pair (address %ibcf_tezos_state) (bytes %storage_slot))));
 code
   {
     UNPAIR;     
     IF_LEFT
       {
-        SWAP;       
-        DUP;        
-        CDR;        
-        DUP;        
+        PUSH nat 1; 
+        PUSH nat 2; 
         DUP 4;      
-        CDR;        
+        CAR;        
+        CAR;        
+        EDIV;       
+        IF_NONE
+          {
+            PUSH int 97; 
+            FAILWITH;   
+          }
+          {
+            CDR;        
+          }; 
+        COMPARE;    
+        EQ;         
+        IF
+          {}
+          {
+            PUSH string "EXPECTING_PING"; 
+            FAILWITH;   
+          }; 
+        SWAP;       
+        UNPAIR;     
+        UNPAIR;     
+        PUSH nat 1; 
+        ADD;        
+        PAIR;       
+        PAIR;       
         DUP;        
         DUG 2;      
-        GET;        
-        IF_NONE
-          {
-            PUSH int 17; 
-            FAILWITH;   
-          }
-          {}; 
-        DUP 5;      
         CAR;        
-        ADD;        
-        SOME;       
-        SWAP;       
-        UPDATE;     
-        UPDATE 2;   
-        SWAP;       
-        NIL operation; 
+        CAR;        
+        NIL string; 
+        PUSH nat 0; 
         DUP 3;      
+        COMPARE;    
+        EQ;         
+        IF
+          {
+            PUSH string "0"; 
+            CONS;       
+          }
+          {}; 
+        PUSH nat 0; 
+        DUP 3;      
+        COMPARE;    
+        GT;         
+        LOOP
+          {
+            PUSH (map nat string) {Elt 0 "0"; Elt 1 "1"; Elt 2 "2"; Elt 3 "3"; Elt 4 "4"; Elt 5 "5"; Elt 6 "6"; Elt 7 "7"; Elt 8 "8"; Elt 9 "9"}; 
+            PUSH nat 10; 
+            DUP 4;      
+            EDIV;       
+            IF_NONE
+              {
+                PUSH int 33; 
+                FAILWITH;   
+              }
+              {
+                CDR;        
+              }; 
+            GET;        
+            IF_NONE
+              {
+                PUSH int 33; 
+                FAILWITH;   
+              }
+              {}; 
+            CONS;       
+            PUSH nat 10; 
+            DIG 2;      
+            EDIV;       
+            IF_NONE
+              {
+                PUSH int 34; 
+                FAILWITH;   
+              }
+              {
+                CAR;        
+              }; 
+            SWAP;       
+            PUSH nat 0; 
+            DUP 3;      
+            COMPARE;    
+            GT;         
+          }; 
+        DUP;        
+        CONCAT;     
+        DUP;        
+        NIL bytes;  
+        DIG 6;      
+        DUP;        
+        GET 3;      
+        SWAP;       
+        DUP;        
+        DUG 8;      
+        GET 6;      
+        DIG 7;      
+        DUP;        
+        GET 4;      
+        SWAP;       
+        DUP;        
+        GET 3;      
+        SWAP;       
+        DUP;        
+        DUG 10;     
         CAR;        
-        CONTRACT %insert (pair (bytes %key) (bytes %value)); 
+        DUP 12;     
+        CAR;        
+        CDR;        
+        PAIR 5;     
+        DIG 4;      
+        DROP;       
+        DIG 4;      
+        DROP;       
+        DIG 4;      
+        DROP;       
+        DIG 4;      
+        DROP;       
+        VIEW "validate_storage_proof" bytes; 
         IF_NONE
           {
-            PUSH string "INVALID_CONTRACT"; 
+            PUSH string "INVALID_VIEW"; 
             FAILWITH;   
           }
           {}; 
-        PUSH mutez 0; 
-        DUP 4;      
-        CAR;        
-        PACK;       
-        DIG 4;      
-        CDR;        
-        PACK;       
-        PAIR;       
-        TRANSFER_TOKENS; 
+        PUSH nat 1; 
+        DUP;        
+        SLICE;      
+        IF_NONE
+          {
+            PUSH int 47; 
+            FAILWITH;   
+          }
+          {}; 
         CONS;       
+        PUSH bytes 0x00000001; 
+        CONS;       
+        PUSH bytes 0x01; 
+        CONS;       
+        PUSH bytes 0x05; 
+        CONS;       
+        CONCAT;     
+        UNPACK string; 
+        IF_NONE
+          {
+            UNIT;       
+            FAILWITH;   
+          }
+          {}; 
+        COMPARE;    
+        EQ;         
+        IF
+          {}
+          {
+            PUSH string "INVALID_COUNTER"; 
+            FAILWITH;   
+          }; 
+        NIL operation; 
       }
       {
-        SWAP;       
-        DUP;        
-        DUG 2;      
-        DUP;        
-        CDR;        
-        DUP 3;      
-        CAR;        
-        DIG 4;      
-        CDR;        
-        DUP 5;      
-        CDR;        
-        GET;        
-        IF_NONE
+        IF_LEFT
           {
-            PUSH int 30; 
-            FAILWITH;   
+            PUSH nat 0; 
+            PUSH nat 2; 
+            DUP 4;      
+            CAR;        
+            CAR;        
+            EDIV;       
+            IF_NONE
+              {
+                PUSH int 72; 
+                FAILWITH;   
+              }
+              {
+                CDR;        
+              }; 
+            COMPARE;    
+            EQ;         
+            IF
+              {}
+              {
+                PUSH string "EXPECTING_PONG"; 
+                FAILWITH;   
+              }; 
+            SWAP;       
+            UNPAIR;     
+            UNPAIR;     
+            PUSH nat 1; 
+            ADD;        
+            PAIR;       
+            PAIR;       
+            DUP;        
+            DUG 2;      
+            CAR;        
+            CAR;        
+            NIL string; 
+            PUSH nat 0; 
+            DUP 3;      
+            COMPARE;    
+            EQ;         
+            IF
+              {
+                PUSH string "0"; 
+                CONS;       
+              }
+              {}; 
+            PUSH nat 0; 
+            DUP 3;      
+            COMPARE;    
+            GT;         
+            LOOP
+              {
+                PUSH (map nat string) {Elt 0 "0"; Elt 1 "1"; Elt 2 "2"; Elt 3 "3"; Elt 4 "4"; Elt 5 "5"; Elt 6 "6"; Elt 7 "7"; Elt 8 "8"; Elt 9 "9"}; 
+                PUSH nat 10; 
+                DUP 4;      
+                EDIV;       
+                IF_NONE
+                  {
+                    PUSH int 33; 
+                    FAILWITH;   
+                  }
+                  {
+                    CDR;        
+                  }; 
+                GET;        
+                IF_NONE
+                  {
+                    PUSH int 33; 
+                    FAILWITH;   
+                  }
+                  {}; 
+                CONS;       
+                PUSH nat 10; 
+                DIG 2;      
+                EDIV;       
+                IF_NONE
+                  {
+                    PUSH int 34; 
+                    FAILWITH;   
+                  }
+                  {
+                    CAR;        
+                  }; 
+                SWAP;       
+                PUSH nat 0; 
+                DUP 3;      
+                COMPARE;    
+                GT;         
+              }; 
+            SWAP;       
+            DROP;       
+            SWAP;       
+            DROP;       
+            CONCAT;     
+            DUP;        
+            PACK;       
+            PUSH nat 6; 
+            DIG 2;      
+            PACK;       
+            SIZE;       
+            SUB;        
+            ISNAT;      
+            IF_NONE
+              {
+                PUSH int 127; 
+                FAILWITH;   
+              }
+              {}; 
+            PUSH nat 6; 
+            SLICE;      
+            IF_NONE
+              {
+                PUSH string "Could not encode string to bytes."; 
+                FAILWITH;   
+              }
+              {}; 
+            NIL operation; 
+            DUP 3;      
+            GET 5;      
+            CONTRACT %insert (pair (bytes %key) (bytes %value)); 
+            IF_NONE
+              {
+                PUSH string "INVALID_CONTRACT"; 
+                FAILWITH;   
+              }
+              {}; 
+            PUSH mutez 0; 
+            DIG 3;      
+            PUSH string "counter"; 
+            PACK;       
+            PUSH nat 6; 
+            PUSH string "counter"; 
+            PACK;       
+            SIZE;       
+            SUB;        
+            ISNAT;      
+            IF_NONE
+              {
+                PUSH int 127; 
+                FAILWITH;   
+              }
+              {}; 
+            PUSH nat 6; 
+            SLICE;      
+            IF_NONE
+              {
+                PUSH string "Could not encode string to bytes."; 
+                FAILWITH;   
+              }
+              {}; 
+            PAIR;       
+            TRANSFER_TOKENS; 
+            CONS;       
           }
-          {}; 
-        SUB;        
-        ISNAT;      
-        IF_NONE
           {
-            PUSH string "AMOUNT_TOO_HIGH"; 
-            FAILWITH;   
-          }
-          {}; 
-        SOME;       
-        DIG 3;      
-        CDR;        
-        UPDATE;     
-        UPDATE 2;   
-        NIL operation; 
+            SWAP;       
+            DROP;       
+            NIL operation; 
+          }; 
       }; 
     PAIR;       
   };

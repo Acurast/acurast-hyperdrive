@@ -16,20 +16,19 @@ EMPTY_TRIE_ROOT_HASH = sp.bytes(
 )
 BLOCK_HEADER_STATE_ROOT_INDEX = 3
 BLOCK_HEADER_LEVEL_INDEX = 8
-ACCOUNT_STORAGE_ROOT_INDEX = 2
+ACCOUNT_STATE_ROOT_INDEX = 2
 
 
 class Error:
-    INVALID_BLOCK_HEADER = "INVALID_BLOCK_HEADER"
-    NOT_REGISTERED_ACCOUNT = "NOT_REGISTERED_ACCOUNT"
+    NOT_ADMINISTRATOR = "NOT_ADMINISTRATOR"
     NOT_VALIDATOR = "NOT_VALIDATOR"
-    UNPROCESSED_STORAGE_ROOT = "UNPROCESSED_STORAGE_ROOT"
+    UNPROCESSED_BLOCK_STATE = "UNPROCESSED_BLOCK_STATE"
     NO_CONSENSUS_FOR_STATE = "NO_CONSENSUS_FOR_STATE"
 
 
 class Type:
     # Views
-    VerifyArgument = sp.TRecord(
+    Verify_argument = sp.TRecord(
         rlp=sp.TRecord(
             to_list=sp.TLambda(sp.TBytes, sp.TMap(sp.TNat, sp.TBytes)),
             is_list=sp.TLambda(sp.TBytes, sp.TBool),
@@ -39,29 +38,97 @@ class Type:
         state_root=sp.TBytes,
         path=sp.TBytes,
     ).right_comb()
-
-
-def get_info_from_block_header(rlp, block_header):
-    """
-    Extract state root from block header, verifying block hash
-
-    block_hash = sp.keccak(block_header)
-    """
-    int_of_bytes = sp.compute(sp.build_lambda(Bytes.int_of_bytes))
-
-    header_fields = sp.compute(rlp.to_list(block_header))
-
-    # Get state root hash
-    state_root = rlp.remove_offset(header_fields[BLOCK_HEADER_STATE_ROOT_INDEX])
-    # Get block level
-    block_number = int_of_bytes(
-        rlp.remove_offset(header_fields[BLOCK_HEADER_LEVEL_INDEX])
+    Validate_storage_proof_argument = sp.TRecord(
+        account=sp.TBytes,
+        block_number=sp.TNat,
+        account_proof_rlp=sp.TBytes,
+        storage_slot=sp.TBytes,
+        storage_proof_rlp=sp.TBytes,
+    ).right_comb()
+    # Entry points
+    Configure_argument = sp.TList(
+        sp.TVariant(
+            update_administrator=sp.TAddress,
+            update_validators=sp.TSet(
+                sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
+            ),
+            update_minimum_endorsements=sp.TNat,
+        ).right_comb()
     )
+    Submit_account_proof_argument = sp.TRecord(
+        account=sp.TBytes,
+        block_header=sp.TBytes,
+        account_state_proof=sp.TBytes,
+    ).right_comb()
+    Submit_block_state_root_argument = sp.TRecord(
+        block_number=sp.TNat,
+        state_root=sp.TBytes,
+    ).right_comb()
 
-    return sp.record(
-        state_root=state_root,
-        block_number=block_number,
-    )
+
+class Inlined:
+    @staticmethod
+    def failIfNotAdministrator(self):
+        """
+        This method when used, ensures that only the administrator is allowed to call a given entrypoint
+        """
+        sp.verify(self.data.config.administrator == sp.sender, Error.NOT_ADMINISTRATOR)
+
+    @staticmethod
+    def failIfNotValidator(self):
+        """
+        This method when used, ensures that only validators are allowed to call a given entrypoint
+        """
+        sp.verify(self.data.config.validators.contains(sp.sender), Error.NOT_VALIDATOR)
+
+
+class Lambdas:
+    @staticmethod
+    def validate_block_state_root(arg):
+        (state_roots, minimum_endorsements) = sp.match_record(
+            arg,
+            "state_roots",
+            "minimum_endorsements",
+        )
+
+        endorsements_per_root = sp.local(
+            "state_roots", sp.map(tkey=sp.TBytes, tvalue=sp.TNat)
+        )
+        with sp.for_("entry", state_roots.items()) as entry:
+            endorsements_per_root.value[entry.value] = (
+                endorsements_per_root.value.get(entry.value, default_value=0) + 1
+            )
+
+        state_root = sp.local("state_root", sp.bytes("0x"))
+        with sp.for_("root_state", endorsements_per_root.value.keys()) as root_state:
+            with sp.if_(
+                endorsements_per_root.value[root_state]
+                > endorsements_per_root.value.get(state_root.value, default_value=0)
+            ):
+                state_root.value = root_state
+
+        # Make sure consensus has been reached
+        sp.verify(
+            (sp.len(endorsements_per_root.value) != 0)
+            & (endorsements_per_root.value[state_root.value] >= minimum_endorsements),
+            Error.NO_CONSENSUS_FOR_STATE,
+        )
+
+        sp.result(state_root.value)
+
+
+class RLP_utils:
+    @staticmethod
+    def to_list():
+        return sp.compute(sp.build_lambda(RLP.to_list))
+
+    @staticmethod
+    def is_list():
+        return sp.compute(sp.build_lambda(RLP.is_list))
+
+    @staticmethod
+    def remove_offset():
+        return sp.compute(sp.build_lambda(RLP.remove_offset))
 
 
 class IBCF_Eth_Validator(sp.Contract):
@@ -75,22 +142,54 @@ class IBCF_Eth_Validator(sp.Contract):
                     validators=sp.TSet(sp.TAddress),
                     # Minimum expected endorsements for a given state root to be considered valid
                     minimum_endorsements=sp.TNat,
-                    # Ethereum addresses being monitored
-                    eth_accounts=sp.TSet(sp.TBytes),
                 ),
-                storage_root=sp.TBigMap(
-                    sp.TPair(sp.TBytes, sp.TNat),
-                    sp.TMap(sp.TAddress, sp.TBytes),
-                ),
+                block_state_root=sp.TBigMap(sp.TNat, sp.TMap(sp.TAddress, sp.TBytes)),
             )
         )
+
+    @sp.entry_point(parameter_type=Type.Submit_block_state_root_argument)
+    def submit_block_state_root(self, arg):
+        (block_number, state_root) = sp.match_record(
+            arg,
+            "block_number",
+            "state_root",
+        )
+
+        # Check if sender is a validator
+        Inlined.failIfNotValidator(self)
+
+        # Store the block state root
+        with sp.if_(self.data.block_state_root.contains(block_number)):
+            self.data.block_state_root[block_number][sp.sender] = state_root
+        with sp.else_():
+            self.data.block_state_root[block_number] = sp.map({sp.sender: state_root})
+
+    @sp.entry_point(parameter_type=Type.Configure_argument)
+    def configure(self, actions):
+
+        # Only allowed addresses can call this entry point
+        Inlined.failIfNotAdministrator(self)
+
+        with sp.for_("action", actions) as action:
+            with action.match_cases() as action:
+                with action.match("update_validators") as payload:
+                    with sp.for_("el", payload.elements()) as el:
+                        with el.match_cases() as cases:
+                            with cases.match("add") as add:
+                                self.data.config.validators.add(add)
+                            with cases.match("remove") as remove:
+                                self.data.config.validators.remove(remove)
+                with action.match("update_administrator") as administrator:
+                    self.data.config.administrator = administrator
+                with cases.match("update_minimum_endorsements") as payload:
+                    self.data.config.minimum_endorsements = payload
 
     @sp.onchain_view()
     def verify(self, arg):
         (rlp, proof_rlp, state_root, path32) = sp.match_record(
             sp.set_type_expr(
                 arg,
-                Type.VerifyArgument,
+                Type.Verify_argument,
             ),
             "rlp",
             "proof_rlp",
@@ -177,7 +276,9 @@ class IBCF_Eth_Validator(sp.Contract):
                             with sp.if_(rlp.is_list(children)):
                                 next_hash.value = HASH_FUNCTION(children)
                             with sp.else_():
-                                next_hash.value = sp.compute(get_next_hash(children))
+                                next_hash.value = sp.compute(
+                                    get_next_hash(rlp.remove_offset(children))
+                                )
 
                     with sp.else_():
                         # Must be a branch node at this point
@@ -204,7 +305,7 @@ class IBCF_Eth_Validator(sp.Contract):
 
                                 # Ensure that the next path item is empty, end of exclusion proof
                                 sp.verify(
-                                    sp.len(nodes[node_index]) == 0,
+                                    sp.len(rlp.remove_offset(nodes[node_index])) == 0,
                                     "Invalid exclusion proof",
                                 )
                                 result.value = sp.bytes("0x")
@@ -234,128 +335,78 @@ class IBCF_Eth_Validator(sp.Contract):
                             with sp.if_(rlp.is_list(children)):
                                 next_hash.value = HASH_FUNCTION(children)
                             with sp.else_():
-                                next_hash.value = sp.compute(get_next_hash(children))
+                                next_hash.value = sp.compute(
+                                    get_next_hash(rlp.remove_offset(children))
+                                )
 
             sp.result(result.value)
 
-    @sp.entry_point()
-    def submit_account_proof(self, arg):
-        (account, block_header, account_state_proof) = sp.match_record(
-            sp.set_type_expr(
-                arg,
-                sp.TRecord(
-                    account=sp.TBytes,
-                    block_header=sp.TBytes,
-                    account_state_proof=sp.TBytes,
-                ).right_comb(),
-            ),
-            "account",
-            "block_header",
-            "account_state_proof",
-        )
-        rlp = sp.record(
-            to_list=sp.compute(sp.build_lambda(RLP.to_list)),
-            is_list=sp.compute(sp.build_lambda(RLP.is_list)),
-            remove_offset=sp.compute(sp.build_lambda(RLP.remove_offset)),
-        )
-
-        # Check if address is allowed
-        sp.verify(
-            self.data.config.eth_accounts.contains(account),
-            Error.NOT_REGISTERED_ACCOUNT,
-        )
-        # Check if sender is validator
-        sp.verify(self.data.config.validators.contains(sp.sender), Error.NOT_VALIDATOR)
-
-        # Decode block header and extract the state_root and block_number
-        block_header = sp.compute(get_info_from_block_header(rlp, block_header))
-
-        # The path to the contract state is the hash of the contract address
-        account_state_path = HASH_FUNCTION(account)
-
-        # Validate proof and extract the account state
-        account_state_rlp_encoded = sp.compute(
-            sp.view(
-                "verify",
-                sp.self_address,
-                sp.set_type_expr(
-                    sp.record(
-                        path=account_state_path,
-                        proof_rlp=account_state_proof,
-                        rlp=rlp,
-                        state_root=block_header.state_root,
-                    ),
-                    Type.VerifyArgument,
-                ),
-                t=sp.TBytes,
-            ).open_some("Invalid view")
-        )
-        # Get account storage root hash and store it
-        account_storage_root = rlp.remove_offset(
-            rlp.to_list(account_state_rlp_encoded)[ACCOUNT_STORAGE_ROOT_INDEX]
-        )
-        with sp.if_(
-            self.data.storage_root.contains(sp.pair(account, block_header.block_number))
-        ):
-            self.data.storage_root[sp.pair(account, block_header.block_number)][
-                sp.sender
-            ] = account_storage_root
-        with sp.else_():
-            self.data.storage_root[(account, block_header.block_number)] = sp.map(
-                {sp.sender: account_storage_root}
-            )
-
     @sp.onchain_view()
-    def get_storage(self, arg):
-        (account, block_number, storage_slot, storage_proof) = sp.match_record(
+    def validate_storage_proof(self, arg):
+        (
+            account,
+            block_number,
+            account_proof_rlp,
+            storage_slot,
+            storage_proof_rlp,
+        ) = sp.match_record(
             sp.set_type_expr(
                 arg,
-                sp.TRecord(
-                    account=sp.TBytes,
-                    block_number=sp.TNat,
-                    storage_slot=sp.TBytes,
-                    storage_proof=sp.TBytes,
-                ),
+                Type.Validate_storage_proof_argument,
             ),
             "account",
             "block_number",
+            "account_proof_rlp",
             "storage_slot",
-            "storage_proof",
+            "storage_proof_rlp",
         )
 
-        key = sp.pair(account, block_number)
-        contract_root_state = sp.compute(
-            self.data.storage_root.get(key, message=Error.UNPROCESSED_STORAGE_ROOT)
-        )
-
-        root_states = sp.local("root_states", sp.map(tkey=sp.TBytes, tvalue=sp.TNat))
-        with sp.for_("entry", contract_root_state.items()) as entry:
-            root_states.value[entry.value] = (
-                root_states.value.get(entry.value, default_value=0) + 1
+        block_state_roots = sp.compute(
+            self.data.block_state_root.get(
+                block_number, message=Error.UNPROCESSED_BLOCK_STATE
             )
-
-        most_endorsed = sp.local("most_endorsed", sp.bytes("0x"))
-        with sp.for_("root_state", root_states.value.keys()) as root_state:
-            with sp.if_(
-                root_states.value[root_state]
-                > root_states.value.get(most_endorsed.value, default_value=0)
-            ):
-                most_endorsed.value = root_state
-
-        # Make sure the consensus has been reached
-        sp.verify(
-            (sp.len(root_states.value) != 0)
-            & (
-                root_states.value[most_endorsed.value]
-                >= self.data.config.minimum_endorsements
-            ),
-            Error.NO_CONSENSUS_FOR_STATE,
+        )
+        validate_block_state_root = sp.build_lambda(Lambdas.validate_block_state_root)
+        block_state_root = sp.compute(
+            validate_block_state_root(
+                sp.record(
+                    state_roots=block_state_roots,
+                    minimum_endorsements=self.data.config.minimum_endorsements,
+                )
+            )
         )
 
         rlp = sp.record(
-            to_list=sp.compute(sp.build_lambda(RLP.to_list)),
-            is_list=sp.compute(sp.build_lambda(RLP.is_list)),
-            remove_offset=sp.compute(sp.build_lambda(RLP.remove_offset)),
+            to_list=RLP_utils.to_list(),
+            is_list=RLP_utils.is_list(),
+            remove_offset=RLP_utils.remove_offset(),
+        )
+
+        # The path to the account state is the hash of the contract address
+        account_state_path = HASH_FUNCTION(account)
+        # The path to the contract state is the hash of the storage slot
+        storage_state_path = HASH_FUNCTION(storage_slot)
+
+        # Validate proof and extract the account state
+        account_state_root = sp.compute(
+            rlp.remove_offset(
+                rlp.to_list(
+                    sp.view(
+                        "verify",
+                        sp.self_address,
+                        sp.set_type_expr(
+                            sp.record(
+                                path=account_state_path,
+                                proof_rlp=account_proof_rlp,
+                                rlp=rlp,
+                                state_root=block_state_root,
+                            ),
+                            Type.Verify_argument,
+                        ),
+                        t=sp.TBytes,
+                    ).open_some(sp.unit)
+                )[ACCOUNT_STATE_ROOT_INDEX]
+            )
         )
 
         sp.result(
@@ -365,14 +416,14 @@ class IBCF_Eth_Validator(sp.Contract):
                 sp.set_type_expr(
                     sp.record(
                         rlp=rlp,
-                        proof_rlp=storage_proof,
-                        state_root=most_endorsed.value,
-                        path=HASH_FUNCTION(storage_slot),
+                        proof_rlp=storage_proof_rlp,
+                        state_root=account_state_root,
+                        path=storage_state_path,
                     ),
-                    Type.VerifyArgument,
+                    Type.Verify_argument,
                 ),
                 t=sp.TBytes,
-            ).open_some("Invalid view")
+            ).open_some(sp.unit)
         )
 
     @sp.onchain_view()
@@ -498,7 +549,6 @@ class IBCF_Eth_Validator(sp.Contract):
 
 
 def get_next_hash(node):
-    # TODO: Check this implementation again
-    sp.verify(sp.len(node) == 33, "Invalid node")
+    sp.verify(sp.len(node) == 32, "Invalid node")
 
-    return sp.slice(node, 1, 32).open_some()
+    return node

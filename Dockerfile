@@ -6,7 +6,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends py
 COPY Makefile Makefile
 COPY package.json package.json
 COPY requirements.txt requirements.txt
-RUN make
 
 # Patch smartpy
-COPY smartpy-patch/* _build/smartpy-cli/
+COPY smartpy-patch smartpy-patch
+
+RUN make

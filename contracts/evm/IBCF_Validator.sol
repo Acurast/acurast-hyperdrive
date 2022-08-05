@@ -26,20 +26,20 @@ contract IBCF_Validator {
     }
 
     // modifier to check if caller is the administrator
-    modifier isAdmin() {
+    modifier is_admin() {
         require(msg.sender == administrator, Err.NOT_ADMIN);
         _;
     }
 
-    function update_administrator(address new_admnistrator) public isAdmin {
+    function update_administrator(address new_admnistrator) public is_admin {
         administrator = new_admnistrator;
     }
 
-    function update_signatures_threshold(uint8 _signatures_threshold) public isAdmin {
+    function update_signatures_threshold(uint8 _signatures_threshold) public is_admin {
         signatures_threshold = _signatures_threshold;
     }
 
-    function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public isAdmin {
+    function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public is_admin {
         for (uint i=0; i<_signers.length; i++) {
             // Fail if signer already exists
             require(signer_public_key[_signers[i]][0] == 0, Err.SIGNER_EXISTS);
@@ -49,7 +49,7 @@ contract IBCF_Validator {
         }
     }
 
-    function remove_signers(address[] memory _signers) public isAdmin {
+    function remove_signers(address[] memory _signers) public is_admin {
         for (uint i=0; i<_signers.length; i++) {
             for(uint j=0; j<signers.length; j++) {
                 if(signers[j] == _signers[i]) {
@@ -85,7 +85,7 @@ contract IBCF_Validator {
     }
 
     /**
-     * Validate signatures
+     * Validates the 'merkle_root' authenticity
      */
     function validate_merkle_root(
         uint block_level,
@@ -105,32 +105,5 @@ contract IBCF_Validator {
 
     function validate_signature(bytes32 content_hash, address signer, uint[2] memory rs /* Signature */) internal view returns(bool) {
         return EllipticCurve.validateSignature(content_hash, rs, signer_public_key[signer]);
-    }
-
-    function getContent(uint block_level, bytes32 merkle_root) public view returns (bytes32) {
-        return sha256(abi.encodePacked(tezos_chain_id, block_level, merkle_root));
-    }
-}
-
-library Utils {
-    function string_of_uint(uint256 value) internal pure returns (string memory) {
-        // @credits https://github.com/OpenZeppelin/openzeppelin-contracts/blob/d50e608a4f0a74c75715258556e131a8e7e00f2d/contracts/utils/Strings.sol
-
-        if (value == 0) {
-            return "0";
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
     }
 }

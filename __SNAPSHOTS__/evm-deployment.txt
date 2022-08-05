@@ -5,14 +5,23 @@
 
 Compiling your contracts...
 ===========================
-> Everything is up to date, there is nothing to compile.
+> Compiling ./contracts/evm/IBCF_Client.sol
+> Compilation warnings encountered:
+
+    project:/contracts/evm/IBCF_Client.sol:53:5: Warning: Function state mutability can be restricted to pure
+    function test(bytes memory b) public view returns(string memory){
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+> Artifacts written to /home/romarq/Documents/papers/ibcf-tezos/__SNAPSHOTS__/compilation/evm
+> Compiled successfully using:
+   - solc: 0.7.6+commit.7338295f.Emscripten.clang
 
 
 Starting migrations...
 ======================
 > Network name:    'goerli'
 > Network id:      5
-> Block gas limit: 29970648 (0x1c950d8)
+> Block gas limit: 29999944 (0x1c9c348)
 
 
 0_all.js
@@ -20,65 +29,59 @@ Starting migrations...
 
    Replacing 'IBCF_Validator'
    --------------------------
-   > transaction hash:    0x9a1559f6c82ab14f93388799bdd401e2e0ce4f8a12dc42b380f0f87deb8ee0d7
+   > transaction hash:    0xff9e27f2c2f03eceee3ad04c8068d8cffd81c15950288d20e68eef2cacf73a7e
 - Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 4
-- Blocks: 0            Seconds: 8
-- Blocks: 0            Seconds: 12
-   > Blocks: 0            Seconds: 12
-   > contract address:    0xC7A30535BF4B157775e1EA2141C89abd0e03D295
-   > block number:        7307050
-   > block timestamp:     1659038567
+- Blocks: 1            Seconds: 4
+   > Blocks: 1            Seconds: 4
+   > contract address:    0xc098b20cAC450b0d9Ea939C5B787AFA36B1CcB5c
+   > block number:        7340086
+   > block timestamp:     1659536563
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             0.406929823205841016
+   > balance:             1.330622012327981061
    > gas used:            2494951 (0x2611e7)
-   > gas price:           2.500000008 gwei
+   > gas price:           2.500000009 gwei
    > value sent:          0 ETH
-   > total cost:          0.006237377519959608 ETH
+   > total cost:          0.006237377522454559 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 7307051)
-   > confirmation number: 2 (block: 7307052)
+   > confirmation number: 1 (block: 7340087)
+   > confirmation number: 2 (block: 7340088)
 
 Add signers
 
 
    Replacing 'IBCF_Client'
    -----------------------
-   > transaction hash:    0xe5a93ee63a3ae50dfdc460135c0c2eb69ad69bfe01742af34a4bdd3e2e5c9f28
+   > transaction hash:    0x8154038070d959ffb0b44f8676749593b3ec955227ef5fbb04c0a5533996361b
 - Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 5
+- Blocks: 0            Seconds: 4
 - Blocks: 0            Seconds: 8
-- Blocks: 0            Seconds: 12
-- Blocks: 1            Seconds: 16
-- Blocks: 1            Seconds: 20
-- Blocks: 1            Seconds: 24
-- Blocks: 2            Seconds: 28
-   > Blocks: 2            Seconds: 28
-   > contract address:    0xabbfD1b3339C8B02e769BD8E8FdD3B1B6cc0426F
-   > block number:        7307055
-   > block timestamp:     1659038642
+- Blocks: 1            Seconds: 12
+   > Blocks: 1            Seconds: 12
+   > contract address:    0x91Fb61cc7EDC7f2875a4f8a72f0FA019c7e349a5
+   > block number:        7340090
+   > block timestamp:     1659536623
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             0.404634663199298759
-   > gas used:            802255 (0xc3dcf)
-   > gas price:           2.500000007 gwei
+   > balance:             1.330332489826822971
+   > gas used:            1012764 (0xf741c)
+   > gas price:           2.50000002 gwei
    > value sent:          0 ETH
-   > total cost:          0.002005637505615785 ETH
+   > total cost:          0.00253191002025528 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 7307056)
-   > confirmation number: 2 (block: 7307057)
+   > confirmation number: 1 (block: 7340091)
+   > confirmation number: 2 (block: 7340092)
    > Saving artifacts
    -------------------------------------
-   > Total cost:     0.008243015025575393 ETH
+   > Total cost:     0.008769287542709839 ETH
 
 Summary
 =======
 > Total deployments:   2
-> Final cost:          0.008243015025575393 ETH
+> Final cost:          0.008769287542709839 ETH
 
 

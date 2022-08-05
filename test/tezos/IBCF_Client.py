@@ -1,12 +1,9 @@
 import smartpy as sp
 
-import contracts.tezos.IBCF_Aggregator
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator
 from contracts.tezos.IBCF_Client import IBCF_Client
 
 from contracts.tezos.utils.bytes import bytes_to_bits
-
-contracts.tezos.IBCF_Aggregator.HASH_FUNCTION = sp.blake2b
 
 
 @sp.add_test(name="IBCF_Client")
@@ -36,18 +33,26 @@ def test():
 
     ibcf_client = IBCF_Client()
     ibcf_client.update_initial_storage(
-        sp.record(locked=sp.map({0: 0}), ibcf_address=ibcf.address)
+        sp.record(
+            eth_contract=sp.bytes("0x"),
+            storage_slot=sp.bytes(
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            ibcf_tezos_state=ibcf.address,
+            ibcf_eth_validator=ibcf.address,
+            counter=0,
+        )
     )
 
     scenario += ibcf_client
 
-    ibcf_client.lock(sp.record(token_id=0, amount=100)).run(
-        level=BLOCK_LEVEL_1, source=admin.address
-    )
+    ibcf_client.ping().run(level=BLOCK_LEVEL_1, source=admin.address)
 
     scenario.verify(
         ibcf.data.merkle_history[BLOCK_LEVEL_1].root
         == sp.bytes(
-            "0x9089f66e4428c41a5ec16631b921eade5bb82aa3953cff9f4e8f9c80b9124c9f"
+            "0x01099dcbff4b5cfd9c353fd372eb04f6b2cb0dcfcb69c4e48d895130d0189e9b"
         )
     )
+
+    # TODO: Test pong entrypoint
