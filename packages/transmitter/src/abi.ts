@@ -2,30 +2,6 @@ export const ibfc_client_abi: any = [
     {
         inputs: [
             {
-                internalType: 'address',
-                name: '_validator_address',
-                type: 'address',
-            },
-        ],
-        stateMutability: 'nonpayable',
-        type: 'constructor',
-    },
-    {
-        inputs: [
-            {
-                internalType: 'bytes',
-                name: 'source',
-                type: 'bytes',
-            },
-        ],
-        name: 'set_tezos_source',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-    },
-    {
-        inputs: [
-            {
                 internalType: 'uint256',
                 name: 'block_level',
                 type: 'uint256',
@@ -61,22 +37,9 @@ export const ibfc_client_abi: any = [
                 type: 'uint256[2][]',
             },
         ],
-        name: 'mint',
+        name: 'ping',
         outputs: [],
         stateMutability: 'nonpayable',
-        type: 'function',
-    },
-    {
-        inputs: [],
-        name: 'getBalance',
-        outputs: [
-            {
-                internalType: 'uint256',
-                name: '',
-                type: 'uint256',
-            },
-        ],
-        stateMutability: 'view',
         type: 'function',
     },
 ];

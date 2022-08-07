@@ -15,5 +15,5 @@ export function pack(value, type) {
     }
 }
 export function utf8ToHex(text) {
-    return Array.from(text).reduce((p, c) => p + c.charCodeAt(0).toString(16), "");
+    return Array.from(text).reduce((p, c) => p + c.charCodeAt(0).toString(16), '');
 }

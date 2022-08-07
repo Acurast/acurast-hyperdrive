@@ -1,5 +1,5 @@
 const constants = {
-    ibcf_client_entrypoint: 'lock',
+    ibcf_client_entrypoint: 'ping',
     ibcf_aggregator_entrypoint: 'insert',
 };
 

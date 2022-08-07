@@ -4,16 +4,6 @@ The bridge will monitor the `IBCF` contracts for `lock` calls, wait for signatur
 
 ### **Configuration file: [.env](.env)**
 
-## Development
-
-### Run
-
-```sh
-npm run dev
-```
-
-## Production
-
 ### Build
 
 ```sh
@@ -23,7 +13,11 @@ npm run build
 ### Run
 
 ```sh
-npm run start
+npm run start tezos_monitor
+
+or
+
+npm run start eth_monitor
 ```
 
 ## Setup an Ethereum node

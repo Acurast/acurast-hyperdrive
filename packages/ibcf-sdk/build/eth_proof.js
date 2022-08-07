@@ -34,7 +34,7 @@ function buildHeaderBytes(block) {
 export function generateEthereumProof(web3_eth, address, slot, block_number) {
     return __awaiter(this, void 0, void 0, function* () {
         const block = yield web3_eth.getBlock(block_number);
-        const block_header_rlp = buildHeaderBytes(block);
+        // const block_header_rlp = buildHeaderBytes(block);
         const proof = yield web3_eth.getProof(address, [slot], block_number);
         const account_proof_rlp = Buffer.from(RLP.encode(proof.accountProof.map((r) => RLP.decode(r)))).toString('hex');
         const storage_proof_rlp = Buffer.from(RLP.encode(proof.storageProof[0].proof.map((r) => RLP.decode(r)))).toString('hex');

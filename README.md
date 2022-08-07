@@ -4,13 +4,13 @@
 
 ## Dependencies
 
-| |
-|-|
+|                                                   |
+| ------------------------------------------------- |
 | [GNU Make 4.3](https://www.gnu.org/software/make) |
-| [Python 3](https://www.python.org) |
-| [Curl](https://curl.se) |
-| [npm](https://github.com/npm/cli) |
-| [nodejs](https://nodejs.org/en) |
+| [Python 3](https://www.python.org)                |
+| [Curl](https://curl.se)                           |
+| [npm](https://github.com/npm/cli)                 |
+| [nodejs](https://nodejs.org/en)                   |
 
 ## Contract Compilation
 
@@ -64,14 +64,13 @@ New deployment configurations can be added by creating a [<config_name>.yaml](ht
 
 Have a look at the [deployment/tezos/configs/ghostnet.yaml](./deployment/configs/ghostnet.yaml) configuration file.
 
-
 ## Flextesa sandbox
 
 The sandbox is used to test the contract deployments locally. It is configured to produce `1` block every second.
 
-| | |
-|--|--|
-|RPC URL| `http://localhost:20000` |
+|         |                          |
+| ------- | ------------------------ |
+| RPC URL | `http://localhost:20000` |
 
 `Default accounts:`
 
@@ -96,9 +95,7 @@ make start-sandbox
 make stop-sandbox
 ```
 
-
 ## Code formatter
-
 
 ```sh
 # Run a code format check
@@ -147,7 +144,6 @@ python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.te
 # This will create a merkle_tree.png at $PWD
 python scripts/visualize_tree.py https://tezos-ithacanet-node-1.diamond.papers.tech KT1VPoRPnHyReNxQF3KzgUXyNcDy2EVJ2PU8
 ```
-
 
 ## Bridges
 
