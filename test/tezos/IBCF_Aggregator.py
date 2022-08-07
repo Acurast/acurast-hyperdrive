@@ -169,11 +169,13 @@ def test():
         sp.record(owner=alice.address, key=encoded_counter_key, level=sp.none)
     )
     explicit_proof = ibcf.get_proof(
-        sp.record(owner=alice.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_1))
+        sp.record(
+            owner=alice.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_1)
+        )
     )
 
     # Proofs must be equal
-    scenario.verify(proof == explicit_proof)
+    scenario.verify_equal(proof, explicit_proof)
 
     # Verify proof for block 1 (Valid)
     scenario.verify(
@@ -241,11 +243,13 @@ def test():
         sp.record(owner=claus.address, key=encoded_counter_key, level=sp.none)
     )
     explicit_proof = ibcf.get_proof(
-        sp.record(owner=claus.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_2))
+        sp.record(
+            owner=claus.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_2)
+        )
     )
 
     # Proofs must be equal
-    scenario.verify(proof == explicit_proof)
+    scenario.verify_equal(proof, explicit_proof)
 
     # Verify proof for block 2 (Valid)
     scenario.verify(

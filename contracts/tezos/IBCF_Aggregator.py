@@ -131,7 +131,9 @@ class Type:
 
     # Views
     Get_proof_argument = sp.TRecord(
-        owner=sp.TAddress, key=sp.TBytes, level=sp.TOption(sp.TNat),
+        owner=sp.TAddress,
+        key=sp.TBytes,
+        level=sp.TOption(sp.TNat),
     ).right_comb()
     Proof_result = sp.TRecord(
         level=sp.TNat,
@@ -464,7 +466,6 @@ class IBCF_Aggregator(sp.Contract):
                     sp.result(_level)
                 with cases.match("None"):
                     sp.result(self.data.latest_state_update[key_hash])
-
 
         tree = sp.local("tree", self.data.merkle_history[level.value])
         root_edge = sp.local("root_edge", tree.value.root_edge)
