@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: MIT
+// --------------------------------------------------------------------------
+// This contract validates proofs generated from a Tezos smart-contract.
+//
+// More info: https://eips.ethereum.org/EIPS/eip-1186
+// ---------------------------------------------------------------------------
 pragma solidity 0.7.6;
 
 import {EllipticCurve} from "./secp256r1.sol";
@@ -60,6 +65,12 @@ contract IBCF_Validator {
         }
     }
 
+    /**
+     * Verifies that a given state exists on the Tezos blockchain at a given block.
+     *
+     * It first asserts that the block state was signed by at least X validators and
+     * then validates the proof against the trusted block state.
+     */
     function verify_proof(
         uint block_level,
         bytes32 merkle_root,

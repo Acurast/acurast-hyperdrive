@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: MIT
+// --------------------------------------------------------------------------
+// This contract is used only for demonstration purpuses.
+//
+// The contract is a minimal client example for interacting if the IBCF
+// protocol.
+// ---------------------------------------------------------------------------
 pragma solidity 0.7.6;
 
 import {IBCF_Validator} from "./IBCF_Validator.sol";

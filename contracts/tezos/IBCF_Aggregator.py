@@ -131,7 +131,7 @@ class Type:
 
     # Views
     Get_proof_argument = sp.TRecord(
-        owner=sp.TAddress, level=sp.TNat, key=sp.TBytes
+        owner=sp.TAddress, key=sp.TBytes, level=sp.TOption(sp.TNat),
     ).right_comb()
     Proof_result = sp.TRecord(
         level=sp.TNat,
@@ -169,6 +169,7 @@ class IBCF_Aggregator(sp.Contract):
                 bytes_to_bits=sp.TMap(sp.TBytes, sp.TString),
                 merkle_history=sp.TBigMap(sp.TNat, Type.Tree),
                 merkle_history_indexes=sp.TList(sp.TNat),
+                latest_state_update=sp.TBigMap(sp.TBytes, sp.TNat),
             ).right_comb()
         )
 
@@ -364,6 +365,9 @@ class IBCF_Aggregator(sp.Contract):
             )
         )
 
+        # Index the level at which the state was lastly modified
+        self.data.latest_state_update[key_hash] = sp.level
+
         # Set new state
         state_hash = sp.compute(
             Inlined.hash_state(ENCODE(sp.sender), param.key, param.value)
@@ -422,13 +426,19 @@ class IBCF_Aggregator(sp.Contract):
         """
         Returns the Merkle-proof for the given key.
 
-        :returns: sp.TRecord(
-            level       = sp.TNat,
-            key         = sp.TBytes,
-            value       = sp.TBytes,
-            merkle_root = sp.TBytes,
-            proof       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
-        )
+        :argument:  sp.TRecord(
+                        level       = sp.TOption(sp.TNat), # If None, it uses the latest block level where the state was modified
+                        owner       = sp.TAddress,
+                        key         = sp.TBytes,
+                    )
+
+        :returns:   sp.TRecord(
+                        level       = sp.TNat,
+                        key         = sp.TBytes,
+                        value       = sp.TBytes,
+                        merkle_root = sp.TBytes,
+                        proof       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
+                    )
         """
         sp.set_type(arg, Type.Get_proof_argument)
 
@@ -447,7 +457,16 @@ class IBCF_Aggregator(sp.Contract):
             ),
         )
 
-        tree = sp.local("tree", self.data.merkle_history[arg.level])
+        level = sp.bind_block()
+        with level:
+            with arg.level.match_cases() as cases:
+                with cases.match("Some") as _level:
+                    sp.result(_level)
+                with cases.match("None"):
+                    sp.result(self.data.latest_state_update[key_hash])
+
+
+        tree = sp.local("tree", self.data.merkle_history[level.value])
         root_edge = sp.local("root_edge", tree.value.root_edge)
         blinded_path = sp.local("blinded_path", [])
 
@@ -505,7 +524,7 @@ class IBCF_Aggregator(sp.Contract):
         with sp.set_result_type(Type.Proof_result):
             sp.result(
                 sp.record(
-                    level=arg.level,
+                    level=level.value,
                     key=arg.key,
                     value=tree.value.states[root_edge.value.node],
                     merkle_root=tree.value.root,
