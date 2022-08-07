@@ -1,0 +1,39 @@
+{
+	"name": "@ibcf/sdk",
+	"version": "1.0.0",
+	"author": {
+		"name": "Rodrigo Quelhas",
+		"email": "r.quelhas@papers.ch"
+	},
+	"license": "MIT",
+    "sideEffects": false,
+    "main": "./build/index.js",
+    "module": "./build/index.js",
+    "types": "./build/index.d.ts",
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"prettier:fix": "prettier --write '*/**/*.{js,ts}'",
+		"lint": "eslint '*/**/*.{js,ts}' --quiet --fix"
+	},
+	"dependencies": {
+        "@taquito/michel-codec": "13.0.1",
+		"eth-util-lite": "1.0.1",
+		"rlp": "3.0.0"
+	},
+    "peerDependencies": {
+		"web3": "^1.7.5",
+        "@taquito/taquito": "^13.0.1"
+    },
+	"devDependencies": {
+		"@types/node": "18.6.1",
+		"@typescript-eslint/eslint-plugin": "5.31.0",
+		"@typescript-eslint/parser": "5.31.0",
+		"eslint": "8.20.0",
+		"eslint-config-prettier": "8.5.0",
+		"eslint-plugin-prettier": "4.2.1",
+		"prettier": "2.7.1",
+		"tslib": "2.4.0",
+		"typescript": "4.7.4",
+		"ts-node": "10.9.1"
+	}
+}
