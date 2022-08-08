@@ -17,5 +17,6 @@ sp.add_compilation_target(
         bytes_to_bits=bytes_to_bits,
         merkle_history=sp.big_map(),
         merkle_history_indexes=[],
+        latest_state_update=sp.big_map(),
     ),
 )

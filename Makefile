@@ -111,7 +111,8 @@ $(BUILD_FOLDER)/install-smartpy:
 
 install-npm-packages: $(BUILD_FOLDER)/npm-packages
 $(BUILD_FOLDER)/npm-packages: package.json
-	@npm i --silent
+	@yarn
+	@yarn build
 	$(touch_done)
 
 install-pip-packages: $(BUILD_FOLDER)/pip-packages

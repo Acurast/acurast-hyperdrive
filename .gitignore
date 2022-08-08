@@ -7,6 +7,9 @@ node_modules
 *_settings.py
 _build
 
+# turbo
+.turbo
+
 __SNAPSHOTS__/test
 __SNAPSHOTS__/**/*.*
 !__SNAPSHOTS__/**/*_contract.tz

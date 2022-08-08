@@ -1,17 +1,29 @@
 {
   "name": "ibcf",
   "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/ibcf-sdk"
+  ],
   "devDependencies": {
     "ganache": "7.3.2",
     "truffle": "5.5.22",
     "@truffle/hdwallet-provider": "2.0.12",
     "ec-pem": "0.18.0",
     "ethers": "5.6.9",
-    "web3": "1.7.4"
+    "web3": "1.7.5",
+    "eslint-config-custom": "*",
+    "prettier": "latest",
+    "turbo": "latest"
   },
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test --migrations_directory migrations_null",
-    "deploy": "truffle deploy --network goerli --reset"
+    "deploy": "truffle deploy --network goerli --reset",
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   }
 }

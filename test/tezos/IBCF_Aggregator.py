@@ -56,6 +56,7 @@ def test():
             bytes_to_bits=bytes_to_bits,
             merkle_history=sp.big_map(),
             merkle_history_indexes=[],
+            latest_state_update=sp.big_map(),
         )
     )
 
@@ -165,8 +166,16 @@ def test():
 
     # Get proof of inclusion for key="price" and price="1"
     proof = ibcf.get_proof(
-        sp.record(owner=alice.address, key=encoded_counter_key, level=BLOCK_LEVEL_1)
+        sp.record(owner=alice.address, key=encoded_counter_key, level=sp.none)
     )
+    explicit_proof = ibcf.get_proof(
+        sp.record(
+            owner=alice.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_1)
+        )
+    )
+
+    # Proofs must be equal
+    scenario.verify_equal(proof, explicit_proof)
 
     # Verify proof for block 1 (Valid)
     scenario.verify(
@@ -231,8 +240,16 @@ def test():
 
     # Get proof of inclusion for key="price" and price="1" on block 2
     proof = ibcf.get_proof(
-        sp.record(owner=claus.address, key=encoded_counter_key, level=BLOCK_LEVEL_2)
+        sp.record(owner=claus.address, key=encoded_counter_key, level=sp.none)
     )
+    explicit_proof = ibcf.get_proof(
+        sp.record(
+            owner=claus.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_2)
+        )
+    )
+
+    # Proofs must be equal
+    scenario.verify_equal(proof, explicit_proof)
 
     # Verify proof for block 2 (Valid)
     scenario.verify(
