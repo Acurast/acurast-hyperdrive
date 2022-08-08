@@ -48,7 +48,9 @@ make tests/<test_file_without_extension>
 
 ## Deployment
 
-The deployment target outputs the results to `stdout` and creates a snapshot file at `__SNAPSHOTS__/deployment-*.yaml`.
+The Tezos deployment outputs the results to `stdout` and creates a snapshot file at `__SNAPSHOTS__/deployment-*.yaml`.
+
+The Ethereum deployment outputs the results to `stdout` and creates a snapshot file at `__SNAPSHOTS__/evm-deployment.txt`.
 
 ```sh
 # Tezos deployment (CONFIG_PATH environment variable is optional)
@@ -63,6 +65,10 @@ ETH_PRIVATE_KEY=<private_key> INFURA_URL=https://<network>.infura.io/v3/<project
 New deployment configurations can be added by creating a [<config_name>.yaml](https://yaml.org/spec/1.2.2) file in [configs](./deployment/tezos/configs) folder.
 
 Have a look at the [deployment/tezos/configs/ghostnet.yaml](./deployment/configs/ghostnet.yaml) configuration file.
+
+#### Ethereum deployment configuration
+
+Have a look at [deployment/evm/0_all.js](./deployment/evm/0_all.js) file.
 
 ## Flextesa sandbox
 
@@ -110,41 +116,13 @@ make fmt-fix
 ### Get proof
 
 ```sh
-python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.tech KT19NH1awRGaVNkZSwY2c96nChMWdp6SU39F
+python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.tech KT18hC6xwPMaQtBqZgPa4id1hUBEcBaSFNwS
 
-# {'level': 867292,
-#  'merkle_root': '0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd',
-#  'proof': [['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff',
-#             ''],
-#            ['0x29ac39fe8a6f05c0296b2f57769dae6a261e75a668c5b75bb96f43426e738a7d',
-#             ''],
-#            ['',
-#             '0x7e6f448ed8ceff132d032cc923dcd3f49fa7e702316a3db73e09b1ba2beea812'],
-#            ['0x47811eb10e0e7310f8e6c47b736de67b9b68f018d9dc7a224a5965a7fe90d405',
-#             ''],
-#            ['',
-#             '0x7646d25d9a992b6ebb996c2c4e5530ffc18f350747c12683ce90a1535305859c'],
-#            ['',
-#             '0xfe9181cc5392bc544a245964b1d39301c9ebd75c2128765710888ba4de9e61ea'],
-#            ['',
-#             '0x12f6db53d79912f90fd2a58ec4c30ebd078c490a6c5bd68c32087a3439ba111a'],
-#            ['',
-#             '0xefac0c32a7c7ab5ee5140850b5d7cbd6ebfaa406964a7e1c10239ccb816ea75e'],
-#            ['0xceceb700876e9abc4848969882032d426e67b103dc96f55eeab84f773a7eeb5c',
-#             ''],
-#            ['0xabce2c418c92ca64a98baf9b20a3fcf7b5e9441e1166feedf4533b57c4bfa6a4',
-#             '']]}
-```
+## Demo application
 
-### Visualize current merkle tree
+- [Ping Pong](./apps/ping-pong)
 
-![merkle tree](merkle_tree.svg)
+## Packages
 
-```sh
-# This will create a merkle_tree.png at $PWD
-python scripts/visualize_tree.py https://tezos-ithacanet-node-1.diamond.papers.tech KT1VPoRPnHyReNxQF3KzgUXyNcDy2EVJ2PU8
-```
-
-## Bridges
-
-- [Tezos to Ethereum](./packages/bridge/README.md)
+- [Transmitters](./packages/transmitters/README.md)
+- [SDK](./packages/ibcf-sdk)

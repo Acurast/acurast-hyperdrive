@@ -3,9 +3,9 @@ from pprint import pprint
 from pytezos import pytezos
 
 
-OWNER = "tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3"
-KEY = int(999).to_bytes(15, "big").hex()
-LEVEL = 867292
+OWNER = "KT1AJmMPMdy5D9P6CW33VWNGSkiVJc7CRFVr"
+KEY = "counter".encode("utf-8").hex()
+LEVEL = 967341
 
 client = pytezos.using(shell=sys.argv[1])
 

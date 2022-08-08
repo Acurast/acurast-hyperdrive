@@ -4,7 +4,7 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/ibcf-sdk"
+    "packages/*"
   ],
   "devDependencies": {
     "ganache": "7.3.2",
