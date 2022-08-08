@@ -54,7 +54,7 @@ async function fetchTezosValidatorStorage() {
 
 async function fetchTezosStateAggregatorStorage() {
     if (!state_contract) {
-        state_contract = await Tezos.contract.at(Constants.tezos_state);
+        state_contract = await Tezos.contract.at(Constants.tezos_state_aggregator);
     }
     const stateAggregator = await state_contract.storage<TezosStateAggregatorStorage>();
     const values = await stateAggregator.merkle_history.getMultipleValues<{ root: string }>(

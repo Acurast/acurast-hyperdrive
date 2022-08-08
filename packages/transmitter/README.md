@@ -1,4 +1,4 @@
-# Tezos to Ethereum bridge
+# IBCF state validators
 
 The bridge will monitor the `IBCF` contracts for `lock` calls, wait for signatures and then transmit the state to the Ethereum `IBCF client` contract.
 
