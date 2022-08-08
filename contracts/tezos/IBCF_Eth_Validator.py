@@ -430,7 +430,7 @@ class IBCF_Eth_Validator(sp.Contract):
     def merkle_patricia_compact_decode(self, _bytes):
         sp.verify(sp.len(_bytes) > 0, "Empty bytes array")
 
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(RLP.int_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
 
         byte0 = sp.compute(nat_of_bytes_lambda(sp.slice(_bytes, 0, 1).open_some()))
         first_nibble = sp.compute(byte0 >> 4)
@@ -471,7 +471,7 @@ class IBCF_Eth_Validator(sp.Contract):
             "skip",
         )
 
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(RLP.int_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
 
         bytes_length = sp.compute(sp.len(_bytes))
         sp.verify(bytes_length > 0, "Empty bytes array")
@@ -532,7 +532,7 @@ class IBCF_Eth_Validator(sp.Contract):
             "position",
         )
 
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(RLP.int_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
 
         sp.verify(position < 64, "Invalid nibble position")
 

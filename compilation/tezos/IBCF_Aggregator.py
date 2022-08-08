@@ -1,7 +1,6 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator
-from contracts.tezos.utils.bytes import bytes_to_bits
 
 sp.add_compilation_target(
     "IBCF_Aggregator",
@@ -14,7 +13,6 @@ sp.add_compilation_target(
             max_state_size=32,
             max_states=1000,
         ),
-        bytes_to_bits=bytes_to_bits,
         merkle_history=sp.big_map(),
         merkle_history_indexes=[],
         latest_state_update=sp.big_map(),

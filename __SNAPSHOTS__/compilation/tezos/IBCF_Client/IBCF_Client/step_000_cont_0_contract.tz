@@ -271,7 +271,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 127; 
+                PUSH int 71; 
                 FAILWITH;   
               }
               {}; 
@@ -305,7 +305,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 127; 
+                PUSH int 71; 
                 FAILWITH;   
               }
               {}; 
