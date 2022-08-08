@@ -1,7 +1,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
-from contracts.tezos.utils.bytes import bytes_to_bits, bytes_of_string
+from contracts.tezos.utils.bytes import bytes_of_string
 
 
 def update_signers(payload):
@@ -53,7 +53,6 @@ def test():
                 max_state_size=32,
                 max_states=1000,
             ),
-            bytes_to_bits=bytes_to_bits,
             merkle_history=sp.big_map(),
             merkle_history_indexes=[],
             latest_state_update=sp.big_map(),

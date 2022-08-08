@@ -35,7 +35,7 @@ const Tezos = () => {
     }, []);
 
     const generateProof = React.useCallback(async (blockLevel: number) => {
-        const contract = await TezosSdk.contract.at(Constants.tezos_state);
+        const contract = await TezosSdk.contract.at(Constants.tezos_state_aggregator);
         const proof = await IbcfSdk.generateTezosProof(
             contract,
             Constants.tezos_client,
@@ -57,11 +57,17 @@ const Tezos = () => {
     const confirmPong = React.useCallback(async () => {
         setSending(true);
         if (pongProof) {
-            const contract = await TezosSdk.contract.at(Constants.tezos_client);
-            const operation = await contract.methods
-                .confirm_pong(pongProof.account_proof_rlp, pongProof.block_number, pongProof.storage_proof_rlp)
-                .send();
-            setOperationHash(operation.hash);
+            try {
+                const contract = await TezosSdk.contract.at(Constants.tezos_client);
+                const operation = await contract.methods
+                    .confirm_pong(pongProof.account_proof_rlp, pongProof.block_number, pongProof.storage_proof_rlp)
+                    .send();
+                setOperationHash(operation.hash);
+            } catch (e: any) {
+                setError(e.message);
+            } finally {
+                setSending(false);
+            }
         }
         setSending(false);
     }, [pongProof]);
@@ -112,7 +118,9 @@ const Tezos = () => {
                             </Grid>
                             <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                             <Grid container direction="row" justifyContent="center" alignItems="center">
-                                <Grid item>Counter: {tezos.clientStorage?.counter.toNumber() || 'No data'}</Grid>
+                                <Grid item>
+                                    Counter: {tezos.clientStorage ? tezos.clientStorage.counter.toNumber() : 'No data'}
+                                </Grid>
                             </Grid>
                             <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                             <Card variant="outlined">

@@ -16,7 +16,7 @@ class Helpers:
 
         block_hash = sp.keccak(block_header)
         """
-        int_of_bytes = sp.compute(sp.build_lambda(Bytes.int_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
         rlp_to_list = sp.compute(RLP_utils.to_list())
         rlp_remove_offset = sp.compute(RLP_utils.remove_offset())
 
@@ -25,7 +25,7 @@ class Helpers:
         # Get state root hash
         state_root = rlp_remove_offset(header_fields[BLOCK_HEADER_STATE_ROOT_INDEX])
         # Get block level
-        block_number = int_of_bytes(
+        block_number = nat_of_bytes_lambda(
             rlp_remove_offset(header_fields[BLOCK_HEADER_LEVEL_INDEX])
         )
 
@@ -181,7 +181,7 @@ def test():
     )
 
     # Test lambdas
-    scenario.verify(sp.build_lambda(Bytes.int_of_bytes)(sp.bytes("0x0211")) == 529)
+    scenario.verify(sp.build_lambda(Bytes.nat_of_bytes)(sp.bytes("0x0211")) == 529)
     scenario.verify(
         sp.build_lambda(item_length)(
             sp.bytes(

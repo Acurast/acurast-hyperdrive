@@ -17,6 +17,103 @@ def generate_var(postfix=None):
     return id
 
 
+def pow(n, e):
+    result = sp.local(generate_var("result"), 1)
+    base = sp.local(generate_var("base"), n)
+    exponent = sp.local(generate_var("exponent"), e)
+
+    with sp.while_(exponent.value != 0):
+        with sp.if_((exponent.value % 2) != 0):
+            result.value *= base.value
+
+        exponent.value = exponent.value >> 1  # Equivalent to exponent.value / 2
+        base.value *= base.value
+
+    return result.value
+
+
+def get_suffix(b, length):
+    return b & sp.as_nat((1 << length) - 1)
+
+
+def get_prefix(b, full_length, prefix_length):
+    return b >> sp.as_nat(full_length - prefix_length)
+
+
+def is_bit_set(i, n):
+    return (i >> n) & 1
+
+
+def nat_of_bytes(b):
+    length = sp.len(b)
+    decimal = sp.local("decimal", sp.nat(0))
+    with sp.for_("_pos", sp.range(0, length)) as pos:
+        byte = sp.compute(sp.slice(b, pos, 1).open_some(sp.unit))
+        base = sp.compute(sp.as_nat(length - (pos + 1)) * 2)
+        # - Packed prefix: 0x05 (1 byte)
+        # - Data identifier: (bytes = 0x0a) (1 byte)
+        # - Length ("0x00000020" = 32) (4 bytes)
+        # - Data (32 bytes)
+        packedBytes = sp.bytes("0x050a00000020") + byte + sp.bytes("0x" + "00" * 31)
+        decimal.value += sp.as_nat(
+            sp.to_int(sp.unpack(packedBytes, sp.TBls12_381_fr).open_some(sp.unit))
+        ) * pow(16, base)
+
+    sp.result(decimal.value)
+
+
+def bytes_of_string(text):
+    b = sp.pack(text)
+    # Remove (packed prefix), (Data identifier) and (string length)
+    # - Packed prefix: 0x05 (1 byte)
+    # - Data identifier: (string = 0x01) (1 byte)
+    # - String length (4 bytes)
+    return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
+        "Could not encode string to bytes."
+    )
+
+
+"""
+########################################################################
+Legacy code (Not being used currently, but may be useful in the future)
+########################################################################
+"""
+
+
+def int_of_bits(bstring):
+    n = sp.local("n", 0)
+    length = sp.compute(sp.len(bstring) - 1)
+    with sp.for_("p", sp.range(0, length + 1, 1)) as p:
+        with sp.if_(sp.slice(bstring, abs(p), 1) == sp.some("1")):
+            n.value += pow(2, abs(length - p))
+
+    sp.result(n.value)
+
+
+def int_of_bytes(b):
+    size = sp.compute(sp.len(b))
+    sp.verify(size < 32, "EXPECTED_LESS_THAN_32_BYTES")
+    _bytes = sp.local("bytes", sp.bytes("0x"))
+    # Reverse bytes for (little-endian)
+    with sp.for_("pos", sp.range(0, size)) as pos:
+        byte0 = sp.slice(b, pos, 1).open_some(sp.unit)
+        _bytes.value = byte0 + _bytes.value
+    # Pad 0x to the right until bytes length is 32
+    with sp.while_(sp.len(_bytes.value) < 32):
+        _bytes.value = _bytes.value + sp.bytes("0x00")
+    # Append (packed prefix) + (Data identifier) + (Length) + (Data)
+    # - Packed prefix: 0x05 (1 byte)
+    # - Data identifier: (bytes = 0x0a) (1 byte)
+    # - Length ("0x00000020" = 32) (4 bytes)
+    # - Data
+    packedBytes = sp.bytes("0x050a00000020") + _bytes.value
+    sp.result(
+        sp.as_nat(
+            sp.to_int(sp.unpack(packedBytes, sp.TBls12_381_fr).open_some(sp.unit))
+        )
+    )
+
+
 def _hex(n: int) -> str:
     return sp.bytes("0x" + (hex(n)[2:].rjust(2, "0")))
 
@@ -58,72 +155,3 @@ def bytes_of_bits(self, b):
         )
 
     return _bytes.value
-
-
-def int_of_bits(bstring):
-    n = sp.local("n", 0)
-    length = sp.compute(sp.len(bstring) - 1)
-    with sp.for_("p", sp.range(0, length + 1, 1)) as p:
-        with sp.if_(sp.slice(bstring, abs(p), 1) == sp.some("1")):
-            n.value += pow(2, abs(length - p))
-
-    sp.result(n.value)
-
-
-def pow(n, e):
-    result = sp.local(generate_var("result"), 1)
-    base = sp.local(generate_var("base"), n)
-    exponent = sp.local(generate_var("exponent"), e)
-
-    with sp.while_(exponent.value != 0):
-        with sp.if_((exponent.value % 2) != 0):
-            result.value *= base.value
-
-        exponent.value = exponent.value >> 1  # Equivalent to exponent.value / 2
-        base.value *= base.value
-
-    return result.value
-
-
-def get_suffix(b, length):
-    return b & sp.as_nat((1 << length) - 1)
-
-
-def get_prefix(b, full_length, prefix_length):
-    return b >> sp.as_nat(full_length - prefix_length)
-
-
-def is_bit_set(i, n):
-    return (i >> n) & 1
-
-
-def int_of_bytes(b):
-    _bytes = sp.local("bytes", sp.bytes("0x"))
-    # Reverse bytes for (little-endian)
-    size = sp.compute(sp.len(b))
-    with sp.for_("pos", sp.range(0, size)) as pos:
-        byte0 = sp.slice(b, pos, 1).open_some()
-        _bytes.value = byte0 + _bytes.value
-    # Pad 0x to the right until bytes length is 32
-    with sp.while_(sp.len(_bytes.value) < 32):
-        _bytes.value = _bytes.value + sp.bytes("0x00")
-    # Append (packed prefix) + (Data identifier) + (Length) + (Data)
-    # - Packed prefix: 0x05 (1 byte)
-    # - Data identifier: (bls12_381_fr = 0x0a) (1 byte)
-    # - Length ("0x00000020" = 32) (4 bytes)
-    # - Data
-    packedBytes = sp.bytes("0x050a00000020") + _bytes.value
-    sp.result(
-        sp.as_nat(sp.to_int(sp.unpack(packedBytes, sp.TBls12_381_fr).open_some()))
-    )
-
-
-def bytes_of_string(text):
-    b = sp.pack(text)
-    # Remove (packed prefix), (Data identifier) and (string length)
-    # - Packed prefix: 0x05 (1 byte)
-    # - Data identifier: (string = 0x01) (1 byte)
-    # - String length (4 bytes)
-    return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
-        "Could not encode string to bytes."
-    )

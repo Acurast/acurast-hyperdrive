@@ -10,7 +10,7 @@ from contracts.tezos.utils.misc import (
     split_common_prefix,
     remove_prefix,
 )
-from contracts.tezos.utils.bytes import bits_of_bytes, int_of_bits
+from contracts.tezos.utils.bytes import nat_of_bytes
 
 HASH_FUNCTION = sp.keccak
 HASH_LENGTH = 256
@@ -116,7 +116,9 @@ class Type:
 
     # Entry points
     Insert_argument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
-    Submit_signature = sp.TRecord(level=sp.TNat, signature=Signature).right_comb()
+    Submit_signature_argument = sp.TRecord(
+        level=sp.TNat, signature=Signature
+    ).right_comb()
     Configure_argument = sp.TList(
         sp.TVariant(
             update_administrator=sp.TAddress,
@@ -135,7 +137,7 @@ class Type:
         key=sp.TBytes,
         level=sp.TOption(sp.TNat),
     ).right_comb()
-    Proof_result = sp.TRecord(
+    Get_proof_result = sp.TRecord(
         level=sp.TNat,
         merkle_root=sp.TBytes,
         key=sp.TBytes,
@@ -168,7 +170,6 @@ class IBCF_Aggregator(sp.Contract):
                     # This constant is used to limit the amount of states being stored per merkle tree.
                     max_states=sp.TNat,
                 ),
-                bytes_to_bits=sp.TMap(sp.TBytes, sp.TString),
                 merkle_history=sp.TBigMap(sp.TNat, Type.Tree),
                 merkle_history_indexes=sp.TList(sp.TNat),
                 latest_state_update=sp.TBigMap(sp.TBytes, sp.TNat),
@@ -327,7 +328,7 @@ class IBCF_Aggregator(sp.Contract):
         """
         Include new state into the merkle tree.
         """
-        int_of_bits_lambda = sp.compute(sp.build_lambda(int_of_bits))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(nat_of_bytes))
 
         with sp.if_(~self.data.merkle_history.contains(sp.level)):
             self.data.merkle_history[sp.level] = EMPTY_TREE
@@ -360,9 +361,7 @@ class IBCF_Aggregator(sp.Contract):
         key_hash = sp.compute(Inlined.hash_key(ENCODE(sp.sender), param.key))
         key = sp.compute(
             sp.record(
-                data=int_of_bits_lambda(
-                    bits_of_bytes(self.data.bytes_to_bits, key_hash)
-                ),
+                data=nat_of_bytes_lambda(key_hash),
                 length=HASH_LENGTH,
             )
         )
@@ -388,7 +387,7 @@ class IBCF_Aggregator(sp.Contract):
 
         self.data.merkle_history[sp.level] = tree.value
 
-    @sp.entry_point(parameter_type=Type.Submit_signature)
+    @sp.entry_point(parameter_type=Type.Submit_signature_argument)
     def submit_signature(self, param):
         # Only allowed addresses can call this entry point
         Inlined.failIfNotSigner(self)
@@ -446,15 +445,13 @@ class IBCF_Aggregator(sp.Contract):
 
         chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
         split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
-        int_of_bits_lambda = sp.compute(sp.build_lambda(int_of_bits))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(nat_of_bytes))
 
         key_hash = sp.compute(Inlined.hash_key(ENCODE(arg.owner), arg.key))
         key = sp.local(
             "key",
             sp.record(
-                data=int_of_bits_lambda(
-                    bits_of_bytes(self.data.bytes_to_bits, key_hash)
-                ),
+                data=nat_of_bytes_lambda(key_hash),
                 length=HASH_LENGTH,
             ),
         )
@@ -522,7 +519,7 @@ class IBCF_Aggregator(sp.Contract):
                 root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
                 key.value = tail
 
-        with sp.set_result_type(Type.Proof_result):
+        with sp.set_result_type(Type.Get_proof_result):
             sp.result(
                 sp.record(
                     level=level.value,
