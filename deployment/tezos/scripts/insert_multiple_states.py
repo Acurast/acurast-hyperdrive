@@ -1,6 +1,6 @@
 from pytezos import PyTezosClient
 
-TOTAL_INSERTS = 3000
+TOTAL_INSERTS = 100
 OPS_PER_BLOCK = 5
 
 
