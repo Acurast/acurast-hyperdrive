@@ -41,7 +41,6 @@ docker_build:
   image: $GOOGLE_TAG_LATEST
   before_script:
     - cp -r /_build .
-    - cp -r /node_modules .
     - make
   when: always
   tags:

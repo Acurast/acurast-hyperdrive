@@ -80,9 +80,13 @@ deploy: deploy-evm deploy-tezos
 
 fmt-check:
 	python3 -m black --check .
+	yarn lint:check
+	yarn prettier:check
 
 fmt-fix:
 	python3 -m black .
+	yarn lint:fix
+	yarn prettier:fix
 
 start-sandbox:
 	@docker run -v $(shell pwd):$(shell pwd) --rm --name "$(CONTAINER_NAME)" --detach \

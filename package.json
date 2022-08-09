@@ -20,7 +20,9 @@
     "deploy": "truffle deploy --network goerli --reset",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "lint:check": "turbo run lint -- 'src/**/*.{js,ts}'",
+    "lint:fix": "turbo run lint -- 'src/**/*.{js,ts}' --quiet --fix",
+    "prettier:check": "turbo run prettier -- --check 'src/**/*.{js,ts}'",
+    "prettier:fix": "turbo run prettier -- --write 'src/**/*.{js,ts}'"
   }
 }
