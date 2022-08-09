@@ -15,19 +15,22 @@ class EthMonitor {
     constructor(private context: MonitorContext) {}
 
     public async run() {
-        this.context.latest_block_number = await this.context.web3_sdk.eth.getBlockNumber();
+        const blockNumber = await this.context.web3_sdk.eth.getBlockNumber();
+        if (blockNumber <= this.context.latest_block_number) {
+            return;
+        }
 
-        const block = await this.context.web3_sdk.eth.getBlock(this.context.latest_block_number);
+        const block = await this.context.web3_sdk.eth.getBlock(blockNumber);
         if (block) {
             const stateRoot = block.stateRoot;
 
             await this.context.ibcf_tezos_validator_contract.methods
-                .submit_block_state_root(this.context.latest_block_number, stateRoot.slice(2))
+                .submit_block_state_root(blockNumber, stateRoot.slice(2))
                 .send();
 
-            console.log('Latest confirmed level:', this.context.latest_block_number);
+            console.log('Latest confirmed level:', blockNumber);
 
-            this.context.latest_block_number += 1;
+            this.context.latest_block_number = blockNumber;
         }
     }
 }
@@ -77,11 +80,11 @@ export async function run_eth_monitor() {
 
     // Start service
     while (1) {
-        // Sleep 15 seconds before each check
-        await new Promise((r) => setTimeout(r, 5000));
+        // Sleep 10 seconds before each check
+        await new Promise((r) => setTimeout(r, 10000));
 
         try {
-            await monitor.run();
+            monitor.run();
         } catch (e) {
             //console.error(e);
         }

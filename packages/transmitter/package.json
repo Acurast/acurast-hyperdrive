@@ -1,6 +1,7 @@
 {
 	"name": "ibcf-transmitter",
 	"version": "1.0.0",
+	"private": true,
 	"author": {
 		"name": "Rodrigo Quelhas",
 		"email": "r.quelhas@papers.ch"
@@ -12,7 +13,7 @@
 		"build": "tsc -p tsconfig.json",
 		"build:watch": "tsc -w -p tsconfig.json",
 		"prettier:fix": "prettier --write '*/**/*.{js,ts}'",
-		"lint": "eslint '*/**/*.{js,ts}' --quiet --fix"
+		"lint": "eslint 'src/**/*.{js,ts}' --quiet --fix"
 	},
 	"dependencies": {
 		"@taquito/michel-codec": "13.0.1",

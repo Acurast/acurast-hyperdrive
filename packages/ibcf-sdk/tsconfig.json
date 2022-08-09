@@ -9,7 +9,7 @@
 		"noImplicitReturns": true,
 		"esModuleInterop": true,
 		"declaration": true,
-		"outDir": "./build",
+		"outDir": "./dist",
 		"moduleResolution": "node",
 		"rootDir": "./src",
 	},

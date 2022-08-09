@@ -10,6 +10,7 @@
 | [Python 3](https://www.python.org)                |
 | [Curl](https://curl.se)                           |
 | [npm](https://github.com/npm/cli)                 |
+| [yarn](https://yarnpkg.com/)                      |
 | [nodejs](https://nodejs.org/en)                   |
 
 ## Contract Compilation
@@ -117,6 +118,7 @@ make fmt-fix
 
 ```sh
 python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.tech KT18hC6xwPMaQtBqZgPa4id1hUBEcBaSFNwS
+```
 
 ## Demo application
 
