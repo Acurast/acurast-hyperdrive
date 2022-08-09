@@ -44,9 +44,8 @@
     "build": "craco build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prettier": "prettier --list-different '*/**/*.{js,ts}'",
-    "prettier:fix": "prettier --write '*/**/*.{js,ts}'",
-    "lint": "eslint '*/**/*.{js,ts}' --quiet --fix"
+    "prettier": "prettier",
+    "lint": "eslint"
   },
   "eslintConfig": {
     "extends": [

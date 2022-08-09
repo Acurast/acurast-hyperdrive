@@ -12,8 +12,8 @@
 		"dev": "DEBUG=true ts-node -r dotenv/config src/index.ts",
 		"build": "tsc -p tsconfig.json",
 		"build:watch": "tsc -w -p tsconfig.json",
-		"prettier:fix": "prettier --write '*/**/*.{js,ts}'",
-		"lint": "eslint 'src/**/*.{js,ts}' --quiet --fix"
+		"prettier": "prettier",
+		"lint": "eslint"
 	},
 	"dependencies": {
 		"@taquito/michel-codec": "13.0.1",

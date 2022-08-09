@@ -8,6 +8,9 @@
     "lint": {
       "outputs": []
     },
+    "prettier": {
+      "outputs": []
+    },
     "dev": {
       "cache": false
     }
