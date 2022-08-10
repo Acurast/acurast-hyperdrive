@@ -106,12 +106,29 @@ contract IBCF_Validator {
     ) internal view {
         bytes32 content_hash = sha256(abi.encodePacked(tezos_chain_id, block_level, merkle_root));
         uint valid_signatures = 0;
+
+        // Revert transaction if any signer is repeated
+        validate_signers(_signers);
+
         for (uint i=0; i<signatures.length; i++) {
             if(validate_signature(content_hash, _signers[i], signatures[i])) {
                 valid_signatures += 1;
             }
         }
         require(valid_signatures >= signatures_threshold, Err.MERKLE_ROOT_INVALID);
+    }
+
+    /**
+     * Revert transaction if any signer is repeated
+     */
+    function validate_signers(address[] memory _signers) internal pure {
+        for (uint i=0; i<_signers.length; i++) {
+            for (uint j=i+1; j<_signers.length; j++) {
+                if(_signers[i] == _signers[j]) {
+                    revert();
+                }
+            }
+        }
     }
 
     function validate_signature(bytes32 content_hash, address signer, uint[2] memory rs /* Signature */) internal view returns(bool) {
