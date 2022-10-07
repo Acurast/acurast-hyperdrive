@@ -26,7 +26,7 @@ clean_evm_compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation/evm
 
 compile-tezos: clean_tezos_compilations $(COMPILATIONS:%.py=%) setup_env
-	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i 's/#.*//' {} \; -exec wc -c {} \; | sort > $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
+	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i -E 's/#.*//' {} \; -exec wc -c {} \; | sort > $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
 	@cat $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
 
 compile-evm: setup_env clean_evm_compilations
