@@ -10,9 +10,11 @@ import Dialog from '../base/Dialog';
 import ValidatedBlocksTable from './Table';
 import CodeBlock from '../base/CodeBlock';
 import TextField from '../base/TextField';
+import useWalletContext from 'src/hooks/useWalletContext';
 
 const Tezos = () => {
     const { tezos } = useAppContext();
+    const { connectTezosWallet } = useWalletContext();
     const [error, setError] = React.useState('');
     const [sending, setSending] = React.useState(false);
     const [proof, setProof] = React.useState<IbcfSdk.TezosProof>();
@@ -81,6 +83,11 @@ const Tezos = () => {
                             <Typography color="text.secondary" gutterBottom>
                                 Tezos
                             </Typography>
+                        </Grid>
+                        <Grid item>
+                            <Button fullWidth size="small" onClick={connectTezosWallet}>
+                                Connect
+                            </Button>
                         </Grid>
                         <Grid item>
                             <TezosIcon />
