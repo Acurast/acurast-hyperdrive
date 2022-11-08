@@ -45,7 +45,7 @@ def is_bit_set(i, n):
 
 
 def nat_of_bytes(b):
-    length = sp.len(b)
+    length = sp.compute(sp.len(b))
     decimal = sp.local("decimal", sp.nat(0))
     with sp.for_("_pos", sp.range(0, length)) as pos:
         byte = sp.compute(sp.slice(b, pos, 1).open_some(sp.unit))
@@ -61,6 +61,17 @@ def nat_of_bytes(b):
 
     sp.result(decimal.value)
 
+def byte_of_nat(n):
+    return sp.slice(sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1).open_some(sp.unit)
+
+def bytes_of_nat(n):
+    result = sp.local(generate_var("bytes"), sp.bytes("0x"))
+    value = sp.local(generate_var("value"), n)
+    with sp.while_(value.value != 0):
+        result.value = byte_of_nat(value.value) + result.value
+        value.value >>= 8
+
+    return result.value
 
 def bytes_of_string(text):
     b = sp.pack(text)

@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.bytes import nat_of_bytes
+from contracts.tezos.utils.bytes import nat_of_bytes, bytes_of_nat, byte_of_nat
 
 STRING_SHORT_START = 128  # sp.bytes("0x80")
 STRING_LONG_START = 184  # sp.bytes("0xb8")
@@ -136,3 +136,26 @@ def remove_offset(item):
 
     with sp.set_result_type(sp.TBytes):
         sp.result(sp.slice(item, offset, length).open_some())
+
+class Encoder:
+    def encode_length(arg):
+        (length, offset) = sp.match_pair(arg)
+        with sp.if_(length < 56):
+            sp.result(byte_of_nat(offset + length))
+        with sp.else_():
+            with sp.if_(length < 256**8):
+                encoded_length = sp.compute(bytes_of_nat(offset + length))
+                sp.result(byte_of_nat(sp.len(encoded_length) + 55 + length) + encoded_length)
+            with sp.else_():
+                sp.failwith("INVALID_LENGTH")
+
+    def encode_uint(n):
+        encode_length = sp.build_lambda(Encoder.encode_length)
+        with sp.if_(n == 0):
+            sp.result(sp.bytes("0x80"))
+        with sp.else_():
+            n_bytes = sp.compute(bytes_of_nat(n))
+            with sp.if_(n < 127):
+                sp.result(n_bytes)
+            with sp.else_():
+                sp.result(encode_length((sp.len(n_bytes), STRING_SHORT_START)) + n_bytes)
