@@ -159,3 +159,10 @@ class Encoder:
                 sp.result(n_bytes)
             with sp.else_():
                 sp.result(encode_length((sp.len(n_bytes), STRING_SHORT_START)) + n_bytes)
+
+    def encode_bytes(b):
+        encode_length = sp.build_lambda(Encoder.encode_length)
+        with sp.if_(sp.len(b) == 0):
+            sp.result(sp.bytes("0x80"))
+        with sp.else_():
+            sp.result(encode_length((sp.len(b), STRING_SHORT_START)) + b)
