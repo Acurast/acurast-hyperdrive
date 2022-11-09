@@ -1,7 +1,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
-from contracts.tezos.utils.bytes import bytes_of_string
+from contracts.tezos.utils.bytes import Bytes
 
 
 def update_signers(payload):
@@ -34,6 +34,7 @@ def test():
     encoded_alice_address = ENCODE(alice.address)
     encoded_claus_address = ENCODE(claus.address)
 
+    bytes_of_string = sp.build_lambda(Bytes.of_string)
     encoded_counter_key = bytes_of_string("counter")
     encoded_counter_value_1 = bytes_of_string("1")
     encoded_counter_value_2 = bytes_of_string("2")

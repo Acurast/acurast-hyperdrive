@@ -8,8 +8,7 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type
 from contracts.tezos.IBCF_Eth_Validator import Type as ValidatiorInterface
-from contracts.tezos.utils.bytes import Bytes
-
+from contracts.tezos.utils.bytes import bytes_of_string
 
 class Error:
     EXPECTING_PONG = "EXPECTING_PONG"
@@ -18,47 +17,15 @@ class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
     INVALID_VIEW = "INVALID_VIEW"
 
-
-class Inlined:
-    @staticmethod
-    def string_of_nat(number):
-        """Convert an int into a string"""
-        c = sp.map({x: str(x) for x in range(0, 10)})
-        x = sp.local("x", number)
-        arr = sp.local("arr", [])
-
-        with sp.if_(x.value == 0):
-            arr.value.push("0")
-        with sp.while_(0 < x.value):
-            arr.value.push(c[x.value % 10])
-            x.value //= 10
-
-        result = sp.local("result", sp.concat(arr.value))
-
-        return result.value
-
-    @staticmethod
-    def string_of_bytes(b):
-        packedBytes = sp.concat(
-            [
-                sp.bytes("0x05"),
-                sp.bytes("0x01"),
-                sp.bytes("0x00000001"),
-                sp.slice(b, 1, 1).open_some(),
-            ]
-        )
-        return sp.unpack(packedBytes, sp.TString).open_some(sp.unit)
-
-
-class IBCF_Client(sp.Contract):
+class IBCF_TokenManager(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
                 eth_contract=sp.TBytes,
                 storage_slot=sp.TBytes,
-                ibcf_tezos_state=sp.TAddress,
-                ibcf_eth_validator=sp.TAddress,
-                counter=sp.TNat,
+                tezos_state_aggregator=sp.TAddress,
+                eth_state_validator=sp.TAddress,
+                eth_nonce=sp.TNat,
             )
         )
 
@@ -71,7 +38,6 @@ class IBCF_Client(sp.Contract):
         # Pings can only happen when counter is even
         sp.verify(self.data.counter % 2 == 0, Error.EXPECTING_PONG)
 
-        bytes_of_string = sp.build_lambda(Bytes.of_string)
         # Increase counter
         self.data.counter += 1
 

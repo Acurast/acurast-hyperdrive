@@ -1,88 +1,33 @@
 import smartpy as sp
 
-latest_var_id = 0
+from contracts.tezos.utils.misc import generate_var
 
-
-def generate_var(postfix=None):
-    """
-    Generate a unique variable name
-
-    Necessary because of smartpy code inlining
-    """
-    global latest_var_id
-
-    id = "utils_%s%s" % (latest_var_id, ("_" + postfix if postfix is not None else ""))
-    latest_var_id += 1
-
-    return id
-
-
-def pow(n, e):
-    result = sp.local(generate_var("result"), 1)
-    base = sp.local(generate_var("base"), n)
-    exponent = sp.local(generate_var("exponent"), e)
-
-    with sp.while_(exponent.value != 0):
-        with sp.if_((exponent.value % 2) != 0):
-            result.value *= base.value
-
-        exponent.value = exponent.value >> 1  # Equivalent to exponent.value / 2
-        base.value *= base.value
-
-    return result.value
-
-
-def get_suffix(b, length):
-    return b & sp.as_nat((1 << length) - 1)
-
-
-def get_prefix(b, full_length, prefix_length):
-    return b >> sp.as_nat(full_length - prefix_length)
-
-
-def is_bit_set(i, n):
-    return (i >> n) & 1
-
-
-def nat_of_bytes(b):
-    length = sp.compute(sp.len(b))
-    decimal = sp.local("decimal", sp.nat(0))
-    with sp.for_("_pos", sp.range(0, length)) as pos:
-        byte = sp.compute(sp.slice(b, pos, 1).open_some(sp.unit))
-        base = sp.compute(sp.as_nat(length - (pos + 1)) * 2)
+class Bytes:
+    @staticmethod
+    def of_string(text):
+        b = sp.pack(text)
+        # Remove (packed prefix), (Data identifier) and (string length)
         # - Packed prefix: 0x05 (1 byte)
-        # - Data identifier: (bytes = 0x0a) (1 byte)
-        # - Length ("0x00000020" = 32) (4 bytes)
-        # - Data (32 bytes)
-        packedBytes = sp.bytes("0x050a00000020") + byte + sp.bytes("0x" + "00" * 31)
-        decimal.value += sp.as_nat(
-            sp.to_int(sp.unpack(packedBytes, sp.TBls12_381_fr).open_some(sp.unit))
-        ) * pow(16, base)
+        # - Data identifier: (string = 0x01) (1 byte)
+        # - String length (4 bytes)
+        sp.result(sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some("Could not encode string to bytes."))
 
-    sp.result(decimal.value)
+    @staticmethod
+    def of_uint8(n):
+        return sp.slice(sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1).open_some()
 
-def byte_of_nat(n):
-    return sp.slice(sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1).open_some(sp.unit)
+    @staticmethod
+    def of_nat(n):
+        # Bls12_381_fr does not work for numbers above 254 bits
+        sp.verify(n < 2**254, "NUMBER_TOO_BIG")
 
-def bytes_of_nat(n):
-    result = sp.local(generate_var("bytes"), sp.bytes("0x"))
-    value = sp.local(generate_var("value"), n)
-    with sp.while_(value.value != 0):
-        result.value = byte_of_nat(value.value) + result.value
-        value.value >>= 8
+        result = sp.local(generate_var("bytes"), sp.bytes("0x"))
+        value = sp.local(generate_var("value"), n)
+        with sp.while_(value.value != 0):
+            result.value = Bytes.of_uint8(value.value) + result.value
+            value.value >>= 8
 
-    return result.value
-
-def bytes_of_string(text):
-    b = sp.pack(text)
-    # Remove (packed prefix), (Data identifier) and (string length)
-    # - Packed prefix: 0x05 (1 byte)
-    # - Data identifier: (string = 0x01) (1 byte)
-    # - String length (4 bytes)
-    return sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
-        "Could not encode string to bytes."
-    )
-
+        sp.result(result.value)
 
 """
 ########################################################################
@@ -90,6 +35,8 @@ Legacy code (Not being used currently, but may be useful in the future)
 ########################################################################
 """
 
+def is_bit_set(i, n):
+    return (i >> n) & 1
 
 def int_of_bits(bstring):
     n = sp.local("n", 0)

@@ -10,7 +10,7 @@ from contracts.tezos.utils.misc import (
     split_common_prefix,
     remove_prefix,
 )
-from contracts.tezos.utils.bytes import nat_of_bytes
+from contracts.tezos.utils.nat import Nat
 
 HASH_FUNCTION = sp.keccak
 HASH_LENGTH = 256
@@ -328,7 +328,7 @@ class IBCF_Aggregator(sp.Contract):
         """
         Include new state into the merkle tree.
         """
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(nat_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
 
         with sp.if_(~self.data.merkle_history.contains(sp.level)):
             self.data.merkle_history[sp.level] = EMPTY_TREE
@@ -445,7 +445,7 @@ class IBCF_Aggregator(sp.Contract):
 
         chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
         split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(nat_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
 
         key_hash = sp.compute(Inlined.hash_key(ENCODE(arg.owner), arg.key))
         key = sp.local(

@@ -8,7 +8,8 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type
 import contracts.tezos.utils.rlp as RLP
-import contracts.tezos.utils.bytes as Bytes
+from contracts.tezos.utils.bytes import Bytes
+from contracts.tezos.utils.nat import Nat
 
 HASH_FUNCTION = sp.keccak
 EMPTY_TRIE_ROOT_HASH = sp.bytes(
@@ -120,15 +121,15 @@ class Lambdas:
 class RLP_utils:
     @staticmethod
     def to_list():
-        return sp.compute(sp.build_lambda(RLP.to_list))
+        return sp.compute(sp.build_lambda(RLP.Decoder.decode_list))
 
     @staticmethod
     def is_list():
-        return sp.compute(sp.build_lambda(RLP.is_list))
+        return sp.compute(sp.build_lambda(RLP.Decoder.is_list))
 
     @staticmethod
     def remove_offset():
-        return sp.compute(sp.build_lambda(RLP.remove_offset))
+        return sp.compute(sp.build_lambda(RLP.Decoder.without_length_prefix))
 
 
 class IBCF_Eth_Validator(sp.Contract):
@@ -430,7 +431,7 @@ class IBCF_Eth_Validator(sp.Contract):
     def merkle_patricia_compact_decode(self, _bytes):
         sp.verify(sp.len(_bytes) > 0, "Empty bytes array")
 
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
 
         byte0 = sp.compute(nat_of_bytes_lambda(sp.slice(_bytes, 0, 1).open_some()))
         first_nibble = sp.compute(byte0 >> 4)
@@ -471,7 +472,7 @@ class IBCF_Eth_Validator(sp.Contract):
             "skip",
         )
 
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
 
         bytes_length = sp.compute(sp.len(_bytes))
         sp.verify(bytes_length > 0, "Empty bytes array")
@@ -532,7 +533,7 @@ class IBCF_Eth_Validator(sp.Contract):
             "position",
         )
 
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Bytes.nat_of_bytes))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
 
         sp.verify(position < 64, "Invalid nibble position")
 
