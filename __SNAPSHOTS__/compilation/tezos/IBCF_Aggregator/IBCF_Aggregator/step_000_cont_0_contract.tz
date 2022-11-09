@@ -76,7 +76,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 36; 
+                PUSH int 18; 
                 FAILWITH;   
               }
               {}; 
@@ -136,7 +136,7 @@ code
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 36; 
+                    PUSH int 18; 
                     FAILWITH;   
                   }
                   {}; 
@@ -190,7 +190,7 @@ code
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 40; 
+                    PUSH int 21; 
                     FAILWITH;   
                   }
                   {}; 
@@ -206,7 +206,7 @@ code
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 40; 
+                    PUSH int 21; 
                     FAILWITH;   
                   }
                   {}; 
@@ -285,7 +285,7 @@ code
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 40; 
+                    PUSH int 21; 
                     FAILWITH;   
                   }
                   {}; 
@@ -324,7 +324,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 36; 
+                PUSH int 18; 
                 FAILWITH;   
               }
               {}; 
@@ -861,6 +861,7 @@ code
               {
                 DUP;        
                 SIZE;       
+                DUP;        
                 PUSH nat 0; 
                 SWAP;       
                 PUSH nat 0; 
@@ -870,13 +871,13 @@ code
                 GT;         
                 LOOP
                   {
-                    DUP 4;      
+                    DUP 5;      
                     PUSH nat 1; 
                     DUP 3;      
                     SLICE;      
                     IF_NONE
                       {
-                        UNIT;       
+                        PUSH int 11; 
                         FAILWITH;   
                       }
                       {}; 
@@ -885,12 +886,11 @@ code
                     DUP 4;      
                     ADD;        
                     DUP 7;      
-                    SIZE;       
                     SUB;        
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 52; 
+                        PUSH int 12; 
                         FAILWITH;   
                       }
                       {}; 
@@ -910,7 +910,7 @@ code
                         EDIV;       
                         IF_NONE
                           {
-                            PUSH int 26; 
+                            PUSH int 13; 
                             FAILWITH;   
                           }
                           {
@@ -951,7 +951,7 @@ code
                     UNPACK bls12_381_fr; 
                     IF_NONE
                       {
-                        UNIT;       
+                        PUSH int 19; 
                         FAILWITH;   
                       }
                       {}; 
@@ -959,7 +959,7 @@ code
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 58; 
+                        PUSH int 18; 
                         FAILWITH;   
                       }
                       {}; 
@@ -975,6 +975,8 @@ code
                     GT;         
                   }; 
                 DROP 2;     
+                SWAP;       
+                DROP;       
                 SWAP;       
                 DROP;       
               }; 
@@ -1322,7 +1324,7 @@ view
         ISNAT;      
         IF_NONE
           {
-            PUSH int 36; 
+            PUSH int 18; 
             FAILWITH;   
           }
           {}; 
@@ -1391,7 +1393,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 40; 
+                PUSH int 21; 
                 FAILWITH;   
               }
               {}; 
@@ -1407,7 +1409,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 40; 
+                PUSH int 21; 
                 FAILWITH;   
               }
               {}; 
@@ -1486,7 +1488,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 40; 
+                PUSH int 21; 
                 FAILWITH;   
               }
               {}; 
@@ -1525,7 +1527,7 @@ view
         ISNAT;      
         IF_NONE
           {
-            PUSH int 36; 
+            PUSH int 18; 
             FAILWITH;   
           }
           {}; 
@@ -1542,6 +1544,7 @@ view
       {
         DUP;        
         SIZE;       
+        DUP;        
         PUSH nat 0; 
         SWAP;       
         PUSH nat 0; 
@@ -1551,13 +1554,13 @@ view
         GT;         
         LOOP
           {
-            DUP 4;      
+            DUP 5;      
             PUSH nat 1; 
             DUP 3;      
             SLICE;      
             IF_NONE
               {
-                UNIT;       
+                PUSH int 11; 
                 FAILWITH;   
               }
               {}; 
@@ -1566,12 +1569,11 @@ view
             DUP 4;      
             ADD;        
             DUP 7;      
-            SIZE;       
             SUB;        
             ISNAT;      
             IF_NONE
               {
-                PUSH int 52; 
+                PUSH int 12; 
                 FAILWITH;   
               }
               {}; 
@@ -1591,7 +1593,7 @@ view
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 26; 
+                    PUSH int 13; 
                     FAILWITH;   
                   }
                   {
@@ -1632,7 +1634,7 @@ view
             UNPACK bls12_381_fr; 
             IF_NONE
               {
-                UNIT;       
+                PUSH int 19; 
                 FAILWITH;   
               }
               {}; 
@@ -1640,7 +1642,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 58; 
+                PUSH int 18; 
                 FAILWITH;   
               }
               {}; 
@@ -1656,6 +1658,8 @@ view
             GT;         
           }; 
         DROP 2;     
+        SWAP;       
+        DROP;       
         SWAP;       
         DROP;       
       }; 

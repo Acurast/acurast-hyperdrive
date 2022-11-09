@@ -113,7 +113,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 163; 
+                PUSH int 164; 
                 FAILWITH;   
               }
               {}; 
@@ -155,6 +155,7 @@ view
       {
         DUP;        
         SIZE;       
+        DUP;        
         PUSH nat 0; 
         SWAP;       
         PUSH nat 0; 
@@ -164,13 +165,13 @@ view
         GT;         
         LOOP
           {
-            DUP 4;      
+            DUP 5;      
             PUSH nat 1; 
             DUP 3;      
             SLICE;      
             IF_NONE
               {
-                UNIT;       
+                PUSH int 11; 
                 FAILWITH;   
               }
               {}; 
@@ -179,12 +180,11 @@ view
             DUP 4;      
             ADD;        
             DUP 7;      
-            SIZE;       
             SUB;        
             ISNAT;      
             IF_NONE
               {
-                PUSH int 52; 
+                PUSH int 12; 
                 FAILWITH;   
               }
               {}; 
@@ -204,7 +204,7 @@ view
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 26; 
+                    PUSH int 13; 
                     FAILWITH;   
                   }
                   {
@@ -245,7 +245,7 @@ view
             UNPACK bls12_381_fr; 
             IF_NONE
               {
-                UNIT;       
+                PUSH int 19; 
                 FAILWITH;   
               }
               {}; 
@@ -253,7 +253,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 58; 
+                PUSH int 18; 
                 FAILWITH;   
               }
               {}; 
@@ -269,6 +269,8 @@ view
             GT;         
           }; 
         DROP 2;     
+        SWAP;       
+        DROP;       
         SWAP;       
         DROP;       
       }; 
@@ -289,7 +291,7 @@ view
     EDIV;       
     IF_NONE
       {
-        PUSH int 542; 
+        PUSH int 543; 
         FAILWITH;   
       }
       {
@@ -298,7 +300,7 @@ view
     SLICE;      
     IF_NONE
       {
-        PUSH int 542; 
+        PUSH int 543; 
         FAILWITH;   
       }
       {}; 
@@ -309,7 +311,7 @@ view
     EDIV;       
     IF_NONE
       {
-        PUSH int 545; 
+        PUSH int 546; 
         FAILWITH;   
       }
       {
@@ -349,6 +351,7 @@ view
       {
         DUP;        
         SIZE;       
+        DUP;        
         PUSH nat 0; 
         SWAP;       
         PUSH nat 0; 
@@ -358,13 +361,13 @@ view
         GT;         
         LOOP
           {
-            DUP 4;      
+            DUP 5;      
             PUSH nat 1; 
             DUP 3;      
             SLICE;      
             IF_NONE
               {
-                UNIT;       
+                PUSH int 11; 
                 FAILWITH;   
               }
               {}; 
@@ -373,12 +376,11 @@ view
             DUP 4;      
             ADD;        
             DUP 7;      
-            SIZE;       
             SUB;        
             ISNAT;      
             IF_NONE
               {
-                PUSH int 52; 
+                PUSH int 12; 
                 FAILWITH;   
               }
               {}; 
@@ -398,7 +400,7 @@ view
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 26; 
+                    PUSH int 13; 
                     FAILWITH;   
                   }
                   {
@@ -439,7 +441,7 @@ view
             UNPACK bls12_381_fr; 
             IF_NONE
               {
-                UNIT;       
+                PUSH int 19; 
                 FAILWITH;   
               }
               {}; 
@@ -447,7 +449,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 58; 
+                PUSH int 18; 
                 FAILWITH;   
               }
               {}; 
@@ -465,6 +467,8 @@ view
         DROP 2;     
         SWAP;       
         DROP;       
+        SWAP;       
+        DROP;       
       }; 
     DUP;        
     DUP 3;      
@@ -473,7 +477,7 @@ view
     SLICE;      
     IF_NONE
       {
-        PUSH int 435; 
+        PUSH int 436; 
         FAILWITH;   
       }
       {}; 
@@ -567,6 +571,7 @@ view
       {
         DUP;        
         SIZE;       
+        DUP;        
         PUSH nat 0; 
         SWAP;       
         PUSH nat 0; 
@@ -576,13 +581,13 @@ view
         GT;         
         LOOP
           {
-            DUP 4;      
+            DUP 5;      
             PUSH nat 1; 
             DUP 3;      
             SLICE;      
             IF_NONE
               {
-                UNIT;       
+                PUSH int 11; 
                 FAILWITH;   
               }
               {}; 
@@ -591,12 +596,11 @@ view
             DUP 4;      
             ADD;        
             DUP 7;      
-            SIZE;       
             SUB;        
             ISNAT;      
             IF_NONE
               {
-                PUSH int 52; 
+                PUSH int 12; 
                 FAILWITH;   
               }
               {}; 
@@ -616,7 +620,7 @@ view
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 26; 
+                    PUSH int 13; 
                     FAILWITH;   
                   }
                   {
@@ -657,7 +661,7 @@ view
             UNPACK bls12_381_fr; 
             IF_NONE
               {
-                UNIT;       
+                PUSH int 19; 
                 FAILWITH;   
               }
               {}; 
@@ -665,7 +669,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 58; 
+                PUSH int 18; 
                 FAILWITH;   
               }
               {}; 
@@ -681,6 +685,8 @@ view
             GT;         
           }; 
         DROP 2;     
+        SWAP;       
+        DROP;       
         SWAP;       
         DROP;       
       }; 
@@ -729,7 +735,7 @@ view
         EDIV;       
         IF_NONE
           {
-            PUSH int 486; 
+            PUSH int 487; 
             FAILWITH;   
           }
           {
@@ -738,7 +744,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 486; 
+            PUSH int 487; 
             FAILWITH;   
           }
           {}; 
@@ -750,7 +756,7 @@ view
         EDIV;       
         IF_NONE
           {
-            PUSH int 490; 
+            PUSH int 491; 
             FAILWITH;   
           }
           {
@@ -759,7 +765,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 490; 
+            PUSH int 491; 
             FAILWITH;   
           }
           {}; 
@@ -772,7 +778,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 491; 
+            PUSH int 492; 
             FAILWITH;   
           }
           {}; 
@@ -847,7 +853,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 516; 
+            PUSH int 517; 
             FAILWITH;   
           }
           {}; 
@@ -859,7 +865,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 515; 
+            PUSH int 516; 
             FAILWITH;   
           }
           {}; 
@@ -981,7 +987,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 105; 
+                PUSH int 106; 
                 FAILWITH;   
               }
               {}; 
@@ -1012,7 +1018,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 113; 
+                PUSH int 114; 
                 FAILWITH;   
               }
               {}; 
@@ -1060,6 +1066,7 @@ view
                   {
                     DUP;        
                     SIZE;       
+                    DUP;        
                     PUSH nat 0; 
                     SWAP;       
                     PUSH nat 0; 
@@ -1069,13 +1076,13 @@ view
                     GT;         
                     LOOP
                       {
-                        DUP 4;      
+                        DUP 5;      
                         PUSH nat 1; 
                         DUP 3;      
                         SLICE;      
                         IF_NONE
                           {
-                            UNIT;       
+                            PUSH int 11; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1084,12 +1091,11 @@ view
                         DUP 4;      
                         ADD;        
                         DUP 7;      
-                        SIZE;       
                         SUB;        
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 52; 
+                            PUSH int 12; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1109,7 +1115,7 @@ view
                             EDIV;       
                             IF_NONE
                               {
-                                PUSH int 26; 
+                                PUSH int 13; 
                                 FAILWITH;   
                               }
                               {
@@ -1150,7 +1156,7 @@ view
                         UNPACK bls12_381_fr; 
                         IF_NONE
                           {
-                            UNIT;       
+                            PUSH int 19; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1158,7 +1164,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 58; 
+                            PUSH int 18; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1176,6 +1182,8 @@ view
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    SWAP;       
+                    DROP;       
                   }; 
                 DUP;        
                 DUP 3;      
@@ -1184,7 +1192,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 76; 
+                    PUSH int 150; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1217,7 +1225,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 82; 
+                            PUSH int 156; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1235,7 +1243,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 86; 
+                                PUSH int 160; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1251,7 +1259,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 88; 
+                                PUSH int 162; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1259,7 +1267,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 88; 
+                                PUSH int 162; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1268,7 +1276,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 91; 
+                                PUSH int 165; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1295,7 +1303,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 96; 
+                                    PUSH int 170; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1307,7 +1315,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 99; 
+                                    PUSH int 173; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1323,7 +1331,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 101; 
+                                    PUSH int 175; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1331,7 +1339,7 @@ view
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 101; 
+                                    PUSH int 175; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1340,7 +1348,7 @@ view
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 104; 
+                                    PUSH int 178; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1362,6 +1370,7 @@ view
                   {
                     DUP;        
                     SIZE;       
+                    DUP;        
                     PUSH nat 0; 
                     SWAP;       
                     PUSH nat 0; 
@@ -1371,13 +1380,13 @@ view
                     GT;         
                     LOOP
                       {
-                        DUP 4;      
+                        DUP 5;      
                         PUSH nat 1; 
                         DUP 3;      
                         SLICE;      
                         IF_NONE
                           {
-                            UNIT;       
+                            PUSH int 11; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1386,12 +1395,11 @@ view
                         DUP 4;      
                         ADD;        
                         DUP 7;      
-                        SIZE;       
                         SUB;        
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 52; 
+                            PUSH int 12; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1411,7 +1419,7 @@ view
                             EDIV;       
                             IF_NONE
                               {
-                                PUSH int 26; 
+                                PUSH int 13; 
                                 FAILWITH;   
                               }
                               {
@@ -1452,7 +1460,7 @@ view
                         UNPACK bls12_381_fr; 
                         IF_NONE
                           {
-                            UNIT;       
+                            PUSH int 19; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1460,7 +1468,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 58; 
+                            PUSH int 18; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1478,6 +1486,8 @@ view
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    SWAP;       
+                    DROP;       
                   }; 
                 SWAP;       
                 PUSH nat 1; 
@@ -1485,7 +1495,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 54; 
+                    PUSH int 188; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1544,7 +1554,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 68; 
+                                PUSH int 202; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1558,7 +1568,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 71; 
+                                PUSH int 205; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1588,7 +1598,7 @@ view
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 122; 
+                    PUSH int 98; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1596,7 +1606,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 123; 
+                    PUSH int 98; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1631,6 +1641,7 @@ view
               {
                 DUP;        
                 SIZE;       
+                DUP;        
                 PUSH nat 0; 
                 SWAP;       
                 PUSH nat 0; 
@@ -1640,13 +1651,13 @@ view
                 GT;         
                 LOOP
                   {
-                    DUP 4;      
+                    DUP 5;      
                     PUSH nat 1; 
                     DUP 3;      
                     SLICE;      
                     IF_NONE
                       {
-                        UNIT;       
+                        PUSH int 11; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1655,12 +1666,11 @@ view
                     DUP 4;      
                     ADD;        
                     DUP 7;      
-                    SIZE;       
                     SUB;        
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 52; 
+                        PUSH int 12; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1680,7 +1690,7 @@ view
                         EDIV;       
                         IF_NONE
                           {
-                            PUSH int 26; 
+                            PUSH int 13; 
                             FAILWITH;   
                           }
                           {
@@ -1721,7 +1731,7 @@ view
                     UNPACK bls12_381_fr; 
                     IF_NONE
                       {
-                        UNIT;       
+                        PUSH int 19; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1729,7 +1739,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 58; 
+                        PUSH int 18; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1747,6 +1757,8 @@ view
                 DROP 2;     
                 SWAP;       
                 DROP;       
+                SWAP;       
+                DROP;       
               }; 
             DUP;        
             DUP 3;      
@@ -1755,7 +1767,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 76; 
+                PUSH int 150; 
                 FAILWITH;   
               }
               {}; 
@@ -1788,7 +1800,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 82; 
+                        PUSH int 156; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1806,7 +1818,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 86; 
+                            PUSH int 160; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1822,7 +1834,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 88; 
+                            PUSH int 162; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1830,7 +1842,7 @@ view
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 88; 
+                            PUSH int 162; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1839,7 +1851,7 @@ view
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 91; 
+                            PUSH int 165; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1866,7 +1878,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 96; 
+                                PUSH int 170; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1878,7 +1890,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 99; 
+                                PUSH int 173; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1894,7 +1906,7 @@ view
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 101; 
+                                PUSH int 175; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1902,7 +1914,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 101; 
+                                PUSH int 175; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1911,7 +1923,7 @@ view
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 104; 
+                                PUSH int 178; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1933,6 +1945,7 @@ view
               {
                 DUP;        
                 SIZE;       
+                DUP;        
                 PUSH nat 0; 
                 SWAP;       
                 PUSH nat 0; 
@@ -1942,13 +1955,13 @@ view
                 GT;         
                 LOOP
                   {
-                    DUP 4;      
+                    DUP 5;      
                     PUSH nat 1; 
                     DUP 3;      
                     SLICE;      
                     IF_NONE
                       {
-                        UNIT;       
+                        PUSH int 11; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1957,12 +1970,11 @@ view
                     DUP 4;      
                     ADD;        
                     DUP 7;      
-                    SIZE;       
                     SUB;        
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 52; 
+                        PUSH int 12; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1982,7 +1994,7 @@ view
                         EDIV;       
                         IF_NONE
                           {
-                            PUSH int 26; 
+                            PUSH int 13; 
                             FAILWITH;   
                           }
                           {
@@ -2023,7 +2035,7 @@ view
                     UNPACK bls12_381_fr; 
                     IF_NONE
                       {
-                        UNIT;       
+                        PUSH int 19; 
                         FAILWITH;   
                       }
                       {}; 
@@ -2031,7 +2043,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 58; 
+                        PUSH int 18; 
                         FAILWITH;   
                       }
                       {}; 
@@ -2049,6 +2061,8 @@ view
                 DROP 2;     
                 SWAP;       
                 DROP;       
+                SWAP;       
+                DROP;       
               }; 
             SWAP;       
             PUSH nat 1; 
@@ -2056,7 +2070,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 54; 
+                PUSH int 188; 
                 FAILWITH;   
               }
               {}; 
@@ -2115,7 +2129,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 68; 
+                            PUSH int 202; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2129,7 +2143,7 @@ view
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 71; 
+                            PUSH int 205; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2149,7 +2163,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 45; 
+                PUSH int 73; 
                 FAILWITH;   
               }
               {}; 
@@ -2190,7 +2204,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 31; 
+                PUSH int 122; 
                 FAILWITH;   
               }
               {}; 
@@ -2198,7 +2212,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 32; 
+                PUSH int 122; 
                 FAILWITH;   
               }
               {}; 
@@ -2210,7 +2224,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 35; 
+                PUSH int 125; 
                 FAILWITH;   
               }
               {}; 
@@ -2255,7 +2269,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 45; 
+            PUSH int 73; 
             FAILWITH;   
           }
           {}; 
@@ -2273,6 +2287,7 @@ view
           {
             DUP;        
             SIZE;       
+            DUP;        
             PUSH nat 0; 
             SWAP;       
             PUSH nat 0; 
@@ -2282,13 +2297,13 @@ view
             GT;         
             LOOP
               {
-                DUP 4;      
+                DUP 5;      
                 PUSH nat 1; 
                 DUP 3;      
                 SLICE;      
                 IF_NONE
                   {
-                    UNIT;       
+                    PUSH int 11; 
                     FAILWITH;   
                   }
                   {}; 
@@ -2297,12 +2312,11 @@ view
                 DUP 4;      
                 ADD;        
                 DUP 7;      
-                SIZE;       
                 SUB;        
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 52; 
+                    PUSH int 12; 
                     FAILWITH;   
                   }
                   {}; 
@@ -2322,7 +2336,7 @@ view
                     EDIV;       
                     IF_NONE
                       {
-                        PUSH int 26; 
+                        PUSH int 13; 
                         FAILWITH;   
                       }
                       {
@@ -2363,7 +2377,7 @@ view
                 UNPACK bls12_381_fr; 
                 IF_NONE
                   {
-                    UNIT;       
+                    PUSH int 19; 
                     FAILWITH;   
                   }
                   {}; 
@@ -2371,7 +2385,7 @@ view
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 58; 
+                    PUSH int 18; 
                     FAILWITH;   
                   }
                   {}; 
@@ -2389,6 +2403,8 @@ view
             DROP 2;     
             SWAP;       
             DROP;       
+            SWAP;       
+            DROP;       
           }; 
         SWAP;       
         PUSH nat 1; 
@@ -2396,7 +2412,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 54; 
+            PUSH int 188; 
             FAILWITH;   
           }
           {}; 
@@ -2455,7 +2471,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 68; 
+                        PUSH int 202; 
                         FAILWITH;   
                       }
                       {}; 
@@ -2469,7 +2485,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 71; 
+                        PUSH int 205; 
                         FAILWITH;   
                       }
                       {}; 
@@ -2489,7 +2505,7 @@ view
         ISNAT;      
         IF_NONE
           {
-            PUSH int 135; 
+            PUSH int 81; 
             FAILWITH;   
           }
           {}; 
@@ -2497,7 +2513,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 138; 
+            PUSH int 83; 
             FAILWITH;   
           }
           {}; 
@@ -2526,7 +2542,7 @@ view
     GET;        
     IF_NONE
       {
-        PUSH int 393; 
+        PUSH int 394; 
         FAILWITH;   
       }
       {}; 
@@ -2643,7 +2659,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 226; 
+                PUSH int 227; 
                 FAILWITH;   
               }
               {}; 
@@ -2703,7 +2719,7 @@ view
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 247; 
+                        PUSH int 248; 
                         FAILWITH;   
                       }
                       {}; 
@@ -2762,7 +2778,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 270; 
+                            PUSH int 271; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2780,7 +2796,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 275; 
+                            PUSH int 276; 
                             FAILWITH;   
                           }
                           {}; 
@@ -2858,7 +2874,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 290; 
+                                PUSH int 291; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -2887,7 +2903,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 308; 
+                                PUSH int 309; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -2937,7 +2953,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 329; 
+                            PUSH int 330; 
                             FAILWITH;   
                           }
                           {}; 

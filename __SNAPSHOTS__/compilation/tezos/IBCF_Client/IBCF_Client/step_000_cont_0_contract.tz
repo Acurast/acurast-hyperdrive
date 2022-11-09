@@ -13,7 +13,7 @@ code
         EDIV;       
         IF_NONE
           {
-            PUSH int 97; 
+            PUSH int 98; 
             FAILWITH;   
           }
           {
@@ -271,7 +271,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 71; 
+                PUSH int 13; 
                 FAILWITH;   
               }
               {}; 
@@ -295,28 +295,35 @@ code
               {}; 
             PUSH mutez 0; 
             DIG 3;      
-            PUSH string "counter"; 
-            PACK;       
-            PUSH nat 6; 
-            PUSH string "counter"; 
-            PACK;       
-            SIZE;       
-            SUB;        
-            ISNAT;      
-            IF_NONE
+            LAMBDA
+              string
+              bytes
               {
-                PUSH int 71; 
-                FAILWITH;   
-              }
-              {}; 
-            PUSH nat 6; 
-            SLICE;      
-            IF_NONE
-              {
-                PUSH string "Could not encode string to bytes."; 
-                FAILWITH;   
-              }
-              {}; 
+                DUP;        
+                PACK;       
+                PUSH nat 6; 
+                DIG 2;      
+                PACK;       
+                SIZE;       
+                SUB;        
+                ISNAT;      
+                IF_NONE
+                  {
+                    PUSH int 13; 
+                    FAILWITH;   
+                  }
+                  {}; 
+                PUSH nat 6; 
+                SLICE;      
+                IF_NONE
+                  {
+                    PUSH string "Could not encode string to bytes."; 
+                    FAILWITH;   
+                  }
+                  {}; 
+              }; 
+            PUSH string "counter"; 
+            EXEC;       
             PAIR;       
             TRANSFER_TOKENS; 
             CONS;       
