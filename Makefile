@@ -6,8 +6,8 @@ FLEXTESA_IMAGE=oxheadalpha/flextesa:latest
 FLEXTESA_SCRIPT=jakartabox
 CONTAINER_NAME=ibc-tezos-sandbox
 
-COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilation/**/*.py))
-TESTS := $(filter-out %/__init__.py, $(wildcard test/**/*.py))
+COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilation/**/*.py)) $(wildcard compilation/**/**/*.py)
+TESTS := $(filter-out %/__init__.py, $(wildcard test/**/*.py)) $(wildcard test/**/**/*.py)
 
 touch_done=@mkdir -p $(@D) && touch $@;
 

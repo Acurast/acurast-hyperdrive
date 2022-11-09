@@ -30,7 +30,7 @@ class Encoder:
                 sp.failwith("INVALID_LENGTH")
 
     @staticmethod
-    def encode_uint(n):
+    def encode_nat(n):
         encode = sp.build_lambda(Encoder.with_length_prefix)
         bytes_of_nat = sp.build_lambda(Bytes.of_nat)
         with sp.if_(n == 0):
