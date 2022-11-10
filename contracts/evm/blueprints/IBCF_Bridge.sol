@@ -2,47 +2,46 @@
 pragma solidity 0.7.6;
 
 // --------------------------------------------------------------------------
-// This contract implements the receiving end of an asset teleporting
-// protocol, which uses Merkle proofs to validate the synchronization
-// between chains.
+// This contract implements the bridging protocol.
+//
+// It allows user to wrap Ethereum assets on the Tezos blockchain.
 // --------------------------------------------------------------------------
 
 import "../libs/RLPReader.sol";
 import {IBCF_Validator} from "../IBCF_Validator.sol";
 import "./MintableERC20.sol";
 
-library IBCF_TeleportReceiver_Error {
+library IBCF_Bridge_Error {
     string constant INVALID_COUNTER = "INVALID_COUNTER";
 }
 
-contract IBCF_TeleportReceiver {
+contract IBCF_Bridge {
     IBCF_Validator validator;
-    MintableERC20 asset = MintableERC20(0);
-    bytes tezos_teleporter;
-    address admin;
-    mapping(address => uint) registry;
+    MintableERC20 asset;
+    bytes tezos_bridge_address;
+    mapping(bytes => uint) tezos_nonce; // Tezos address => nonce
+    mapping(address => uint) eth_nonce; // Eth address => nonce
+    mapping(bytes => bytes) registry; // (Tezos address + nonce) RLP encoded => amount RLP encoded
 
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for bytes;
 
-    // modifier to check if caller is the administrator
-    modifier is_admin() {
-        require(msg.sender == admin, "NOT_ADMIN");
-        _;
-    }
-
-    constructor(IBCF_Validator _validator, address _admin, bytes memory _tezos_teleporter) {
+    constructor(IBCF_Validator _validator, MintableERC20 _asset, bytes memory _tezos_bridge_address) {
         validator = _validator;
-        admin = _admin;
-        tezos_teleporter = _tezos_teleporter;
-    }
-
-    function set_asset(MintableERC20 _asset) public is_admin {
-        require(asset == MintableERC20(0), "ASSET_ALREADY_SET");
         asset = _asset;
+        tezos_bridge_address = _tezos_bridge_address;
     }
 
-    function finalize_teleport(
+    function teleport(bytes memory target_address, uint amount) public {
+        // Transfer assets
+        asset.transferFrom(msg.sender, address(this), amount);
+
+        uint nonce = tezos_nonce[target_address];
+        tezos_nonce[target_address] = nonce + 1;
+        registry[abi.encodePacked(target_address, nonce)] = abi.encodePacked(amount);
+    }
+
+    function receive_teleport(
         uint block_level,
         bytes32 merkle_root,
         bytes memory key,
@@ -55,7 +54,7 @@ contract IBCF_TeleportReceiver {
         validator.verify_proof(
             block_level,
             merkle_root,
-            tezos_teleporter,
+            tezos_bridge_address,
             key,
             value,
             proof,
@@ -70,19 +69,20 @@ contract IBCF_TeleportReceiver {
         uint counter = args[2].toUint();
 
         // Teleports must be finalized sequentially per target account
-        uint old_counter = registry[target_address];
-        require(old_counter + 1 == counter, IBCF_TeleportReceiver_Error.INVALID_COUNTER);
+        uint old_counter = eth_nonce[target_address];
+        require(old_counter + 1 == counter, IBCF_Bridge_Error.INVALID_COUNTER);
         // Increment counter
-        registry[target_address] = counter;
+        eth_nonce[target_address] = counter;
 
-        // Mint tokens
-        asset.mint(target_address, amount);
+        // Transfer tokens
+        asset.transfer(target_address, amount);
     }
+
 
     /**
      * Get the nonce of a given account.
      */
     function nonce_of(address account) public view returns (uint) {
-        return registry[account];
+        return eth_nonce[account];
     }
 }

@@ -1,32 +1,41 @@
 const { createSecp256r1KeyPair, signContent, buildBuffer, expectsFailure } = require("../utils");
 
-const IBCF_TeleportReceiver = artifacts.require('IBCF_TeleportReceiver');
+const IBCF_Bridge = artifacts.require('IBCF_Bridge');
 const IBCF_Validator = artifacts.require('IBCF_Validator');
-const MintableERC20 = artifacts.require('MintableERC20');
+const ERC20 = artifacts.require('MintableERC20');
 
 let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 
-contract('IBCF_TeleportReceiver', async ([_, primary]) => {
+contract('IBCF_Bridge', async ([_, primary]) => {
     const signer_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
     const chain_id = "0xaf1864d9";
     const tezos_teleport = "0x050a0000001601d1371b91c4cf72f705512fdf3eda99ca70af9f4800";
-    let teleportReceiver;
+    const tezos_address = "0x1601d1371b91c4cf72f705512fdf3eda99ca70af9f4800";
+    let bridge;
     let validator;
     let asset;
 
-    beforeEach('Deploy contracts', async () => {
+    before('Deploy contracts', async () => {
         validator = await IBCF_Validator.new(primary, 1, chain_id, { from: primary });
-        teleportReceiver = await IBCF_TeleportReceiver.new(validator.address, primary, tezos_teleport, { from: primary });
-        asset = await MintableERC20.new("TOKEN", "ABC", teleportReceiver.address, { from: primary });
+        asset = await ERC20.new("TOKEN", "ABC", primary, { from: primary });
+        bridge = await IBCF_Bridge.new(validator.address, asset.address, tezos_teleport, { from: primary });
 
-        // Set asset
-        await teleportReceiver.set_asset(asset.address, { from: primary });
+        // Fund accounts
+        await asset.mint(primary, "10", { from: primary });
 
         // Add signers
         await validator.add_signers([signer_address], [public_key], { from: primary });
     })
 
-    it('Call finalize_teleport', async function() {
+
+    it('Call teleport', async function() {
+        await expectsFailure(async () => await bridge.teleport(tezos_address, 10, { from: primary }), "Expected error (user must set the allowance).");
+
+        await asset.increaseAllowance(bridge.address, 10, { from: primary });
+        await bridge.teleport(tezos_address, 10, { from: primary });
+    });
+
+    it('Call receive_teleport', async function() {
         const level = 1;
         const valid_merkle_root = "0x8c5729c8e8e6d3c6d22da098262439b0645c74cef9f5f37ac4f6b4e20d6ddf9a";
         const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
@@ -44,21 +53,21 @@ contract('IBCF_TeleportReceiver', async ([_, primary]) => {
         const key = "0x11111111111111111111111111111111111111118101";
         const value = "0xd9941111111111111111111111111111111111111111810a8101";
 
-        let account_nonce = await teleportReceiver.nonce_of(target_address);
+        let account_nonce = await bridge.nonce_of(target_address);
         assert(account_nonce == 0);
 
         let account_balance = await asset.balanceOf(target_address);
         assert(account_balance == 0);
 
-        await teleportReceiver.finalize_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
+        await bridge.receive_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
 
-        account_nonce = await teleportReceiver.nonce_of("0x1111111111111111111111111111111111111111");
+        account_nonce = await bridge.nonce_of("0x1111111111111111111111111111111111111111");
         assert(account_nonce == 1);
 
         account_balance = await asset.balanceOf(target_address);
         assert(account_balance == 10);
 
         // Cannot teleport the same proof twice
-        await expectsFailure(async () => await teleportReceiver.finalize_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures), "Expected error (invalid nonce).");
+        await expectsFailure(async () => await bridge.receive_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures), "Expected error (invalid nonce).");
     });
 })

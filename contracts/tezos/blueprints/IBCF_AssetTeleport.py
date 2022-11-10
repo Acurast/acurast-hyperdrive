@@ -9,13 +9,16 @@ from contracts.tezos.IBCF_Aggregator import Type as IBCF_Aggregator_Type
 from contracts.tezos.IBCF_Eth_Validator import Type as ValidatiorInterface
 import contracts.tezos.utils.rlp as RLP
 
+
 class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
     NOT_MINTER = "NOT_MINTER"
 
+
 class Type:
-    TeleportTable = sp.TBigMap(sp.TBytes, sp.TNat) # (ETH address, counter)
-    TeleportArgument = sp.TRecord(eth_address = sp.TBytes, amount = sp.TNat)
+    TeleportTable = sp.TBigMap(sp.TBytes, sp.TNat)  # (ETH address, counter)
+    TeleportArgument = sp.TRecord(eth_address=sp.TBytes, amount=sp.TNat)
+
 
 class RLP_encoder:
     @staticmethod
@@ -30,6 +33,7 @@ class RLP_encoder:
     def with_length_prefix():
         return sp.compute(sp.build_lambda(RLP.Encoder.with_length_prefix))
 
+
 class Inlined:
     @staticmethod
     def failIfNotMinter(self):
@@ -38,22 +42,25 @@ class Inlined:
         """
         sp.verify(self.data.minter_address == sp.sender, Error.NOT_MINTER)
 
+
 class IBCF_AssetTeleport(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
-                registry = Type.TeleportTable,
-                minter_address = sp.TAddress,
-                merkle_aggregator = sp.TAddress
+                registry=Type.TeleportTable,
+                minter_address=sp.TAddress,
+                merkle_aggregator=sp.TAddress,
             )
         )
 
-    @sp.entry_point(parameter_type = Type.TeleportArgument)
+    @sp.entry_point(parameter_type=Type.TeleportArgument)
     def teleport(self, param):
         Inlined.failIfNotMinter(self)
 
         # Update recipient counter
-        counter = sp.compute(self.data.registry.get(param.eth_address, default_value = 0) + 1)
+        counter = sp.compute(
+            self.data.registry.get(param.eth_address, default_value=0) + 1
+        )
         self.data.registry[param.eth_address] = counter
 
         encode_nat_lambda = RLP_encoder.encode_nat()
@@ -67,8 +74,10 @@ class IBCF_AssetTeleport(sp.Contract):
         payload = encode_list_lambda([rlp_eth_address, rlp_amount, rlp_counter])
 
         # Prepare message
-        param = sp.record(key = param.eth_address + rlp_counter, value = payload)
-        contract = sp.contract(IBCF_Aggregator_Type.Insert_argument, self.data.merkle_aggregator, "insert").open_some(Error.INVALID_CONTRACT)
+        param = sp.record(key=param.eth_address + rlp_counter, value=payload)
+        contract = sp.contract(
+            IBCF_Aggregator_Type.Insert_argument, self.data.merkle_aggregator, "insert"
+        ).open_some(Error.INVALID_CONTRACT)
 
         # Emit teleport
         sp.transfer(param, sp.mutez(0), contract)
