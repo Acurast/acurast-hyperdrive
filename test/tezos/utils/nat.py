@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.nat import Nat
 
+
 @sp.add_test(name="Util_nat")
 def test():
 

@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 pragma solidity 0.7.6;
 
-import {EllipticCurve} from "./secp256r1.sol";
+import {EllipticCurve} from "./libs/secp256r1.sol";
 
 library Err {
     string constant NOT_ADMIN = "NOT_ADMIN";

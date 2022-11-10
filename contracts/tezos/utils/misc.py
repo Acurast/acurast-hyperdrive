@@ -1,6 +1,8 @@
 import smartpy as sp
 
 latest_var_id = 0
+
+
 def generate_var(postfix=None):
     """
     Generate a unique variable name
@@ -14,11 +16,14 @@ def generate_var(postfix=None):
 
     return id
 
+
 def get_suffix(b, length):
     return b & sp.as_nat((1 << length) - 1)
 
+
 def get_prefix(b, full_length, prefix_length):
     return b >> sp.as_nat(full_length - prefix_length)
+
 
 def split_common_prefix(arg):
     (a, b) = sp.match_pair(arg)

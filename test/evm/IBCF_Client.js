@@ -7,7 +7,6 @@ let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 
 contract('IBCF_Client', async ([_, primary]) => {
     const signer_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
-    const signer_public_key = ["0x80b156abc1b94075eb95ba6c397d50e987acf2bb8107dd1adb0c1691dee56bcb", "0x6379608d6db8f328b9e50f74778d2bf34d31e523ef4c72e8c2c7355264003f5a"];
     const chain_id = "0xaf1864d9"
     const packed_tezos_client_address = "0x050a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467";
     let client;

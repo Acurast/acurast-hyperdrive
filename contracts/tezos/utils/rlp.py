@@ -12,20 +12,24 @@ LIST_SHORT_START_BYTES = sp.bytes("0xc0")
 
 LIST_LONG_START = 248  # sp.bytes("0xf8")
 
+
 class Encoder:
     @staticmethod
     def encode_length(arg):
         (length, offset) = sp.match_pair(arg)
 
         bytes_of_nat = sp.build_lambda(Bytes.of_nat)
-        bytes_of_uint8 = sp.build_lambda(lambda x : sp.result(Bytes.of_uint8(x)))
+        bytes_of_uint8 = sp.build_lambda(lambda x: sp.result(Bytes.of_uint8(x)))
 
         with sp.if_(length < 56):
             sp.result(bytes_of_uint8(offset + length))
         with sp.else_():
             with sp.if_(length < 256**8):
                 encoded_length = sp.compute(bytes_of_nat(offset + length))
-                sp.result(bytes_of_uint8(sp.len(encoded_length) + 55 + length) + encoded_length)
+                sp.result(
+                    bytes_of_uint8(sp.len(encoded_length) + 55 + length)
+                    + encoded_length
+                )
             with sp.else_():
                 sp.failwith("INVALID_LENGTH")
 
@@ -64,6 +68,7 @@ class Encoder:
             l_bytes = sp.compute(sp.concat(l))
             sp.result(encode_length((sp.len(l_bytes), LIST_SHORT_START)) + l_bytes)
 
+
 class Decoder:
     @staticmethod
     def is_list(item):
@@ -95,7 +100,9 @@ class Decoder:
         end_pos = sp.compute(sp.len(b))
         with sp.while_(cur_pos.value < end_pos):
             cur_pos.value += item_length_lambda(
-                sp.slice(b, cur_pos.value, sp.as_nat(end_pos - cur_pos.value)).open_some()
+                sp.slice(
+                    b, cur_pos.value, sp.as_nat(end_pos - cur_pos.value)
+                ).open_some()
             )
             # next item
             count.value += 1
@@ -119,7 +126,9 @@ class Decoder:
         with sp.for_("pos", sp.range(0, items, 1)) as pos:
             data_length = sp.compute(
                 item_length_lambda(
-                    sp.slice(b, cur_pos.value, sp.as_nat(length - cur_pos.value)).open_some()
+                    sp.slice(
+                        b, cur_pos.value, sp.as_nat(length - cur_pos.value)
+                    ).open_some()
                 )
             )
             result.value[pos] = sp.slice(b, cur_pos.value, data_length).open_some()
@@ -172,7 +181,9 @@ class Decoder:
                         # 247 = LIST_LONG_START - 1
                         bytes_length = sp.compute(sp.as_nat(byte0 - 247))
                         # skip over the first byte
-                        _item = sp.slice(item, 1, sp.as_nat(sp.len(item) - 1)).open_some()
+                        _item = sp.slice(
+                            item, 1, sp.as_nat(sp.len(item) - 1)
+                        ).open_some()
                         # right shifting to get the length
                         data_length = nat_of_bytes_lambda(
                             sp.slice(_item, 0, bytes_length).open_some()

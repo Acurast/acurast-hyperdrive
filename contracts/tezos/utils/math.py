@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.misc import generate_var
 
+
 class Math:
     @staticmethod
     def pow(n, e):

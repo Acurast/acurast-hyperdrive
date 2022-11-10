@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.misc import generate_var
 
+
 class Bytes:
     @staticmethod
     def of_string(text):
@@ -10,11 +11,17 @@ class Bytes:
         # - Packed prefix: 0x05 (1 byte)
         # - Data identifier: (string = 0x01) (1 byte)
         # - String length (4 bytes)
-        sp.result(sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some("Could not encode string to bytes."))
+        sp.result(
+            sp.slice(b, 6, sp.as_nat(sp.len(b) - 6)).open_some(
+                "Could not encode string to bytes."
+            )
+        )
 
     @staticmethod
     def of_uint8(n):
-        return sp.slice(sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1).open_some()
+        return sp.slice(
+            sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1
+        ).open_some()
 
     @staticmethod
     def of_nat(n):
@@ -29,14 +36,17 @@ class Bytes:
 
         sp.result(result.value)
 
+
 """
 ########################################################################
 Legacy code (Not being used currently, but may be useful in the future)
 ########################################################################
 """
 
+
 def is_bit_set(i, n):
     return (i >> n) & 1
+
 
 def int_of_bits(bstring):
     n = sp.local("n", 0)

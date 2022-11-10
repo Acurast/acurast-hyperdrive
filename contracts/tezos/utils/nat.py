@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.math import Math
 
+
 class Nat:
     @staticmethod
     def of_bytes(b):

@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.bytes import Bytes
 
+
 class String:
     @staticmethod
     def of_bytes(b):
@@ -16,5 +17,9 @@ class String:
         # - Data identifier: (string = 0x01) (1 byte)
         # - String length (4 bytes)
         # - String bytes
-        packedBytes = sp.concat([sp.bytes("0x05"), sp.bytes("0x01"), lengthBytes.value, b])
-        return sp.unpack(packedBytes, sp.TString).open_some("Could not decode bytes to string")
+        packedBytes = sp.concat(
+            [sp.bytes("0x05"), sp.bytes("0x01"), lengthBytes.value, b]
+        )
+        return sp.unpack(packedBytes, sp.TString).open_some(
+            "Could not decode bytes to string"
+        )
