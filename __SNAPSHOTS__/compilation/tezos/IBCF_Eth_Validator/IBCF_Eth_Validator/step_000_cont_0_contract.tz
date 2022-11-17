@@ -291,7 +291,7 @@ view
     EDIV;       
     IF_NONE
       {
-        PUSH int 543; 
+        PUSH int 544; 
         FAILWITH;   
       }
       {
@@ -300,7 +300,7 @@ view
     SLICE;      
     IF_NONE
       {
-        PUSH int 543; 
+        PUSH int 544; 
         FAILWITH;   
       }
       {}; 
@@ -311,7 +311,7 @@ view
     EDIV;       
     IF_NONE
       {
-        PUSH int 546; 
+        PUSH int 547; 
         FAILWITH;   
       }
       {
@@ -477,7 +477,7 @@ view
     SLICE;      
     IF_NONE
       {
-        PUSH int 436; 
+        PUSH int 437; 
         FAILWITH;   
       }
       {}; 
@@ -735,7 +735,7 @@ view
         EDIV;       
         IF_NONE
           {
-            PUSH int 487; 
+            PUSH int 488; 
             FAILWITH;   
           }
           {
@@ -744,7 +744,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 487; 
+            PUSH int 488; 
             FAILWITH;   
           }
           {}; 
@@ -756,7 +756,7 @@ view
         EDIV;       
         IF_NONE
           {
-            PUSH int 491; 
+            PUSH int 492; 
             FAILWITH;   
           }
           {
@@ -765,7 +765,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 491; 
+            PUSH int 492; 
             FAILWITH;   
           }
           {}; 
@@ -778,7 +778,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 492; 
+            PUSH int 493; 
             FAILWITH;   
           }
           {}; 
@@ -853,7 +853,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 517; 
+            PUSH int 518; 
             FAILWITH;   
           }
           {}; 
@@ -865,7 +865,7 @@ view
         SLICE;      
         IF_NONE
           {
-            PUSH int 516; 
+            PUSH int 517; 
             FAILWITH;   
           }
           {}; 
@@ -2542,7 +2542,7 @@ view
     GET;        
     IF_NONE
       {
-        PUSH int 394; 
+        PUSH int 392; 
         FAILWITH;   
       }
       {}; 

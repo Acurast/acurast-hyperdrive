@@ -8,7 +8,6 @@ from termcolor import colored
 from configs import deployment
 from deployment.tezos.scripts.insert_multiple_states import insert_multiple_states
 
-
 def get_address(pytezos_admin_client, operation_hash):
     max_tries = 10
     while max_tries > 0:

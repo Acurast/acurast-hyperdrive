@@ -20,7 +20,7 @@
     "react-dom": "18.2.0",
     "react-helmet": "6.1.0",
     "react-router-dom": "6.3.0",
-    "web3": "1.7.5",
+    "web3": "1.8.1",
     "web-vitals": "2.1.4",
     "craco-esbuild": "0.5.1",
     "crypto-browserify": "3.12.0",

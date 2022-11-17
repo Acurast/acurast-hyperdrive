@@ -58,7 +58,7 @@ The Ethereum deployment outputs the results to `stdout` and creates a snapshot f
 CONFIG_PATH=deployment/configs/ghostnet.yaml make deploy-tezos
 
 # Evm deployment (ETH_PRIVATE_KEY and INFURA_URL environment variables are not optional)
-ETH_PRIVATE_KEY=<private_key> INFURA_URL=https://<network>.infura.io/v3/<project_api_key> make deploy-evm
+PRIVATE_KEY=<private_key> INFURA_URL=https://<network>.infura.io/v3/<project_api_key> make deploy-evm
 ```
 
 #### Tezos deployment configuration

@@ -4,6 +4,18 @@ from contracts.tezos.utils.misc import generate_var
 
 
 class Bytes:
+
+    @staticmethod
+    def pad_start(arg):
+        (b, fill, length) = sp.match_tuple(arg, "el1", "el2", "el3")
+        diff = sp.compute(sp.as_nat(length - sp.len(b)))
+        prefix = sp.local(generate_var("bytes"), sp.bytes("0x"))
+
+        with sp.while_(sp.len(prefix.value) < diff):
+            prefix.value = fill + prefix.value
+
+        sp.result(prefix.value + b)
+
     @staticmethod
     def of_string(text):
         b = sp.pack(text)

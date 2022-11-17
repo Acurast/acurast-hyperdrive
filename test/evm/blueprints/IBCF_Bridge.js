@@ -9,8 +9,8 @@ let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 contract('IBCF_Bridge', async ([_, primary]) => {
     const signer_address = "0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0";
     const chain_id = "0xaf1864d9";
-    const tezos_teleport = "0x050a0000001601d1371b91c4cf72f705512fdf3eda99ca70af9f4800";
-    const tezos_address = "0x1601d1371b91c4cf72f705512fdf3eda99ca70af9f4800";
+    const tezos_bridge = "0x050a0000001601d1371b91c7491542e97deee96091e28a80b2335900";
+    const tezos_address = "0x050a0000001601d1371b91c7491542e97deee96091e28a80b2335900";
     let bridge;
     let validator;
     let asset;
@@ -18,7 +18,7 @@ contract('IBCF_Bridge', async ([_, primary]) => {
     before('Deploy contracts', async () => {
         validator = await IBCF_Validator.new(primary, 1, chain_id, { from: primary });
         asset = await ERC20.new("TOKEN", "ABC", primary, { from: primary });
-        bridge = await IBCF_Bridge.new(validator.address, asset.address, tezos_teleport, { from: primary });
+        bridge = await IBCF_Bridge.new(validator.address, asset.address, tezos_bridge, { from: primary });
 
         // Fund accounts
         await asset.mint(primary, "10", { from: primary });
@@ -37,7 +37,7 @@ contract('IBCF_Bridge', async ([_, primary]) => {
 
     it('Call receive_teleport', async function() {
         const level = 1;
-        const valid_merkle_root = "0x8c5729c8e8e6d3c6d22da098262439b0645c74cef9f5f37ac4f6b4e20d6ddf9a";
+        const valid_merkle_root = "0x882f1702afb628fa5883b06c5a5f57dfded1a9d063bbd3bea8a59812b1f37a3f";
         const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
         const target_address = "0x1111111111111111111111111111111111111111";
 
@@ -46,12 +46,11 @@ contract('IBCF_Bridge', async ([_, primary]) => {
         ];
 
         const proof = [
-            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0xd9b59df48583ee2e099b03cd95c8deb6a07edc3cfaf3288690d1437f71246016"],
-            ["0x05fe8371deacdc27859b4c5c1a0c98510d2267d68300fea75d41c383648f0366", "0x0000000000000000000000000000000000000000000000000000000000000000"]
+            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0x754d30463d4f6bd2aaaebbb04e5af504ce44ced91b586fbf6330591c2b3d581a"]
         ];
 
-        const key = "0x11111111111111111111111111111111111111118101";
-        const value = "0xd9941111111111111111111111111111111111111111810a8101";
+        const key = "0xd79411111111111111111111111111111111111111118101";
+        const value = "0xd994111111111111111111111111111111111111111181098101";
 
         let account_nonce = await bridge.nonce_of(target_address);
         assert(account_nonce == 0);
@@ -65,7 +64,7 @@ contract('IBCF_Bridge', async ([_, primary]) => {
         assert(account_nonce == 1);
 
         account_balance = await asset.balanceOf(target_address);
-        assert(account_balance == 10);
+        assert(account_balance == 9);
 
         // Cannot teleport the same proof twice
         await expectsFailure(async () => await bridge.receive_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures), "Expected error (invalid nonce).");

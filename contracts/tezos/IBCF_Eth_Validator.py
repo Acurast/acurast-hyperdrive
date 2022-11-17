@@ -385,8 +385,6 @@ class IBCF_Eth_Validator(sp.Contract):
 
         # The path to the account state is the hash of the contract address
         account_state_path = HASH_FUNCTION(account)
-        # The path to the contract state is the hash of the storage slot
-        storage_state_path = HASH_FUNCTION(storage_slot)
 
         # Validate proof and extract the account state
         account_state_root = sp.compute(
@@ -409,6 +407,9 @@ class IBCF_Eth_Validator(sp.Contract):
                 )[ACCOUNT_STATE_ROOT_INDEX]
             )
         )
+
+        # The path to the contract state is the hash of the storage slot
+        storage_state_path = HASH_FUNCTION(storage_slot)
 
         sp.result(
             sp.view(

@@ -137,7 +137,7 @@ class Decoder:
         sp.result(result.value)
 
     @staticmethod
-    def decode_uint(b):
+    def decode_nat(b):
         without_length_prefix = sp.build_lambda(Decoder.without_length_prefix)
         nat_of_bytes_lambda = sp.build_lambda(Nat.of_bytes)
         with sp.if_(b == sp.bytes("0x80")):
@@ -214,3 +214,11 @@ class Decoder:
                     with sp.else_():
                         # 247 = LIST_LONG_START - 1
                         sp.result(sp.as_nat(byte0 - 247) + 1)
+
+class Lambda:
+    # Encoding
+    encode_list = sp.build_lambda(Encoder.encode_list)
+    encode_nat = sp.build_lambda(Encoder.encode_nat)
+    with_length_prefix = sp.build_lambda(Encoder.with_length_prefix)
+    # Decoding
+    decode_nat = sp.build_lambda(Decoder.decode_nat)

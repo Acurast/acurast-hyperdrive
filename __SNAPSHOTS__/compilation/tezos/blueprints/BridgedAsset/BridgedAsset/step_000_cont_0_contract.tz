@@ -1,0 +1,464 @@
+parameter (or (or (pair %balance_of (list %requests (pair (address %owner) (nat %token_id))) (contract %callback (list (pair (pair %request (address %owner) (nat %token_id)) (nat %balance))))) (or (list %burn (pair (address %from_) (pair (nat %token_id) (nat %amount)))) (list %mint (pair (address %to_) (nat %amount))))) (or (address %set_administrator) (or (list %transfer (pair (address %from_) (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount)))))) (list %update_operators (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id))) (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))))));
+storage   (pair (pair (address %administrator) (pair (nat %last_token_id) (big_map %ledger address nat))) (pair (pair (big_map %metadata string bytes) (big_map %operators (pair (address %owner) (pair (address %operator) (nat %token_id))) unit)) (pair (nat %supply) (big_map %token_metadata nat (pair (nat %token_id) (map %token_info string bytes))))));
+code
+  {
+    UNPAIR;     
+    IF_LEFT
+      {
+        IF_LEFT
+          {
+            NIL operation; 
+            DUP;        
+            DUP 3;      
+            CDR;        
+            PUSH mutez 0; 
+            DUP 5;      
+            CAR;        
+            MAP
+              {
+                DUP 7;      
+                GET 6;      
+                SWAP;       
+                DUP;        
+                DUG 2;      
+                CDR;        
+                MEM;        
+                IF
+                  {}
+                  {
+                    PUSH string "FA2_TOKEN_UNDEFINED"; 
+                    FAILWITH;   
+                  }; 
+                DUP 7;      
+                CAR;        
+                GET 4;      
+                SWAP;       
+                DUP;        
+                DUG 2;      
+                CAR;        
+                GET;        
+                IF_NONE
+                  {
+                    PUSH nat 0; 
+                  }
+                  {}; 
+                SWAP;       
+                PAIR;       
+              }; 
+            DIG 4;      
+            DROP;       
+            DIG 4;      
+            DROP;       
+            TRANSFER_TOKENS; 
+            CONS;       
+          }
+          {
+            IF_LEFT
+              {
+                DUP;        
+                ITER
+                  {
+                    DUP 3;      
+                    GET 6;      
+                    SWAP;       
+                    DUP;        
+                    DUG 2;      
+                    GET 3;      
+                    MEM;        
+                    IF
+                      {}
+                      {
+                        PUSH string "FA2_TOKEN_UNDEFINED"; 
+                        FAILWITH;   
+                      }; 
+                    DUP;        
+                    CAR;        
+                    SENDER;     
+                    COMPARE;    
+                    EQ;         
+                    IF
+                      {
+                        PUSH bool True; 
+                      }
+                      {
+                        DUP 3;      
+                        GET 3;      
+                        CDR;        
+                        SWAP;       
+                        DUP;        
+                        DUG 2;      
+                        GET 3;      
+                        SENDER;     
+                        DUP 4;      
+                        CAR;        
+                        PAIR 3;     
+                        MEM;        
+                      }; 
+                    IF
+                      {}
+                      {
+                        PUSH string "FA2_NOT_OPERATOR"; 
+                        FAILWITH;   
+                      }; 
+                    DUP 3;      
+                    UNPAIR;     
+                    UNPAIR;     
+                    SWAP;       
+                    UNPAIR;     
+                    SWAP;       
+                    DUP 5;      
+                    GET 4;      
+                    DIG 7;      
+                    CAR;        
+                    GET 4;      
+                    DUP 7;      
+                    CAR;        
+                    GET;        
+                    IF_NONE
+                      {
+                        PUSH nat 0; 
+                      }
+                      {}; 
+                    SUB;        
+                    ISNAT;      
+                    IF_NONE
+                      {
+                        PUSH string "FA2_INSUFFICIENT_BALANCE"; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    SOME;       
+                    DUP 6;      
+                    CAR;        
+                    UPDATE;     
+                    SWAP;       
+                    PAIR;       
+                    SWAP;       
+                    PAIR;       
+                    PAIR;       
+                    SWAP;       
+                    GET 4;      
+                    SWAP;       
+                    DUP;        
+                    DUG 3;      
+                    GET 5;      
+                    SUB;        
+                    ISNAT;      
+                    IF_NONE
+                      {
+                        SWAP;       
+                        PUSH nat 0; 
+                        UPDATE 5;   
+                        SWAP;       
+                      }
+                      {
+                        DIG 2;      
+                        SWAP;       
+                        UPDATE 5;   
+                        SWAP;       
+                      }; 
+                  }; 
+                DROP;       
+              }
+              {
+                SWAP;       
+                DUP;        
+                DUG 2;      
+                CAR;        
+                CAR;        
+                SENDER;     
+                COMPARE;    
+                EQ;         
+                IF
+                  {}
+                  {
+                    PUSH string "FA2_NOT_ADMIN"; 
+                    FAILWITH;   
+                  }; 
+                DUP;        
+                ITER
+                  {
+                    DUP 3;      
+                    GET 6;      
+                    PUSH nat 0; 
+                    MEM;        
+                    IF
+                      {}
+                      {
+                        PUSH string "FA2_TOKEN_UNDEFINED"; 
+                        FAILWITH;   
+                      }; 
+                    DIG 2;      
+                    DUP;        
+                    GET 5;      
+                    DUP 3;      
+                    CDR;        
+                    ADD;        
+                    UPDATE 5;   
+                    DUP;        
+                    DUG 3;      
+                    UNPAIR;     
+                    UNPAIR;     
+                    SWAP;       
+                    UNPAIR;     
+                    SWAP;       
+                    DUP 5;      
+                    CDR;        
+                    DIG 7;      
+                    CAR;        
+                    GET 4;      
+                    DUP 7;      
+                    CAR;        
+                    GET;        
+                    IF_NONE
+                      {
+                        PUSH nat 0; 
+                      }
+                      {}; 
+                    ADD;        
+                    SOME;       
+                    DIG 5;      
+                    CAR;        
+                    UPDATE;     
+                    SWAP;       
+                    PAIR;       
+                    SWAP;       
+                    PAIR;       
+                    PAIR;       
+                    SWAP;       
+                  }; 
+                DROP;       
+              }; 
+            NIL operation; 
+          }; 
+      }
+      {
+        IF_LEFT
+          {
+            SWAP;       
+            DUP;        
+            DUG 2;      
+            CAR;        
+            CAR;        
+            SENDER;     
+            COMPARE;    
+            EQ;         
+            IF
+              {}
+              {
+                PUSH string "FA2_NOT_ADMIN"; 
+                FAILWITH;   
+              }; 
+            SWAP;       
+            UNPAIR;     
+            CDR;        
+            DIG 2;      
+            PAIR;       
+            PAIR;       
+          }
+          {
+            IF_LEFT
+              {
+                DUP;        
+                ITER
+                  {
+                    DUP;        
+                    CDR;        
+                    ITER
+                      {
+                        DUP 4;      
+                        GET 6;      
+                        SWAP;       
+                        DUP;        
+                        DUG 2;      
+                        GET 3;      
+                        MEM;        
+                        IF
+                          {}
+                          {
+                            PUSH string "FA2_TOKEN_UNDEFINED"; 
+                            FAILWITH;   
+                          }; 
+                        SWAP;       
+                        DUP;        
+                        DUG 2;      
+                        CAR;        
+                        SENDER;     
+                        COMPARE;    
+                        EQ;         
+                        IF
+                          {
+                            PUSH bool True; 
+                          }
+                          {
+                            DUP 4;      
+                            GET 3;      
+                            CDR;        
+                            SWAP;       
+                            DUP;        
+                            DUG 2;      
+                            GET 3;      
+                            SENDER;     
+                            DUP 5;      
+                            CAR;        
+                            PAIR 3;     
+                            MEM;        
+                          }; 
+                        IF
+                          {}
+                          {
+                            PUSH string "FA2_NOT_OPERATOR"; 
+                            FAILWITH;   
+                          }; 
+                        DUP;        
+                        GET 4;      
+                        PUSH nat 0; 
+                        COMPARE;    
+                        LT;         
+                        IF
+                          {
+                            DUP 4;      
+                            UNPAIR;     
+                            UNPAIR;     
+                            SWAP;       
+                            UNPAIR;     
+                            SWAP;       
+                            DUP 5;      
+                            GET 4;      
+                            DIG 8;      
+                            CAR;        
+                            GET 4;      
+                            DUP 8;      
+                            CAR;        
+                            GET;        
+                            IF_NONE
+                              {
+                                PUSH nat 0; 
+                              }
+                              {}; 
+                            SUB;        
+                            ISNAT;      
+                            IF_NONE
+                              {
+                                PUSH string "FA2_INSUFFICIENT_BALANCE"; 
+                                FAILWITH;   
+                              }
+                              {}; 
+                            SOME;       
+                            DUP 7;      
+                            CAR;        
+                            UPDATE;     
+                            SWAP;       
+                            PAIR;       
+                            SWAP;       
+                            PAIR;       
+                            PAIR;       
+                            DUP;        
+                            DUG 4;      
+                            UNPAIR;     
+                            UNPAIR;     
+                            SWAP;       
+                            UNPAIR;     
+                            SWAP;       
+                            DUP 5;      
+                            GET 4;      
+                            DIG 8;      
+                            CAR;        
+                            GET 4;      
+                            DUP 7;      
+                            CAR;        
+                            GET;        
+                            IF_NONE
+                              {
+                                PUSH nat 0; 
+                              }
+                              {}; 
+                            ADD;        
+                            SOME;       
+                            DIG 5;      
+                            CAR;        
+                            UPDATE;     
+                            SWAP;       
+                            PAIR;       
+                            SWAP;       
+                            PAIR;       
+                            PAIR;       
+                            DUG 2;      
+                          }
+                          {
+                            DROP;       
+                          }; 
+                      }; 
+                    DROP;       
+                  }; 
+                DROP;       
+              }
+              {
+                DUP;        
+                ITER
+                  {
+                    IF_LEFT
+                      {
+                        DUP;        
+                        CAR;        
+                        SENDER;     
+                        COMPARE;    
+                        EQ;         
+                        IF
+                          {}
+                          {
+                            PUSH string "FA2_NOT_OWNER"; 
+                            FAILWITH;   
+                          }; 
+                        DIG 2;      
+                        UNPAIR;     
+                        SWAP;       
+                        UNPAIR;     
+                        UNPAIR;     
+                        SWAP;       
+                        PUSH (option unit) (Some Unit); 
+                        DIG 5;      
+                        UPDATE;     
+                        SWAP;       
+                        PAIR;       
+                        PAIR;       
+                        SWAP;       
+                        PAIR;       
+                        SWAP;       
+                      }
+                      {
+                        DUP;        
+                        CAR;        
+                        SENDER;     
+                        COMPARE;    
+                        EQ;         
+                        IF
+                          {}
+                          {
+                            PUSH string "FA2_NOT_OWNER"; 
+                            FAILWITH;   
+                          }; 
+                        DIG 2;      
+                        UNPAIR;     
+                        SWAP;       
+                        UNPAIR;     
+                        UNPAIR;     
+                        SWAP;       
+                        NONE unit;  
+                        DIG 5;      
+                        UPDATE;     
+                        SWAP;       
+                        PAIR;       
+                        PAIR;       
+                        SWAP;       
+                        PAIR;       
+                        SWAP;       
+                      }; 
+                  }; 
+                DROP;       
+              }; 
+          }; 
+        NIL operation; 
+      }; 
+    PAIR;       
+  };

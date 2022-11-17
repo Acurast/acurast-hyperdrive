@@ -10,7 +10,7 @@ export interface TezosProof {
     signatures: [string, string][];
 }
 
-export async function generateTezosProof(
+export async function generateProof(
     contract: ContractAbstraction<any>,
     owner: string,
     key: string,

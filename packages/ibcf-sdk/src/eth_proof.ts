@@ -37,7 +37,7 @@ export async function generateEthereumProof(
     slot: string,
     block_number: number,
 ): Promise<EthereumProof> {
-    const block = await web3_eth.getBlock(block_number);
+    // const block = await web3_eth.getBlock(block_number);
     // const block_header_rlp = buildHeaderBytes(block);
 
     const proof = await web3_eth.getProof(address, [slot], block_number);
@@ -47,6 +47,8 @@ export async function generateEthereumProof(
     const storage_proof_rlp = Buffer.from(
         RLP.encode(proof.storageProof[0].proof.map((r) => RLP.decode(r)) as any),
     ).toString('hex');
+
+    console.log(proof);
 
     return {
         //storage_slot: '0x' + proof.storageProof[0].key.slice(2).padStart(64, '0'),

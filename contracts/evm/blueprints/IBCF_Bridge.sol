@@ -21,7 +21,7 @@ contract IBCF_Bridge {
     bytes tezos_bridge_address;
     mapping(bytes => uint) tezos_nonce; // Tezos address => nonce
     mapping(address => uint) eth_nonce; // Eth address => nonce
-    mapping(bytes => bytes) registry; // (Tezos address + nonce) RLP encoded => amount RLP encoded
+    mapping(bytes => uint) registry; // (Tezos address + nonce) RLP encoded => amount RLP encoded
 
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for bytes;
@@ -36,9 +36,9 @@ contract IBCF_Bridge {
         // Transfer assets
         asset.transferFrom(msg.sender, address(this), amount);
 
-        uint nonce = tezos_nonce[target_address];
-        tezos_nonce[target_address] = nonce + 1;
-        registry[abi.encodePacked(target_address, nonce)] = abi.encodePacked(amount);
+        uint nonce = tezos_nonce[target_address] + 1;
+        tezos_nonce[target_address] = nonce;
+        registry[abi.encodePacked(target_address, nonce)] = amount;
     }
 
     function receive_teleport(

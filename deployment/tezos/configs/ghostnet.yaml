@@ -49,6 +49,28 @@ actions:
             ibcf_eth_validator: IBCF_Eth_Validator
             counter: 0
 
+    # Blueprints
+
+    - kind: origination
+      contract_kind: Asset
+      name: Asset
+      code_path: __SNAPSHOTS__/compilation/tezos/blueprints/BridgedAsset/BridgedAsset/step_000_cont_0_contract.tz
+      overrides:
+            metadata: {}
+            administrator: admin_address
+
+    - kind: origination
+      contract_kind: IBCF_Bridge
+      name: IBCF_Bridge
+      code_path: __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Bridge/IBCF_Bridge/step_000_cont_0_contract.tz
+      overrides:
+            registry: {}
+            ethereum_nonce: {}
+            merkle_aggregator: IBCF_Aggragator
+            proof_validator: IBCF_Eth_Validator
+            asset_address: Asset
+            eth_bridge_address: "0x15862e73957701C56892D8C689A6189A16c8e05d"
+
     # - kind: contract_call
     #   contract_address: IBCF_Client
     #   entrypoint: update_storage

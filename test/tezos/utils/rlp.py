@@ -45,9 +45,9 @@ def test_decoder():
         sp.build_lambda(Decoder.without_length_prefix)(sp.bytes("0x82ffff"))
         == sp.bytes("0xffff")
     )
-    scenario.verify(sp.build_lambda(Decoder.decode_uint)(sp.bytes("0x80")) == 0)
+    scenario.verify(sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x80")) == 0)
     scenario.verify(
-        sp.build_lambda(Decoder.decode_uint)(sp.bytes("0x87038d7ea4c67fff"))
+        sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x87038d7ea4c67fff"))
         == 999999999999999
     )
     scenario.verify(sp.build_lambda(Decoder.decode_string)(sp.bytes("0x80")) == "")

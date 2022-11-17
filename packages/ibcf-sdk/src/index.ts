@@ -1,4 +1,5 @@
 export * from './eth_proof';
-export * from './tezos_proof';
+export * as Blueprint from './blueprint';
 
-export * as Utils from './utils';
+export * as TezosProof from './tezos/proof';
+export * as TezosUtils from './tezos/utils';
