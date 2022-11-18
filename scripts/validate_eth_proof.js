@@ -5,19 +5,24 @@ const RLP = require('rlp');
 const trie = new Trie()
 const web3_sdk = new Web3("https://goerli.infura.io/v3/d100ca58b1cc4ea98873b4f0ddd7894c");
 
-const address = process.argv[2] || '0x15862e73957701C56892D8C689A6189A16c8e05d';
+const ETH_BRIDGE_ADDRESS = process.argv[2] || '0x0C2dBba45E207619B79Fd7946496fbEc1E66fA8C';
 
 const ACCOUNT_STATE_ROOT_INDEX = 2;
-const storageSlot = "0x346629535920ae179e6d13e36fe4643e45066f531ab311fee89999b8eb5d1d8f";
+
+const ETH_BLOCK_NUMBER = 7976909;
+const tezos_address = "0x050a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"
+const storageIndex = "05".padStart(64, '0');
+const hexNonce = Web3.utils.toHex(1).slice(2).padStart(64, '0');
+const storageSlot = Web3.utils.sha3(tezos_address + hexNonce + storageIndex);
 
 (async () => {
     const [block, account] = await Promise.all([
-        web3_sdk.eth.getBlock(7934545),
-        web3_sdk.eth.getProof(address, [storageSlot], 7934545)
+        web3_sdk.eth.getBlock(ETH_BLOCK_NUMBER),
+        web3_sdk.eth.getProof(ETH_BRIDGE_ADDRESS, [storageSlot], ETH_BLOCK_NUMBER)
     ])
 
     const blockStateRoot = Buffer.from(block.stateRoot.slice(2), 'hex');
-    const acountkey = Buffer.from(Web3.utils.sha3(address).slice(2), 'hex');
+    const acountkey = Buffer.from(Web3.utils.sha3(ETH_BRIDGE_ADDRESS).slice(2), 'hex');
     const accountProof = account.accountProof.map(x => Buffer.from(x.slice(2), 'hex'))
     const storageProof = account.storageProof[0].proof.map(x => Buffer.from(x.slice(2), 'hex'))
 
@@ -27,7 +32,14 @@ const storageSlot = "0x346629535920ae179e6d13e36fe4643e45066f531ab311fee89999b8e
     const storage_proof_rlp = Buffer.from(
         RLP.encode(account.storageProof[0].proof.map((r) => RLP.decode(r))),
     ).toString('hex');
-    console.log(account_proof_rlp, storage_proof_rlp)
+
+    console.log({
+        ETH_ACCOUNT_PROOF: account_proof_rlp,
+        ETH_STORAGE_PROOF: storage_proof_rlp,
+        ETH_BRIDGE_ADDRESS,
+        ETH_BLOCK_NUMBER,
+        ETH_BLOCK_ROOT_STATE: block.stateRoot,
+    })
 
     try {
         const value = (await trie.verifyProof(blockStateRoot, acountkey, accountProof))
@@ -36,7 +48,7 @@ const storageSlot = "0x346629535920ae179e6d13e36fe4643e45066f531ab311fee89999b8e
         if (!value.equals(Buffer.from(RLP.encode([Number(account.nonce), Number(account.balance), account.storageHash, account.codeHash]))))
             console.log('proof failed')
         else
-            console.log('Account proof is valid|!')
+            console.log('Account proof is valid!')
 
             const accountStateRoot = RLP.decode(value)[ACCOUNT_STATE_ROOT_INDEX]
             const storage = (await trie.verifyProof(accountStateRoot, Buffer.from(Web3.utils.sha3(storageSlot).slice(2), 'hex'), storageProof))

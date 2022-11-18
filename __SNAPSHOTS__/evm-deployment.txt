@@ -20,117 +20,118 @@ Starting migrations...
 
    Replacing 'IBCF_Validator'
    --------------------------
-   > transaction hash:    0x5b31e0504f067697a100655a39f34eeb34efd508487fc7ba08468af52e02cf57
+   > transaction hash:    0x4c454d74b7e3c21c04ce00fb5abfb038fc4f8ed76b1016cec1f43db4474a96b1
 - Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 5
-- Blocks: 0            Seconds: 9
-- Blocks: 1            Seconds: 13
-- Blocks: 1            Seconds: 17
-- Blocks: 1            Seconds: 21
-- Blocks: 1            Seconds: 25
-- Blocks: 1            Seconds: 29
-- Blocks: 1            Seconds: 33
-   > Blocks: 1            Seconds: 33
-   > contract address:    0x7B5E10fEec757D631b38121E5A634ED44f995542
-   > block number:        7970105
-   > block timestamp:     1668696564
+- Blocks: 1            Seconds: 4
+- Blocks: 1            Seconds: 8
+- Blocks: 1            Seconds: 12
+   > Blocks: 1            Seconds: 12
+   > contract address:    0x9832f481be52710B4e48FFD6a88585b5457474D5
+   > block number:        7976850
+   > block timestamp:     1668795756
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             3.617217842139168054
+   > balance:             2.629446331227314772
    > gas used:            2447435 (0x25584b)
-   > gas price:           217.377661379 gwei
+   > gas price:           10.758928416 gwei
    > value sent:          0 ETH
-   > total cost:          0.532017696677112865 ETH
+   > total cost:          0.02633177796781296 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 7970106)
-   > confirmation number: 2 (block: 7970107)
+   > confirmation number: 1 (block: 7976851)
+   > confirmation number: 2 (block: 7976852)
 
 Add signers
 
 
    Replacing 'IBCF_Client'
    -----------------------
-   > transaction hash:    0xe3dc23c6499d03c3489f3d72295135615c7912ab18a5121435423142ee12a81c
+   > transaction hash:    0x5c6717756944652c5da2ddd9f9d0cc3927fe9cec8a6d404cfffe2f1739d0c072
 - Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 5
+- Blocks: 0            Seconds: 4
 - Blocks: 1            Seconds: 9
-   > Blocks: 1            Seconds: 9
-   > contract address:    0x52bAA5f4de506c6Dac82157d49D95Ce301bD676F
-   > block number:        7970110
-   > block timestamp:     1668696636
-   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             3.355077323599473282
-   > gas used:            1037606 (0xfd526)
-   > gas price:           228.150284139 gwei
-   > value sent:          0 ETH
-   > total cost:          0.236730103724331234 ETH
-
-   Pausing for 2 confirmations...
-
-   -------------------------------
-   > confirmation number: 1 (block: 7970111)
-   > confirmation number: 2 (block: 7970112)
-
-   Replacing 'MintableERC20'
-   -------------------------
-   > transaction hash:    0xfd7efc7cfcb70bb3ae535d174ee21681230b505fe7dbf48f58d3e4cea6021d0c
-- Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 4
-- Blocks: 0            Seconds: 8
-   > Blocks: 0            Seconds: 8
-   > contract address:    0x6be076126FA5DD2e3Fd8B982E3c2efda1EdC82f3
-   > block number:        7970113
-   > block timestamp:     1668696672
-   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             3.114143049616154296
-   > gas used:            1233446 (0x12d226)
-   > gas price:           195.334269991 gwei
-   > value sent:          0 ETH
-   > total cost:          0.240934273983318986 ETH
-
-   Pausing for 2 confirmations...
-
-   -------------------------------
-   > confirmation number: 1 (block: 7970114)
-   > confirmation number: 2 (block: 7970115)
-
-   Replacing 'IBCF_Bridge'
-   -----------------------
-   > transaction hash:    0xef55638efd97905783b8f791941ab97159c47d33525a395c53beee8944fd400e
-- Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 4
-- Blocks: 1            Seconds: 8
 - Blocks: 1            Seconds: 12
 - Blocks: 1            Seconds: 16
 - Blocks: 2            Seconds: 20
-- Blocks: 2            Seconds: 24
-- Blocks: 2            Seconds: 28
-- Blocks: 3            Seconds: 32
-   > Blocks: 3            Seconds: 32
-   > contract address:    0xA72fF505fdE5e9FFd922614267B54B01aAa88FAe
-   > block number:        7970120
-   > block timestamp:     1668696792
+   > Blocks: 2            Seconds: 20
+   > contract address:    0xef4205d48655577F50251667A92BA33183B7Bf21
+   > block number:        7976855
+   > block timestamp:     1668795816
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             2.849873582130937732
-   > gas used:            1120569 (0x111939)
-   > gas price:           222.506377926 gwei
+   > balance:             2.617354252320225054
+   > gas used:            1037606 (0xfd526)
+   > gas price:           10.439699166 gwei
    > value sent:          0 ETH
-   > total cost:          0.249333749406159894 ETH
+   > total cost:          0.010832294492836596 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 7970121)
-   > confirmation number: 2 (block: 7970122)
+   > confirmation number: 1 (block: 7976856)
+   > confirmation number: 2 (block: 7976857)
+
+   Replacing 'MintableERC20'
+   -------------------------
+   > transaction hash:    0x5cce2cb4480afd3250d207d599ff0d32c8cc88c38ae0a5eed06a3a0481691658
+- Blocks: 0            Seconds: 0
+- Blocks: 0            Seconds: 4
+- Blocks: 0            Seconds: 9
+- Blocks: 1            Seconds: 12
+- Blocks: 1            Seconds: 16
+- Blocks: 1            Seconds: 20
+- Blocks: 1            Seconds: 24
+- Blocks: 1            Seconds: 29
+- Blocks: 1            Seconds: 33
+   > Blocks: 1            Seconds: 33
+   > contract address:    0x943ad87dd15CDEb3aCD915502271bF1b8718dd54
+   > block number:        7976859
+   > block timestamp:     1668795876
+   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
+   > balance:             2.603875667796150592
+   > gas used:            1233446 (0x12d226)
+   > gas price:           10.927583797 gwei
+   > value sent:          0 ETH
+   > total cost:          0.013478584524074462 ETH
+
+   Pausing for 2 confirmations...
+
+   -------------------------------
+   > confirmation number: 1 (block: 7976860)
+   > confirmation number: 2 (block: 7976861)
+
+   Replacing 'IBCF_Bridge'
+   -----------------------
+   > transaction hash:    0x58ed351ce19a384b48a0e186c485e232daa8f96c55d0a7ed9d5ffdc72f1be889
+- Blocks: 0            Seconds: 0
+- Blocks: 0            Seconds: 5
+- Blocks: 1            Seconds: 8
+- Blocks: 1            Seconds: 12
+- Blocks: 1            Seconds: 17
+- Blocks: 2            Seconds: 20
+   > Blocks: 2            Seconds: 20
+   > contract address:    0x0C2dBba45E207619B79Fd7946496fbEc1E66fA8C
+   > block number:        7976864
+   > block timestamp:     1668795936
+   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
+   > balance:             2.590008658562509905
+   > gas used:            1235373 (0x12d9ad)
+   > gas price:           10.626733931 gwei
+   > value sent:          0 ETH
+   > total cost:          0.013127980176541263 ETH
+
+   Pausing for 2 confirmations...
+
+   -------------------------------
+   > confirmation number: 1 (block: 7976865)
+   > confirmation number: 2 (block: 7976866)
    > Saving artifacts
    -------------------------------------
-   > Total cost:     1.259015823790922979 ETH
+   > Total cost:     0.063770637161265281 ETH
 
 Summary
 =======
 > Total deployments:   4
-> Final cost:          1.259015823790922979 ETH
+> Final cost:          0.063770637161265281 ETH
 
 

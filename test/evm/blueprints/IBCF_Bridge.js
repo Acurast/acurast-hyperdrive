@@ -18,7 +18,7 @@ contract('IBCF_Bridge', async ([_, primary]) => {
     before('Deploy contracts', async () => {
         validator = await IBCF_Validator.new(primary, 1, chain_id, { from: primary });
         asset = await ERC20.new("TOKEN", "ABC", primary, { from: primary });
-        bridge = await IBCF_Bridge.new(validator.address, asset.address, tezos_bridge, { from: primary });
+        bridge = await IBCF_Bridge.new(validator.address, asset.address, { from: primary });
 
         // Fund accounts
         await asset.mint(primary, "10", { from: primary });
@@ -27,15 +27,20 @@ contract('IBCF_Bridge', async ([_, primary]) => {
         await validator.add_signers([signer_address], [public_key], { from: primary });
     })
 
+    it('Call set_tezos_bridge_address', async function() {
+        await bridge.set_tezos_bridge_address(tezos_bridge, { from: primary })
 
-    it('Call teleport', async function() {
-        await expectsFailure(async () => await bridge.teleport(tezos_address, 10, { from: primary }), "Expected error (user must set the allowance).");
-
-        await asset.increaseAllowance(bridge.address, 10, { from: primary });
-        await bridge.teleport(tezos_address, 10, { from: primary });
+        await expectsFailure(async () => await bridge.set_tezos_bridge_address(tezos_bridge, { from: primary }), "Expected error (user must set the allowance).");
     });
 
-    it('Call receive_teleport', async function() {
+    it('Call wrap', async function() {
+        await expectsFailure(async () => await bridge.wrap(tezos_address, 10, { from: primary }), "Expected error (user must set the allowance).");
+
+        await asset.approve(bridge.address, 10, { from: primary });
+        await bridge.wrap(tezos_address, 10, { from: primary });
+    });
+
+    it('Call unwrap', async function() {
         const level = 1;
         const valid_merkle_root = "0x882f1702afb628fa5883b06c5a5f57dfded1a9d063bbd3bea8a59812b1f37a3f";
         const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
@@ -58,7 +63,7 @@ contract('IBCF_Bridge', async ([_, primary]) => {
         let account_balance = await asset.balanceOf(target_address);
         assert(account_balance == 0);
 
-        await bridge.receive_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
+        await bridge.unwrap(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
 
         account_nonce = await bridge.nonce_of("0x1111111111111111111111111111111111111111");
         assert(account_nonce == 1);
@@ -67,6 +72,6 @@ contract('IBCF_Bridge', async ([_, primary]) => {
         assert(account_balance == 9);
 
         // Cannot teleport the same proof twice
-        await expectsFailure(async () => await bridge.receive_teleport(level, valid_merkle_root, key, value, proof, [signer_address], signatures), "Expected error (invalid nonce).");
+        await expectsFailure(async () => await bridge.unwrap(level, valid_merkle_root, key, value, proof, [signer_address], signatures), "Expected error (invalid nonce).");
     });
 })

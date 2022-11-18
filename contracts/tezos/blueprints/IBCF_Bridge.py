@@ -1,6 +1,7 @@
 # --------------------------------------------------------------------------
-# This contract is a token teleporter used to provide provable orders
-# for minting the assets on ethereum.
+# This contract implements a bridging protocol.
+#
+# It allows users to wrap/unwrap Ethereum assets on the Tezos blockchain.
 # --------------------------------------------------------------------------
 
 import smartpy as sp
@@ -19,14 +20,14 @@ class Error:
     INVALID_VIEW = "INVALID_VIEW"
 
 class Type:
-    TeleportTable = sp.TBigMap(sp.TBytes, sp.TNat)  # (ETH address, counter)
-    TeleportArgument = sp.TRecord(eth_address=sp.TBytes, amount=sp.TNat)
-    ReceiveTeleportArgument = sp.TRecord(
-        block_number = sp.TNat,
-        account_proof_rlp = sp.TBytes,
-        storage_proof_rlp = sp.TBytes,
-        destination = sp.TAddress
-    )
+    UnwrapTable     = sp.TBigMap(sp.TBytes, sp.TNat)  # (ETH address, counter)
+    UnwrapArgument  = sp.TRecord(eth_address=sp.TBytes, amount=sp.TNat)
+    WrapArgument    = sp.TRecord(
+                        block_number        = sp.TNat,
+                        account_proof_rlp   = sp.TBytes,
+                        storage_proof_rlp   = sp.TBytes,
+                        destination         = sp.TAddress
+                    )
 
 class Inlined:
     @staticmethod
@@ -60,7 +61,7 @@ class IBCF_Bridge(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
-                registry            = Type.TeleportTable,
+                registry            = Type.UnwrapTable,
                 ethereum_nonce      = sp.TBigMap(sp.TAddress, sp.TNat),
                 merkle_aggregator   = sp.TAddress,
                 proof_validator     = sp.TAddress,
@@ -69,8 +70,8 @@ class IBCF_Bridge(sp.Contract):
             )
         )
 
-    @sp.entry_point(parameter_type=Type.TeleportArgument)
-    def teleport(self, param):
+    @sp.entry_point(parameter_type=Type.UnwrapArgument)
+    def unwrap(self, param):
         burn_method = Inlined.getBurnEntrypoint(self.data.asset_address)
 
         # Update recipient counter
@@ -95,7 +96,7 @@ class IBCF_Bridge(sp.Contract):
             IBCF_Aggregator_Type.Insert_argument, self.data.merkle_aggregator, "insert"
         ).open_some(Error.INVALID_CONTRACT)
 
-        # Emit teleport
+        # Emit unwrap operation
         state_param = sp.record(key=key, value=payload)
         sp.transfer(state_param, sp.mutez(0), contract)
 
@@ -107,18 +108,22 @@ class IBCF_Bridge(sp.Contract):
         )
         sp.transfer([burn_param], sp.mutez(0), burn_method)
 
-    @sp.entry_point(parameter_type=Type.ReceiveTeleportArgument)
-    def receive_teleport(self, param):
+    @sp.entry_point(parameter_type=Type.WrapArgument)
+    def wrap(self, param):
         mint_method = Inlined.getMintEntrypoint(self.data.asset_address)
 
         decode_nat_lambda = sp.compute(RLP.Lambda.decode_nat)
 
         # Compute storage slot
         destination = sp.compute(param.destination)
-        nonce = sp.compute(self.data.ethereum_nonce.get(destination, default_value = 0))
+        nonce = sp.compute(self.data.ethereum_nonce.get(destination, default_value = 0) + 1)
+        # Increase nonce
+        self.data.ethereum_nonce[destination] = nonce
+
+        # Compute the storage slot for the ethereum proof
         storage_slot = Inlined.computeStorageSlot(destination, nonce)
 
-        # Validate proof and extract storage value (The amount to be minted)
+        # Validate proof and extract storage value (The amount to be wrapped)
         rlp_amount = sp.view(
             "validate_storage_proof",
             self.data.proof_validator,
@@ -135,10 +140,8 @@ class IBCF_Bridge(sp.Contract):
             t=sp.TBytes,
         ).open_some(Error.INVALID_VIEW)
 
+        # Decode the amount
         amount = decode_nat_lambda(rlp_amount)
-
-        # Increase nonce
-        self.data.ethereum_nonce[destination] = nonce + 1
 
         # Mint tokens
         sp.transfer([sp.record(to_=destination, amount=amount)], sp.mutez(0), mint_method)

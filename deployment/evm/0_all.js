@@ -25,5 +25,5 @@ module.exports = async function(deployer, _network, _accounts) {
     // Fund accounts
     await asset.mint(administrator, "1000000");
 
-    await deployer.deploy(IBCF_Bridge, validator.address, asset.address, tezos_packed_address);
+    await deployer.deploy(IBCF_Bridge, validator.address, asset.address);
 };

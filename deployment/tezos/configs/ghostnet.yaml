@@ -69,7 +69,7 @@ actions:
             merkle_aggregator: IBCF_Aggragator
             proof_validator: IBCF_Eth_Validator
             asset_address: Asset
-            eth_bridge_address: "0x15862e73957701C56892D8C689A6189A16c8e05d"
+            eth_bridge_address: "0x0C2dBba45E207619B79Fd7946496fbEc1E66fA8C"
 
     # - kind: contract_call
     #   contract_address: IBCF_Client
