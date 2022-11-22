@@ -1,6 +1,20 @@
-import { packAddress } from '../../src/tezos/utils';
+import { MichelsonType, pack, packAddress, unpack } from '../../src/tezos/utils';
 
 describe('Tezos > Utils', () => {
+    it('pack', () => {
+        expect(pack(1, MichelsonType.nat)).toBe('050001');
+        expect(pack(9999, MichelsonType.int)).toBe('05008f9c01');
+        expect(pack('tz1f2k9M3ztqtbCTk5EmEepboEJxksXvafaU', MichelsonType.address)).toBe(
+            '050a000000160000d4b624c3100fd8b0cfb44941d0361dac52a660d5',
+        );
+    });
+    it('unpack', () => {
+        expect(unpack('050001', MichelsonType.nat)).toBe('1');
+        expect(unpack('05008f9c01', MichelsonType.int)).toBe('9999');
+        expect(unpack('050a000000160000d4b624c3100fd8b0cfb44941d0361dac52a660d5', MichelsonType.address)).toBe(
+            'tz1f2k9M3ztqtbCTk5EmEepboEJxksXvafaU',
+        );
+    });
     it('packAddress', () => {
         expect(packAddress('tz1f2k9M3ztqtbCTk5EmEepboEJxksXvafaU')).toBe(
             '050a000000160000d4b624c3100fd8b0cfb44941d0361dac52a660d5',

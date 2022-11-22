@@ -12,7 +12,7 @@ import {IBCF_Validator} from "../IBCF_Validator.sol";
 import "./MintableERC20.sol";
 
 library IBCF_Bridge_Error {
-    string constant INVALID_COUNTER = "INVALID_COUNTER";
+    string constant INVALID_NONCE = "INVALID_NONCE";
     string constant TEZOS_BRIDGE_ALREADY_SET = "TEZOS_BRIDGE_ALREADY_SET";
 }
 
@@ -20,8 +20,8 @@ contract IBCF_Bridge {
     IBCF_Validator validator;
     MintableERC20 asset;
     bytes tezos_bridge_address;
-    mapping(bytes => uint) tezos_nonce; // Tezos address => nonce
-    mapping(address => uint) eth_nonce; // Eth address => nonce
+    mapping(bytes => uint) wrap_nonce; // Tezos address => nonce
+    mapping(address => uint) unwrap_nonce; // Eth address => nonce
     mapping(bytes => uint) registry; // (Tezos address + nonce) RLP encoded => amount RLP encoded
 
     using RLPReader for RLPReader.RLPItem;
@@ -31,6 +31,9 @@ contract IBCF_Bridge {
         validator = _validator;
         asset = _asset;
     }
+
+    event Wrap(bytes destination, uint amount, uint nonce);
+    event Unwrap(address destination, uint amount, uint nonce);
 
     function set_tezos_bridge_address(bytes memory _tezos_bridge_address) public returns (bool) {
         require(tezos_bridge_address.length == 0, IBCF_Bridge_Error.TEZOS_BRIDGE_ALREADY_SET);
@@ -47,9 +50,11 @@ contract IBCF_Bridge {
         // Transfer assets
         asset.transferFrom(msg.sender, address(this), amount);
         // Update registry (The registry is used for proof generation)
-        uint nonce = tezos_nonce[target_address] + 1;
-        tezos_nonce[target_address] = nonce;
+        uint nonce = wrap_nonce[target_address] + 1;
+        wrap_nonce[target_address] = nonce;
         registry[abi.encodePacked(target_address, nonce)] = amount;
+
+        emit Wrap(target_address, amount, nonce);
     }
 
     /**
@@ -87,22 +92,17 @@ contract IBCF_Bridge {
         RLPReader.RLPItem[] memory args = value.toRlpItem().toList();
         address target_address = args[0].toAddress();
         uint amount = args[1].toUint();
-        uint counter = args[2].toUint();
+        uint nonce = args[2].toUint();
 
         // Unwraps must be finalized sequentially per target account
-        uint old_counter = eth_nonce[target_address];
-        require(old_counter + 1 == counter, IBCF_Bridge_Error.INVALID_COUNTER);
-        // Increment counter
-        eth_nonce[target_address] = counter;
+        uint old_nonce = unwrap_nonce[target_address];
+        require(old_nonce + 1 == nonce, IBCF_Bridge_Error.INVALID_NONCE);
+        // Increment nonce
+        unwrap_nonce[target_address] = nonce;
 
         // Transfer tokens
         asset.transfer(target_address, amount);
-    }
 
-    /**
-     * Get the nonce of a given account.
-     */
-    function nonce_of(address account) public view returns (uint) {
-        return eth_nonce[account];
+        emit Unwrap(target_address, amount, nonce);
     }
 }

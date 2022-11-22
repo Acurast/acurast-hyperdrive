@@ -56,8 +56,14 @@ actions:
       name: Asset
       code_path: __SNAPSHOTS__/compilation/tezos/blueprints/BridgedAsset/BridgedAsset/step_000_cont_0_contract.tz
       overrides:
-            metadata: {}
             administrator: admin_address
+            last_token_id: 1
+            ledger: {}
+            supply: 0
+            token_metadata:
+                0:
+                    - 0
+                    - {}
 
     - kind: origination
       contract_kind: IBCF_Bridge
@@ -69,17 +75,12 @@ actions:
             merkle_aggregator: IBCF_Aggragator
             proof_validator: IBCF_Eth_Validator
             asset_address: Asset
-            eth_bridge_address: "0x0C2dBba45E207619B79Fd7946496fbEc1E66fA8C"
+            eth_bridge_address: "0xbE0C32961DA35928196f6bc912A3Ed55d5d53f04"
 
-    # - kind: contract_call
-    #   contract_address: IBCF_Client
-    #   entrypoint: update_storage
-    #   argument:
-    #         eth_contract: eth_client_address
-    #         storage_slot: "0x0000000000000000000000000000000000000000000000000000000000000000"
-    #         ibcf_tezos_state: IBCF_Aggragator
-    #         ibcf_eth_validator: IBCF_Eth_Validator
-    #         counter: 0
+    - kind: contract_call
+      contract_address: Asset
+      entrypoint: set_administrator
+      argument: IBCF_Bridge
 
     # - kind: contract_call
     #   contract_address: IBCF_Client
