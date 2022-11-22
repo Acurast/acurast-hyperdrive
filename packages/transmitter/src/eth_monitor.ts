@@ -4,10 +4,8 @@ import Web3 from 'web3';
 
 interface MonitorContext {
     tezos_sdk: TezosToolkit;
-    latest_block_number: number;
-    min_signatures: number;
+    from_block: number;
     web3_sdk: Web3;
-    ibcf_eth_client_address: string;
     ibcf_tezos_validator_contract: ContractAbstraction<any>;
 }
 
@@ -15,22 +13,22 @@ class EthMonitor {
     constructor(private context: MonitorContext) {}
 
     public async run() {
-        const blockNumber = await this.context.web3_sdk.eth.getBlockNumber();
-        if (blockNumber <= this.context.latest_block_number) {
+        const currentBlockNumber = await this.context.web3_sdk.eth.getBlockNumber();
+        if (this.context.from_block > currentBlockNumber) {
             return;
         }
 
-        const block = await this.context.web3_sdk.eth.getBlock(blockNumber);
+        const block = await this.context.web3_sdk.eth.getBlock(this.context.from_block);
         if (block) {
             const stateRoot = block.stateRoot;
 
             await this.context.ibcf_tezos_validator_contract.methods
-                .submit_block_state_root(blockNumber, stateRoot.slice(2))
+                .submit_block_state_root(block.number, stateRoot.slice(2))
                 .send();
 
-            console.log('Latest confirmed level:', blockNumber);
+            console.log('Latest confirmed level:', block.number);
 
-            this.context.latest_block_number = blockNumber;
+            this.context.from_block += 1;
         }
     }
 }
@@ -39,9 +37,7 @@ function getEnv() {
     const env = {
         ETH_RPC: process.env['ETH_RPC']!,
         TEZOS_RPC: process.env['TEZOS_RPC']!,
-        IBCF_ETH_CLIENT_ADDRESS: process.env['IBCF_ETH_CLIENT_ADDRESS']!,
         IBCF_TEZOS_VALIDATOR_ADDRESS: process.env['IBCF_TEZOS_VALIDATOR_ADDRESS']!,
-        MIN_SIGNATURES: Number(process.env['MIN_SIGNATURES']!),
         PRIVATE_KEY: process.env['TEZOS_PRIVATE_KEY']!,
     };
     // Validate environment variables
@@ -64,15 +60,12 @@ export async function run_eth_monitor() {
     /// Client contract
     const ibcf_tezos_validator_contract = await tezos_sdk.contract.at(env.IBCF_TEZOS_VALIDATOR_ADDRESS);
 
-    // Start from head block
-    const latest_block_number = Number(process.env['LATEST_LEVEL']) || 0;
+    const from_block = Number(process.env['FROM_BLOCK']) || 0;
 
     const context: MonitorContext = {
         tezos_sdk,
         web3_sdk,
-        latest_block_number,
-        min_signatures: env.MIN_SIGNATURES,
-        ibcf_eth_client_address: env.IBCF_ETH_CLIENT_ADDRESS,
+        from_block,
         ibcf_tezos_validator_contract,
     };
 
@@ -80,11 +73,8 @@ export async function run_eth_monitor() {
 
     // Start service
     while (1) {
-        // Sleep 10 seconds before each check
-        await new Promise((r) => setTimeout(r, 10000));
-
         try {
-            monitor.run();
+            await monitor.run();
         } catch (e) {
             //console.error(e);
         }

@@ -1,6 +1,6 @@
-# IBCF state validators
+# IBCF state trasmitter
 
-The bridge will monitor the `IBCF` contracts for `lock` calls, wait for signatures and then transmit the state to the Ethereum `IBCF client` contract.
+The transmitter will submit the root state of every block to the respective contracts. The root state submitted in this step is then used to validate the merkle proofs.
 
 ### **Configuration file: [.env](.env)**
 

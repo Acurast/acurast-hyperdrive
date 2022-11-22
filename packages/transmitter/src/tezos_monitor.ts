@@ -44,7 +44,6 @@ interface MonitorContext {
     tezos_sdk: TezosToolkit;
     chain_id: string;
     merkle_history_map: BigMapAbstraction;
-    latest_level: number;
     ibcf_tezos_state_contract: ContractAbstraction<any>;
     eth_private_key: string;
     validator_address: string;
@@ -115,12 +114,8 @@ export async function run_tezos_monitor() {
 
     const storage = await ibcf_tezos_state_contract.storage<{ merkle_history: BigMapAbstraction }>();
 
-    // Start from head block
-    const latest_level = Number(process.env['LATEST_LEVEL']) || (await tezos_sdk.rpc.getBlock()).header.level;
-
     const context: MonitorContext = {
         tezos_sdk,
-        latest_level,
         ibcf_tezos_state_contract,
         chain_id: (b58cdecode(await tezos_sdk.rpc.getChainId(), new Uint8Array([0x87, 0x82, 0x00])) as any).toString(
             'hex',
