@@ -116,7 +116,7 @@ class Decoder:
         payload_offset_lambda = sp.compute(sp.build_lambda(Decoder.prefix_length))
         is_list_lambda = sp.compute(sp.build_lambda(Decoder.is_list))
 
-        sp.verify(is_list_lambda(b), "Cannot convert to list a non-list RLPItem.")
+        sp.verify(is_list_lambda(b), "NOT_A_LIST")
 
         items = sp.compute(list_size_lambda(b))
         length = sp.compute(sp.len(b))
@@ -221,4 +221,6 @@ class Lambda:
     encode_nat = sp.build_lambda(Encoder.encode_nat)
     with_length_prefix = sp.build_lambda(Encoder.with_length_prefix)
     # Decoding
+    without_length_prefix = sp.build_lambda(Decoder.without_length_prefix)
     decode_nat = sp.build_lambda(Decoder.decode_nat)
+    decode_list = sp.build_lambda(Decoder.decode_list)

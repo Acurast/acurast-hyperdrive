@@ -6,8 +6,9 @@ sp.add_compilation_target(
     "IBCF_Bridge",
     IBCF_Bridge(),
     storage=sp.record(
+        nonce               = 0,
+        wrap_nonce          = sp.big_map(),
         registry            = sp.big_map(),
-        ethereum_nonce      = sp.big_map(),
         merkle_aggregator   = sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
         proof_validator     = sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
         asset_address       = sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),

@@ -42,7 +42,7 @@ contract('IBCF_Bridge', async ([_, primary]) => {
 
     it('Call unwrap', async function() {
         const level = 1;
-        const valid_merkle_root = "0x882f1702afb628fa5883b06c5a5f57dfded1a9d063bbd3bea8a59812b1f37a3f";
+        const valid_merkle_root = "0x9d14356ed03a5da92aaad50a7b838ee4bb41baaa0746edadb21bbfbe4cd018d5";
         const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
         const target_address = "0x1111111111111111111111111111111111111111";
 
@@ -51,25 +51,16 @@ contract('IBCF_Bridge', async ([_, primary]) => {
         ];
 
         const proof = [
-            ["0x0000000000000000000000000000000000000000000000000000000000000000", "0x754d30463d4f6bd2aaaebbb04e5af504ce44ced91b586fbf6330591c2b3d581a"]
+            ["0x38517ca2532ce3b5d665a30581e983f8d9967c19e98f5443922114198b9c35d3", "0x0000000000000000000000000000000000000000000000000000000000000000"]
         ];
 
-        const key = "0xd79411111111111111111111111111111111111111118101";
-        const value = "0xd994111111111111111111111111111111111111111181098101";
-
-        let account_nonce = await bridge.nonce_of(target_address);
-        assert(account_nonce == 0);
+        const key = "0x8101";
+        const value = "0xd79411111111111111111111111111111111111111118109";
 
         let account_balance = await asset.balanceOf(target_address);
         assert(account_balance == 0);
 
         await bridge.unwrap(level, valid_merkle_root, key, value, proof, [signer_address], signatures);
-
-        account_nonce = await bridge.nonce_of("0x1111111111111111111111111111111111111111");
-        assert(account_nonce == 1);
-
-        account_balance = await asset.balanceOf(target_address);
-        assert(account_balance == 9);
 
         // Cannot teleport the same proof twice
         await expectsFailure(async () => await bridge.unwrap(level, valid_merkle_root, key, value, proof, [signer_address], signatures), "Expected error (invalid nonce).");

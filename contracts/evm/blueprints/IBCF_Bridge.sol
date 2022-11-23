@@ -12,7 +12,7 @@ import {IBCF_Validator} from "../IBCF_Validator.sol";
 import "./MintableERC20.sol";
 
 library IBCF_Bridge_Error {
-    string constant INVALID_NONCE = "INVALID_NONCE";
+    string constant ALREADY_PROCESSED = "ALREADY_PROCESSED";
     string constant TEZOS_BRIDGE_ALREADY_SET = "TEZOS_BRIDGE_ALREADY_SET";
 }
 
@@ -20,9 +20,11 @@ contract IBCF_Bridge {
     IBCF_Validator validator;
     MintableERC20 asset;
     bytes tezos_bridge_address;
-    mapping(bytes => uint) wrap_nonce; // Tezos address => nonce
-    mapping(address => uint) unwrap_nonce; // Eth address => nonce
-    mapping(bytes => uint) registry; // (Tezos address + nonce) RLP encoded => amount RLP encoded
+    uint wrap_nonce;
+    mapping(uint => bool) unwrap_nonce;
+    // Proof slots
+    mapping(uint => bytes) destination_registry;
+    mapping(uint => uint) amount_registry;
 
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for bytes;
@@ -43,18 +45,19 @@ contract IBCF_Bridge {
 
     /**
      * @dev Wrap tokens on the Tezos blockchain.
-     * @param target_address The destination address.
+     * @param destination The destination address.
      * @param amount The amount of tokens to wrap.
      */
-    function wrap(bytes memory target_address, uint amount) public {
+    function wrap(bytes memory destination, uint amount) public {
         // Transfer assets
         asset.transferFrom(msg.sender, address(this), amount);
-        // Update registry (The registry is used for proof generation)
-        uint nonce = wrap_nonce[target_address] + 1;
-        wrap_nonce[target_address] = nonce;
-        registry[abi.encodePacked(target_address, nonce)] = amount;
 
-        emit Wrap(target_address, amount, nonce);
+        // Update registry (The registry is used for proof generation)
+        wrap_nonce += 1;
+        destination_registry[wrap_nonce] = destination;
+        amount_registry[wrap_nonce] = amount;
+
+        emit Wrap(destination, amount, wrap_nonce);
     }
 
     /**
@@ -92,13 +95,12 @@ contract IBCF_Bridge {
         RLPReader.RLPItem[] memory args = value.toRlpItem().toList();
         address target_address = args[0].toAddress();
         uint amount = args[1].toUint();
-        uint nonce = args[2].toUint();
+        uint nonce = key.toRlpItem().toUint();
 
-        // Unwraps must be finalized sequentially per target account
-        uint old_nonce = unwrap_nonce[target_address];
-        require(old_nonce + 1 == nonce, IBCF_Bridge_Error.INVALID_NONCE);
-        // Increment nonce
-        unwrap_nonce[target_address] = nonce;
+        // Verify if that wrap was not yet processed, fail otherwise
+        require(!unwrap_nonce[nonce], IBCF_Bridge_Error.ALREADY_PROCESSED);
+        // Register unwrap
+        unwrap_nonce[nonce] = true;
 
         // Transfer tokens
         asset.transfer(target_address, amount);

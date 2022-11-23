@@ -13,21 +13,33 @@ from contracts.tezos.utils.bytes import Bytes
 import contracts.tezos.utils.rlp as RLP
 
 class Constant:
-    ETH_SLOT_INDEX = sp.bytes("0x0000000000000000000000000000000000000000000000000000000000000005")
+    ETH_DESTINATION_INDEX = sp.bytes("0x0000000000000000000000000000000000000000000000000000000000000005")
+    ETH_AMOUNT_INDEX = sp.bytes("0x0000000000000000000000000000000000000000000000000000000000000006")
 
 class Error:
-    INVALID_CONTRACT = "INVALID_CONTRACT"
-    INVALID_VIEW = "INVALID_VIEW"
+    INVALID_CONTRACT    = "INVALID_CONTRACT"
+    INVALID_VIEW        = "INVALID_VIEW"
+    INVALID_DESTINATION = "INVALID_DESTINATION"
+    ALREADY_PROCESSED   = "ALREADY_PROCESSED"
 
 class Type:
-    UnwrapTable     = sp.TBigMap(sp.TBytes, sp.TNat)  # (ETH address, counter)
-    UnwrapArgument  = sp.TRecord(eth_address=sp.TBytes, amount=sp.TNat)
+    Unwrap          = sp.TRecord(
+                        level               = sp.TNat,
+                        destination         = sp.TBytes,
+                        amount              = sp.TNat
+                    ).right_comb()
+    UnwrapArgument  = sp.TRecord(
+                        destination = sp.TBytes,
+                        amount = sp.TNat
+                    ).right_comb()
+    UnwrapTable     = sp.TBigMap(sp.TNat, Unwrap)  # (nonce => Unwrap)
     WrapArgument    = sp.TRecord(
-                        block_number        = sp.TNat,
-                        account_proof_rlp   = sp.TBytes,
-                        storage_proof_rlp   = sp.TBytes,
-                        destination         = sp.TAddress
-                    )
+                        block_number            = sp.TNat,
+                        nonce                   = sp.TBytes,
+                        account_proof_rlp       = sp.TBytes,
+                        destination_proof_rlp   = sp.TBytes,
+                        amount_proof_rlp        = sp.TBytes
+                    ).right_comb()
 
 class Inlined:
     @staticmethod
@@ -51,18 +63,18 @@ class Inlined:
         ).open_some(Error.INVALID_CONTRACT)
 
     @staticmethod
-    def computeStorageSlot(destination, nonce):
-        pad_start_lambda = sp.build_lambda(Bytes.pad_start)
-        bytes_of_nat = sp.build_lambda(Bytes.of_nat)
-        nonce_encoded = pad_start_lambda((bytes_of_nat(nonce), sp.bytes("0x00"), 32))
-        return sp.keccak(sp.pack(destination) + nonce_encoded + Constant.ETH_SLOT_INDEX)
+    def computeStorageSlots(nonce):
+        destination_slot = sp.keccak(nonce + Constant.ETH_DESTINATION_INDEX)
+        amount_slot = sp.keccak(nonce + Constant.ETH_AMOUNT_INDEX)
+        return (destination_slot, amount_slot)
 
 class IBCF_Bridge(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
+                nonce               = sp.TNat,
+                wrap_nonce          = sp.TBigMap(sp.TBytes, sp.TUnit),
                 registry            = Type.UnwrapTable,
-                ethereum_nonce      = sp.TBigMap(sp.TAddress, sp.TNat),
                 merkle_aggregator   = sp.TAddress,
                 proof_validator     = sp.TAddress,
                 asset_address       = sp.TAddress,
@@ -74,22 +86,24 @@ class IBCF_Bridge(sp.Contract):
     def unwrap(self, param):
         burn_method = Inlined.getBurnEntrypoint(self.data.asset_address)
 
-        # Update recipient counter
-        counter = sp.compute(
-            self.data.registry.get(param.eth_address, default_value = 0) + 1
+        # Register unwrap
+        self.data.nonce +=1
+        nonce = sp.compute(self.data.nonce)
+        self.data.registry[nonce] = sp.record(
+            level = sp.level,
+            destination = param.destination,
+            amount = param.amount,
         )
-        self.data.registry[param.eth_address] = counter
 
         encode_nat_lambda = sp.compute(RLP.Lambda.encode_nat)
         with_length_prefix_lambda = sp.compute(RLP.Lambda.with_length_prefix)
         encode_list_lambda = sp.compute(RLP.Lambda.encode_list)
 
         # Encode payload
-        rlp_eth_address = with_length_prefix_lambda(param.eth_address)
+        rlp_destination = with_length_prefix_lambda(param.destination)
         rlp_amount = encode_nat_lambda(param.amount)
-        rlp_counter = encode_nat_lambda(counter)
-        key = encode_list_lambda([rlp_eth_address, rlp_counter])
-        payload = encode_list_lambda([rlp_eth_address, rlp_amount, rlp_counter])
+        rlp_nonce = encode_nat_lambda(nonce)
+        payload = encode_list_lambda([rlp_destination, rlp_amount])
 
         # Prepare message
         contract = sp.contract(
@@ -97,7 +111,7 @@ class IBCF_Bridge(sp.Contract):
         ).open_some(Error.INVALID_CONTRACT)
 
         # Emit unwrap operation
-        state_param = sp.record(key=key, value=payload)
+        state_param = sp.record(key=rlp_nonce, value=payload)
         sp.transfer(state_param, sp.mutez(0), contract)
 
         # Burn tokens
@@ -113,17 +127,33 @@ class IBCF_Bridge(sp.Contract):
         mint_method = Inlined.getMintEntrypoint(self.data.asset_address)
 
         decode_nat_lambda = sp.compute(RLP.Lambda.decode_nat)
+        without_length_prefix = sp.compute(RLP.Lambda.without_length_prefix)
 
-        # Compute storage slot
-        destination = sp.compute(param.destination)
-        nonce = sp.compute(self.data.ethereum_nonce.get(destination, default_value = 0) + 1)
-        # Increase nonce
-        self.data.ethereum_nonce[destination] = nonce
+        # Verify that wrap was not yet processed, fail otherwise
+        nonce = param.nonce
+        sp.verify(~self.data.wrap_nonce.contains(nonce), Error.ALREADY_PROCESSED)
+        # Set nonce as processed
+        self.data.wrap_nonce[nonce] = sp.unit
 
         # Compute the storage slot for the ethereum proof
-        storage_slot = Inlined.computeStorageSlot(destination, nonce)
+        (destination_slot, amount_slot) = Inlined.computeStorageSlots(nonce)
 
-        # Validate proof and extract storage value (The amount to be wrapped)
+        # Validate proof and extract storage value (The amount to be wrapped and the destination address)
+        rlp_destination = sp.view(
+            "validate_storage_proof",
+            self.data.proof_validator,
+            sp.set_type_expr(
+                sp.record(
+                    block_number=param.block_number,
+                    account=self.data.eth_bridge_address,
+                    account_proof_rlp=param.account_proof_rlp,
+                    storage_slot=destination_slot,
+                    storage_proof_rlp=param.destination_proof_rlp,
+                ),
+                ValidatiorInterface.Validate_storage_proof_argument,
+            ),
+            t=sp.TBytes,
+        ).open_some(Error.INVALID_VIEW)
         rlp_amount = sp.view(
             "validate_storage_proof",
             self.data.proof_validator,
@@ -132,16 +162,17 @@ class IBCF_Bridge(sp.Contract):
                     block_number=param.block_number,
                     account=self.data.eth_bridge_address,
                     account_proof_rlp=param.account_proof_rlp,
-                    storage_slot=storage_slot,
-                    storage_proof_rlp=param.storage_proof_rlp,
+                    storage_slot=amount_slot,
+                    storage_proof_rlp=param.amount_proof_rlp,
                 ),
                 ValidatiorInterface.Validate_storage_proof_argument,
             ),
             t=sp.TBytes,
         ).open_some(Error.INVALID_VIEW)
 
-        # Decode the amount
-        amount = decode_nat_lambda(rlp_amount)
+        # Decode destination and amount
+        destination = sp.unpack(sp.slice(rlp_destination, 1, 28).open_some(Error.INVALID_DESTINATION), sp.TAddress).open_some(Error.INVALID_DESTINATION)
+        amount = decode_nat_lambda(sp.compute(rlp_amount))
 
         # Mint tokens
         sp.transfer([sp.record(to_=destination, amount=amount)], sp.mutez(0), mint_method)
