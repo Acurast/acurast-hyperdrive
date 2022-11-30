@@ -4,7 +4,6 @@ from contracts.tezos.utils.misc import generate_var
 
 
 class Bytes:
-
     @staticmethod
     def pad_start(arg):
         (b, fill, length) = sp.match_tuple(arg, "el1", "el2", "el3")

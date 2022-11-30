@@ -143,8 +143,11 @@ class IBCF_Eth_Validator(sp.Contract):
                     validators=sp.TSet(sp.TAddress),
                     # Minimum expected endorsements for a given state root to be considered valid
                     minimum_endorsements=sp.TNat,
+                    # The validator only stores the state roots of the latest `history_length` blocks
+                    history_length=sp.TNat,
                 ),
-                block_state_root=sp.TBigMap(sp.TNat, sp.TMap(sp.TAddress, sp.TBytes)),
+                state_root=sp.TBigMap(sp.TNat, sp.TMap(sp.TAddress, sp.TBytes)),
+                history=sp.TSet(sp.TNat)
             )
         )
 
@@ -159,11 +162,21 @@ class IBCF_Eth_Validator(sp.Contract):
         # Check if sender is a validator
         Inlined.failIfNotValidator(self)
 
+        # Remove old root states
+        with sp.if_(sp.len(self.data.history) == self.data.config.history_length):
+            oldest = sp.local("oldest", sp.level)
+            with sp.for_("block", self.data.history.elements()) as b:
+                with sp.if_(b < oldest.value):
+                    oldest.value = b
+
+            del self.data.state_root[oldest.value]
+            self.data.history.remove(oldest.value)
+
         # Store the block state root
-        with sp.if_(self.data.block_state_root.contains(block_number)):
-            self.data.block_state_root[block_number][sp.sender] = state_root
+        with sp.if_(self.data.state_root.contains(block_number)):
+            self.data.state_root[block_number][sp.sender] = state_root
         with sp.else_():
-            self.data.block_state_root[block_number] = sp.map({sp.sender: state_root})
+            self.data.state_root[block_number] = sp.map({sp.sender: state_root})
 
     @sp.entry_point(parameter_type=Type.Configure_argument)
     def configure(self, actions):
@@ -363,12 +376,10 @@ class IBCF_Eth_Validator(sp.Contract):
         )
 
         block_state_roots = sp.compute(
-            self.data.block_state_root.get(
-                block_number, message=Error.UNPROCESSED_BLOCK_STATE
-            )
+            self.data.state_root.get( block_number, message=Error.UNPROCESSED_BLOCK_STATE)
         )
         validate_block_state_root = sp.build_lambda(Lambdas.validate_block_state_root)
-        block_state_root = sp.compute(
+        state_root = sp.compute(
             validate_block_state_root(
                 sp.record(
                     state_roots=block_state_roots,
@@ -398,7 +409,7 @@ class IBCF_Eth_Validator(sp.Contract):
                                 path=account_state_path,
                                 proof_rlp=account_proof_rlp,
                                 rlp=rlp,
-                                state_root=block_state_root,
+                                state_root=state_root,
                             ),
                             Type.Verify_argument,
                         ),

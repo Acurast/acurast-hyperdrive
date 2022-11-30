@@ -53,8 +53,10 @@ def test():
             administrator=admin.address,
             validators=sp.set([alice.address, bob.address, claus.address]),
             minimum_endorsements=2,
+            history_length=5
         ),
-        block_state_root=sp.big_map(),
+        state_root=sp.big_map(),
+        history=sp.set()
     )
 
     scenario += ibcf

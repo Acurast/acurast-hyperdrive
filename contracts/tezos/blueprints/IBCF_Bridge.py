@@ -8,38 +8,46 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type as IBCF_Aggregator_Type
 from contracts.tezos.IBCF_Eth_Validator import Type as ValidatiorInterface
-from contracts.tezos.utils.fa2_lib import Fa2SingleAsset, BurnSingleAsset, MintSingleAsset, Admin
+from contracts.tezos.utils.fa2_lib import (
+    Fa2SingleAsset,
+    BurnSingleAsset,
+    MintSingleAsset,
+    Admin,
+)
 from contracts.tezos.utils.bytes import Bytes
 import contracts.tezos.utils.rlp as RLP
 
+
 class Constant:
-    ETH_DESTINATION_INDEX = sp.bytes("0x0000000000000000000000000000000000000000000000000000000000000005")
-    ETH_AMOUNT_INDEX = sp.bytes("0x0000000000000000000000000000000000000000000000000000000000000006")
+    ETH_DESTINATION_INDEX = sp.bytes(
+        "0x0000000000000000000000000000000000000000000000000000000000000005"
+    )
+    ETH_AMOUNT_INDEX = sp.bytes(
+        "0x0000000000000000000000000000000000000000000000000000000000000006"
+    )
+
 
 class Error:
-    INVALID_CONTRACT    = "INVALID_CONTRACT"
-    INVALID_VIEW        = "INVALID_VIEW"
+    INVALID_CONTRACT = "INVALID_CONTRACT"
+    INVALID_VIEW = "INVALID_VIEW"
     INVALID_DESTINATION = "INVALID_DESTINATION"
-    ALREADY_PROCESSED   = "ALREADY_PROCESSED"
+    ALREADY_PROCESSED = "ALREADY_PROCESSED"
+
 
 class Type:
-    Unwrap          = sp.TRecord(
-                        level               = sp.TNat,
-                        destination         = sp.TBytes,
-                        amount              = sp.TNat
-                    ).right_comb()
-    UnwrapArgument  = sp.TRecord(
-                        destination = sp.TBytes,
-                        amount = sp.TNat
-                    ).right_comb()
-    UnwrapTable     = sp.TBigMap(sp.TNat, Unwrap)  # (nonce => Unwrap)
-    WrapArgument    = sp.TRecord(
-                        block_number            = sp.TNat,
-                        nonce                   = sp.TBytes,
-                        account_proof_rlp       = sp.TBytes,
-                        destination_proof_rlp   = sp.TBytes,
-                        amount_proof_rlp        = sp.TBytes
-                    ).right_comb()
+    Unwrap = sp.TRecord(
+        level=sp.TNat, destination=sp.TBytes, amount=sp.TNat
+    ).right_comb()
+    UnwrapArgument = sp.TRecord(destination=sp.TBytes, amount=sp.TNat).right_comb()
+    UnwrapTable = sp.TBigMap(sp.TNat, Unwrap)  # (nonce => Unwrap)
+    WrapArgument = sp.TRecord(
+        block_number=sp.TNat,
+        nonce=sp.TBytes,
+        account_proof_rlp=sp.TBytes,
+        destination_proof_rlp=sp.TBytes,
+        amount_proof_rlp=sp.TBytes,
+    ).right_comb()
+
 
 class Inlined:
     @staticmethod
@@ -51,7 +59,9 @@ class Inlined:
                     token_id=sp.TNat,
                     amount=sp.TNat,
                 ).layout(("from_", ("token_id", "amount")))
-            ), asset_address, "burn"
+            ),
+            asset_address,
+            "burn",
         ).open_some(Error.INVALID_CONTRACT)
 
     @staticmethod
@@ -59,7 +69,9 @@ class Inlined:
         return sp.contract(
             sp.TList(
                 sp.TRecord(to_=sp.TAddress, amount=sp.TNat).layout(("to_", "amount"))
-            ), asset_address, "mint"
+            ),
+            asset_address,
+            "mint",
         ).open_some(Error.INVALID_CONTRACT)
 
     @staticmethod
@@ -68,17 +80,18 @@ class Inlined:
         amount_slot = sp.keccak(nonce + Constant.ETH_AMOUNT_INDEX)
         return (destination_slot, amount_slot)
 
+
 class IBCF_Bridge(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
-                nonce               = sp.TNat,
-                wrap_nonce          = sp.TBigMap(sp.TBytes, sp.TUnit),
-                registry            = Type.UnwrapTable,
-                merkle_aggregator   = sp.TAddress,
-                proof_validator     = sp.TAddress,
-                asset_address       = sp.TAddress,
-                eth_bridge_address  = sp.TBytes,
+                nonce=sp.TNat,
+                wrap_nonce=sp.TBigMap(sp.TBytes, sp.TUnit),
+                registry=Type.UnwrapTable,
+                merkle_aggregator=sp.TAddress,
+                proof_validator=sp.TAddress,
+                asset_address=sp.TAddress,
+                eth_bridge_address=sp.TBytes,
             )
         )
 
@@ -87,12 +100,12 @@ class IBCF_Bridge(sp.Contract):
         burn_method = Inlined.getBurnEntrypoint(self.data.asset_address)
 
         # Register unwrap
-        self.data.nonce +=1
+        self.data.nonce += 1
         nonce = sp.compute(self.data.nonce)
         self.data.registry[nonce] = sp.record(
-            level = sp.level,
-            destination = param.destination,
-            amount = param.amount,
+            level=sp.level,
+            destination=param.destination,
+            amount=param.amount,
         )
 
         encode_nat_lambda = sp.compute(RLP.Lambda.encode_nat)
@@ -116,9 +129,9 @@ class IBCF_Bridge(sp.Contract):
 
         # Burn tokens
         burn_param = sp.record(
-            from_       = sp.sender,
-            token_id    = 0,
-            amount      = param.amount,
+            from_=sp.sender,
+            token_id=0,
+            amount=param.amount,
         )
         sp.transfer([burn_param], sp.mutez(0), burn_method)
 
@@ -171,8 +184,13 @@ class IBCF_Bridge(sp.Contract):
         ).open_some(Error.INVALID_VIEW)
 
         # Decode destination and amount
-        destination = sp.unpack(sp.slice(rlp_destination, 1, 28).open_some(Error.INVALID_DESTINATION), sp.TAddress).open_some(Error.INVALID_DESTINATION)
+        destination = sp.unpack(
+            sp.slice(rlp_destination, 1, 28).open_some(Error.INVALID_DESTINATION),
+            sp.TAddress,
+        ).open_some(Error.INVALID_DESTINATION)
         amount = decode_nat_lambda(sp.compute(rlp_amount))
 
         # Mint tokens
-        sp.transfer([sp.record(to_=destination, amount=amount)], sp.mutez(0), mint_method)
+        sp.transfer(
+            [sp.record(to_=destination, amount=amount)], sp.mutez(0), mint_method
+        )

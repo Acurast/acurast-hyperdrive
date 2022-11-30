@@ -215,6 +215,7 @@ class Decoder:
                         # 247 = LIST_LONG_START - 1
                         sp.result(sp.as_nat(byte0 - 247) + 1)
 
+
 class Lambda:
     # Encoding
     encode_list = sp.build_lambda(Encoder.encode_list)
