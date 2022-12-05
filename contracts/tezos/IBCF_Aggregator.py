@@ -307,7 +307,7 @@ class IBCF_Aggregator(sp.Contract):
                 )
             )
 
-    @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
+    @sp.private_lambda(with_storage="read-write", with_operations=True, wrap_call=True)
     def finalize_snapshot(self, require):
         with sp.if_(self.data.snapshot_start_level == 0):
             # Start snapshot
@@ -323,8 +323,7 @@ class IBCF_Aggregator(sp.Contract):
             self.data.snapshot_start_level = sp.level
             self.data.merkle_tree = EMPTY_TREE
 
-            # Add event
-            # sp.emit(sp.record(snapshot= self.data.snapshot_counter, level = sp.level), with_type = True, tag = "SNAPSHOT_FINALIZED")
+            sp.emit(sp.record(snapshot= self.data.snapshot_counter, level = sp.level), with_type = True, tag = "SNAPSHOT_FINALIZED")
         with sp.else_():
             sp.verify(~require, Error.CANNOT_SNAPSHOT)
 
