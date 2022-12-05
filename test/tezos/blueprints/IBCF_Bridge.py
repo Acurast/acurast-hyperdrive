@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator
+from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
 from contracts.tezos.IBCF_Eth_Validator import IBCF_Eth_Validator
 from contracts.tezos.blueprints.IBCF_Bridge import IBCF_Bridge
 from contracts.tezos.blueprints.Asset import Asset
@@ -46,14 +46,13 @@ def test():
         sp.record(
             config=sp.record(
                 administrator=admin.address,
-                signers=sp.set(),
-                history_ttl=5,
                 max_state_size=32,
-                max_states=1000,
+                snapshot_duration=5
             ),
-            merkle_history=sp.big_map(),
-            merkle_history_indexes=[],
-            latest_state_update=sp.big_map(),
+            snapshot_start_level        = 0,
+            snapshot_counter            = 0,
+            snapshot_level              = sp.big_map(),
+            merkle_tree                 = EMPTY_TREE
         )
     )
     scenario += aggregator
@@ -161,8 +160,7 @@ def test():
     proof = aggregator.get_proof(
         sp.record(
             owner=bridge.address,
-            key=rlp_nonce,
-            level=sp.none,
+            key=rlp_nonce
         )
     )
     scenario.show(proof)
@@ -170,7 +168,6 @@ def test():
     scenario.verify(
         aggregator.verify_proof(
             sp.record(
-                level=BLOCK_LEVEL_1,
                 proof=proof.proof,
                 state=sp.record(
                     owner=sp.pack(bridge.address),

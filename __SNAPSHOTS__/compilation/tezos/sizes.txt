@@ -1,4 +1,4 @@
 15742 __SNAPSHOTS__/compilation/tezos/blueprints/BridgedAsset/BridgedAsset/step_000_cont_0_contract.tz
+46519 __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
 48315 __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Bridge/IBCF_Bridge/step_000_cont_0_contract.tz
-52806 __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
 85951 __SNAPSHOTS__/compilation/tezos/IBCF_Eth_Validator/IBCF_Eth_Validator/step_000_cont_0_contract.tz

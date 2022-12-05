@@ -23,8 +23,7 @@ EMPTY_TREE = sp.record(
         key=sp.record(data=0, length=0),
     ),
     nodes=sp.map(),
-    states=sp.map(),
-    signatures=sp.map(),
+    states=sp.map()
 )
 
 
@@ -34,13 +33,12 @@ def ENCODE(d):
 
 class Error:
     PROOF_INVALID = "PROOF_INVALID"
-    NOT_FOUND = "NOT_FOUND"
+    PROOF_NOT_FOUND = "PROOF_NOT_FOUND"
     NOT_ADMINISTRATOR = "NOT_ADMINISTRATOR"
     STATE_TOO_LARGE = "STATE_TOO_LARGE"
     LEVEL_ALREADY_USED = "LEVEL_ALREADY_USED"
-    TOO_MANY_STATES = "TOO_MANY_STATES"
-    NOT_SIGNER = "NOT_SIGNER"
     UNPROCESSED_BLOCK_STATE = "UNPROCESSED_BLOCK_STATE"
+    CANNOT_SNAPSHOT = "CANNOT_SNAPSHOT"
 
 
 class Inlined:
@@ -85,13 +83,6 @@ class Inlined:
         """
         sp.verify(self.data.config.administrator == sp.sender, Error.NOT_ADMINISTRATOR)
 
-    @staticmethod
-    def failIfNotSigner(self):
-        """
-        This method when used, ensures that only signers are allowed to call a given entrypoint
-        """
-        sp.verify(self.data.config.signers.contains(sp.sender), Error.NOT_SIGNER)
-
 
 class Type:
     KeyMeta = sp.TRecord(data=sp.TNat, length=sp.TNat).right_comb()
@@ -102,40 +93,27 @@ class Type:
         key=sp.TBytes,
         value=sp.TBytes,
     ).right_comb()
-    Signature = sp.TRecord(
-        r=sp.TBytes,
-        s=sp.TBytes,
-    ).right_comb()
     Tree = sp.TRecord(
         root=sp.TBytes,
         root_edge=Edge,
         nodes=sp.TMap(sp.TBytes, Node),
-        states=sp.TMap(sp.TBytes, sp.TBytes),
-        signatures=sp.TMap(sp.TAddress, Signature),
+        states=sp.TMap(sp.TBytes, sp.TBytes)
     ).right_comb()
 
     # Entry points
     Insert_argument = sp.TRecord(key=sp.TBytes, value=sp.TBytes).right_comb()
-    Submit_signature_argument = sp.TRecord(
-        level=sp.TNat, signature=Signature
-    ).right_comb()
     Configure_argument = sp.TList(
         sp.TVariant(
             update_administrator=sp.TAddress,
-            update_signers=sp.TSet(
-                sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
-            ),
-            update_history_ttl=sp.TNat,
-            update_max_state_size=sp.TNat,
-            update_max_states=sp.TNat,
+            update_snapshot_duration=sp.TNat,
+            update_max_state_size=sp.TNat
         ).right_comb()
     )
 
     # Views
     Get_proof_argument = sp.TRecord(
         owner=sp.TAddress,
-        key=sp.TBytes,
-        level=sp.TOption(sp.TNat),
+        key=sp.TBytes
     ).right_comb()
     Get_proof_result = sp.TRecord(
         level=sp.TNat,
@@ -143,10 +121,9 @@ class Type:
         key=sp.TBytes,
         value=sp.TBytes,
         proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
-        signatures=sp.TMap(sp.TAddress, Signature),
     ).right_comb()
     Verify_proof_argument = sp.TRecord(
-        level=sp.TNat, proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
+        proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
     ).right_comb()
 
 
@@ -161,20 +138,214 @@ class IBCF_Aggregator(sp.Contract):
                 config=sp.TRecord(
                     # Multi-sig address allowed to manage the contract
                     administrator=sp.TAddress,
-                    # State signers
-                    signers=sp.TSet(sp.TAddress),
-                    # This constant sets a time to live for every entry in merkle_history
-                    history_ttl=sp.TNat,
+                    # This constant sets how many levels each snapshot has.
+                    snapshot_duration=sp.TNat,
                     # This constant is used to limit the data length being inserted (in bytes).
                     max_state_size=sp.TNat,
-                    # This constant is used to limit the amount of states being stored per merkle tree.
-                    max_states=sp.TNat,
                 ),
-                merkle_history=sp.TBigMap(sp.TNat, Type.Tree),
-                merkle_history_indexes=sp.TList(sp.TNat),
-                latest_state_update=sp.TBigMap(sp.TBytes, sp.TNat),
+                snapshot_start_level = sp.TNat,
+                snapshot_counter     = sp.TNat,
+                snapshot_level       = sp.TBigMap(sp.TNat, sp.TNat),
+                merkle_tree          = Type.Tree
             ).right_comb()
         )
+
+    @sp.entry_point()
+    def snapshot(self):
+        self.finalize_snapshot(True)
+
+    @sp.entry_point(parameter_type=Type.Insert_argument)
+    def insert(self, param):
+        """
+        Include new state into the merkle tree.
+        """
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
+
+        # Check and finalize snapshot
+        self.finalize_snapshot(False)
+
+        # Do not allow users to insert values bigger than max_state_size
+        sp.verify(
+            sp.len(param.value) <= self.data.config.max_state_size,
+            Error.STATE_TOO_LARGE,
+        )
+
+        key_hash = sp.compute(Inlined.hash_key(ENCODE(sp.sender), param.key))
+        key = sp.compute(
+            sp.record(
+                data=nat_of_bytes_lambda(key_hash),
+                length=HASH_LENGTH,
+            )
+        )
+
+        # Set new state
+        state_hash = sp.compute(
+            Inlined.hash_state(ENCODE(sp.sender), param.key, param.value)
+        )
+        self.data.merkle_tree.states[state_hash] = param.value
+
+        with sp.if_(self.data.merkle_tree.root != NULL_HASH):
+            # Skip on first insertion
+            self.data.merkle_tree = self.insert_at_edge(
+                sp.record(tree=self.data.merkle_tree, key=key, value=state_hash)
+            )
+        with sp.else_():
+            edge = sp.compute(sp.record(key=key, node=state_hash))
+            self.data.merkle_tree.root = Inlined.hash_edge(edge)
+            self.data.merkle_tree.root_edge = edge
+
+    @sp.entry_point(parameter_type=Type.Configure_argument)
+    def configure(self, actions):
+        # Only allowed addresses can call this entry point
+        Inlined.failIfNotAdministrator(self)
+
+        with sp.for_("action", actions) as action:
+            with action.match_cases() as action:
+                with action.match("update_administrator") as administrator:
+                    self.data.config.administrator = administrator
+                with action.match("update_snapshot_duration") as payload:
+                    self.data.config.snapshot_duration = payload
+                with action.match("update_max_state_size") as payload:
+                    self.data.config.max_state_size = payload
+
+    @sp.onchain_view()
+    def get_proof(self, arg):
+        """
+        Returns the Merkle-proof for the given key.
+
+        :argument:  sp.TRecord(
+                        owner       = sp.TAddress,
+                        key         = sp.TBytes,
+                    )
+
+        :returns:   sp.TRecord(
+                        level       = sp.TNat,
+                        key         = sp.TBytes,
+                        value       = sp.TBytes,
+                        merkle_root = sp.TBytes,
+                        proof       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
+                    )
+        """
+        sp.set_type(arg, Type.Get_proof_argument)
+
+        chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
+        split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
+
+        key_hash = sp.compute(Inlined.hash_key(ENCODE(arg.owner), arg.key))
+        key = sp.local(
+            "key",
+            sp.record(
+                data=nat_of_bytes_lambda(key_hash),
+                length=HASH_LENGTH,
+            ),
+        )
+
+        tree = sp.local("tree", self.data.merkle_tree)
+        root_edge = sp.local("root_edge", tree.value.root_edge)
+        blinded_path = sp.local("blinded_path", [])
+
+        continue_loop = sp.local("continue_loop", True)
+        with sp.while_(continue_loop.value):
+            (prefix, suffix) = sp.match_record(
+                split_common_prefix_lambda((key.value, root_edge.value.key)),
+                "prefix",
+                "suffix",
+            )
+            sp.verify(prefix.length == root_edge.value.key.length, Error.PROOF_NOT_FOUND)
+
+            with sp.if_(suffix.length == 0):
+                # Proof found
+                continue_loop.value = False
+            with sp.else_():
+                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
+
+                # Add hash to proof path with direction (0=left or 1=right)
+                #
+                # For head = 0
+                #
+                #      h(a+b)
+                #       /   \
+                #    0 /     \ 1
+                #   h(a)    h(b)
+                #    |        |
+                #   head    complement
+                #
+                # The proof path must include the complement, since
+                # the head is already known.
+                hash = sp.bind_block()
+                with hash:
+                    with sp.if_(head == 0):
+                        sp.result(
+                            sp.right(
+                                Inlined.hash_edge(
+                                    tree.value.nodes[root_edge.value.node].children[1]
+                                )
+                            )
+                        )
+                    with sp.else_():
+                        sp.result(
+                            sp.left(
+                                Inlined.hash_edge(
+                                    tree.value.nodes[root_edge.value.node].children[0]
+                                )
+                            )
+                        )
+
+                blinded_path.value.push(hash.value)
+                root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
+                key.value = tail
+
+        with sp.set_result_type(Type.Get_proof_result):
+            sp.result(
+                sp.record(
+                    level=sp.level,
+                    key=arg.key,
+                    value=tree.value.states[root_edge.value.node],
+                    merkle_root=tree.value.root,
+                    proof=blinded_path.value
+                )
+            )
+
+    @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
+    def finalize_snapshot(self, require):
+        with sp.if_(self.data.snapshot_start_level == 0):
+            # Start snapshot
+            self.data.snapshot_start_level = sp.level
+            self.data.merkle_tree = EMPTY_TREE
+
+        with sp.if_(self.data.snapshot_start_level + self.data.config.snapshot_duration < sp.level):
+            # Finalize snapshot
+            self.data.snapshot_counter += 1
+            self.data.snapshot_level[self.data.snapshot_counter] = sp.as_nat(sp.level-1)
+
+            # Start snapshot
+            self.data.snapshot_start_level = sp.level
+            self.data.merkle_tree = EMPTY_TREE
+
+            # Add event
+            # sp.emit(sp.record(snapshot= self.data.snapshot_counter, level = sp.level), with_type = True, tag = "SNAPSHOT_FINALIZED")
+        with sp.else_():
+            sp.verify(~require, Error.CANNOT_SNAPSHOT)
+
+
+    @sp.onchain_view()
+    def verify_proof(self, arg):
+        """
+        Validates a proof against a given state.
+        """
+        sp.set_type(arg, Type.Verify_proof_argument)
+
+        state_hash = Inlined.hash_state(arg.state.owner, arg.state.key, arg.state.value)
+        derived_hash = sp.local("derived_hash", state_hash)
+        with sp.for_("el", arg.proof) as el:
+            with el.match_cases() as cases:
+                with cases.match("Left") as left:
+                    derived_hash.value = HASH_FUNCTION(left + derived_hash.value)
+                with cases.match("Right") as right:
+                    derived_hash.value = HASH_FUNCTION(derived_hash.value + right)
+
+        sp.verify((self.data.merkle_tree.root == derived_hash.value), Error.PROOF_INVALID)
 
     @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
     def insert_at_edge(self, arg):
@@ -322,233 +493,3 @@ class IBCF_Aggregator(sp.Contract):
             tree.value.root_edge = edge
 
             sp.result(tree.value)
-
-    @sp.entry_point(parameter_type=Type.Insert_argument)
-    def insert(self, param):
-        """
-        Include new state into the merkle tree.
-        """
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
-
-        with sp.if_(~self.data.merkle_history.contains(sp.level)):
-            self.data.merkle_history[sp.level] = EMPTY_TREE
-
-        tree = sp.local("tree", self.data.merkle_history[sp.level])
-
-        # Do not allow users to insert values bigger than max_state_size
-        sp.verify(
-            sp.len(param.value) <= self.data.config.max_state_size,
-            Error.STATE_TOO_LARGE,
-        )
-        sp.verify(
-            sp.len(tree.value.states) < self.data.config.max_states,
-            Error.TOO_MANY_STATES,
-        )
-
-        latest_indexes = sp.local("latest_indexes", [])
-        with sp.for_("el", self.data.merkle_history_indexes) as el:
-            with sp.if_(
-                (el + self.data.config.history_ttl > sp.level) & (el != sp.level)
-            ):
-                latest_indexes.value.push(el)
-            with sp.else_():
-                # Remove old merkle tree
-                del self.data.merkle_history[el]
-
-        self.data.merkle_history_indexes = latest_indexes.value
-        self.data.merkle_history_indexes.push(sp.level)
-
-        key_hash = sp.compute(Inlined.hash_key(ENCODE(sp.sender), param.key))
-        key = sp.compute(
-            sp.record(
-                data=nat_of_bytes_lambda(key_hash),
-                length=HASH_LENGTH,
-            )
-        )
-
-        # Index the level at which the state was lastly modified
-        self.data.latest_state_update[key_hash] = sp.level
-
-        # Set new state
-        state_hash = sp.compute(
-            Inlined.hash_state(ENCODE(sp.sender), param.key, param.value)
-        )
-        tree.value.states[state_hash] = param.value
-
-        with sp.if_(tree.value.root != NULL_HASH):
-            # Skip on first insertion
-            tree.value = self.insert_at_edge(
-                sp.record(tree=tree.value, key=key, value=state_hash)
-            )
-        with sp.else_():
-            edge = sp.compute(sp.record(key=key, node=state_hash))
-            tree.value.root = Inlined.hash_edge(edge)
-            tree.value.root_edge = edge
-
-        self.data.merkle_history[sp.level] = tree.value
-
-    @sp.entry_point(parameter_type=Type.Submit_signature_argument)
-    def submit_signature(self, param):
-        # Only allowed addresses can call this entry point
-        Inlined.failIfNotSigner(self)
-
-        with sp.if_(self.data.merkle_history.contains(param.level)):
-            self.data.merkle_history[param.level].signatures[
-                sp.sender
-            ] = param.signature
-        with sp.else_():
-            sp.failwith(Error.UNPROCESSED_BLOCK_STATE)
-
-    @sp.entry_point(parameter_type=Type.Configure_argument)
-    def configure(self, actions):
-        # Only allowed addresses can call this entry point
-        Inlined.failIfNotAdministrator(self)
-
-        with sp.for_("action", actions) as action:
-            with action.match_cases() as action:
-                with action.match("update_signers") as payload:
-                    with sp.for_("el", payload.elements()) as el:
-                        with el.match_cases() as cases:
-                            with cases.match("add") as add:
-                                self.data.config.signers.add(add)
-                            with cases.match("remove") as remove:
-                                self.data.config.signers.remove(remove)
-                with action.match("update_administrator") as administrator:
-                    self.data.config.administrator = administrator
-                with cases.match("update_history_ttl") as payload:
-                    self.data.config.history_ttl = payload
-                with cases.match("update_max_state_size") as payload:
-                    self.data.config.max_state_size = payload
-                with cases.match("update_max_states") as payload:
-                    self.data.config.max_states = payload
-
-    @sp.onchain_view()
-    def get_proof(self, arg):
-        """
-        Returns the Merkle-proof for the given key.
-
-        :argument:  sp.TRecord(
-                        level       = sp.TOption(sp.TNat), # If None, it uses the latest block level where the state was modified
-                        owner       = sp.TAddress,
-                        key         = sp.TBytes,
-                    )
-
-        :returns:   sp.TRecord(
-                        level       = sp.TNat,
-                        key         = sp.TBytes,
-                        value       = sp.TBytes,
-                        merkle_root = sp.TBytes,
-                        proof       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
-                    )
-        """
-        sp.set_type(arg, Type.Get_proof_argument)
-
-        chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
-        split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
-
-        key_hash = sp.compute(Inlined.hash_key(ENCODE(arg.owner), arg.key))
-        key = sp.local(
-            "key",
-            sp.record(
-                data=nat_of_bytes_lambda(key_hash),
-                length=HASH_LENGTH,
-            ),
-        )
-
-        level = sp.bind_block()
-        with level:
-            with arg.level.match_cases() as cases:
-                with cases.match("Some") as _level:
-                    sp.result(_level)
-                with cases.match("None"):
-                    sp.result(self.data.latest_state_update[key_hash])
-
-        tree = sp.local("tree", self.data.merkle_history[level.value])
-        root_edge = sp.local("root_edge", tree.value.root_edge)
-        blinded_path = sp.local("blinded_path", [])
-
-        continue_loop = sp.local("continue_loop", True)
-        with sp.while_(continue_loop.value):
-            (prefix, suffix) = sp.match_record(
-                split_common_prefix_lambda((key.value, root_edge.value.key)),
-                "prefix",
-                "suffix",
-            )
-            sp.verify(prefix.length == root_edge.value.key.length, Error.NOT_FOUND)
-
-            with sp.if_(suffix.length == 0):
-                # Proof found
-                continue_loop.value = False
-            with sp.else_():
-                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
-
-                # Add hash to proof path with direction (0=left or 1=right)
-                #
-                # For head = 0
-                #
-                #      h(a+b)
-                #       /   \
-                #    0 /     \ 1
-                #   h(a)    h(b)
-                #    |        |
-                #   head    complement
-                #
-                # The proof path must include the complement, since
-                # the head is already known.
-                hash = sp.bind_block()
-                with hash:
-                    with sp.if_(head == 0):
-                        sp.result(
-                            sp.right(
-                                Inlined.hash_edge(
-                                    tree.value.nodes[root_edge.value.node].children[1]
-                                )
-                            )
-                        )
-                    with sp.else_():
-                        sp.result(
-                            sp.left(
-                                Inlined.hash_edge(
-                                    tree.value.nodes[root_edge.value.node].children[0]
-                                )
-                            )
-                        )
-
-                blinded_path.value.push(hash.value)
-                root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
-                key.value = tail
-
-        with sp.set_result_type(Type.Get_proof_result):
-            sp.result(
-                sp.record(
-                    level=level.value,
-                    key=arg.key,
-                    value=tree.value.states[root_edge.value.node],
-                    merkle_root=tree.value.root,
-                    proof=blinded_path.value,
-                    signatures=tree.value.signatures,
-                )
-            )
-
-    @sp.onchain_view()
-    def verify_proof(self, arg):
-        """
-        Validates a proof against a given state.
-        """
-        sp.set_type(arg, Type.Verify_proof_argument)
-
-        state_hash = Inlined.hash_state(arg.state.owner, arg.state.key, arg.state.value)
-        derived_hash = sp.local("derived_hash", state_hash)
-        with sp.for_("el", arg.proof) as el:
-            with el.match_cases() as cases:
-                with cases.match("Left") as left:
-                    derived_hash.value = HASH_FUNCTION(left + derived_hash.value)
-                with cases.match("Right") as right:
-                    derived_hash.value = HASH_FUNCTION(derived_hash.value + right)
-
-        sp.verify(
-            self.data.merkle_history.contains(arg.level)
-            & (self.data.merkle_history[arg.level].root == derived_hash.value),
-            Error.PROOF_INVALID,
-        )

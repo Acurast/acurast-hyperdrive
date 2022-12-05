@@ -1,28 +1,18 @@
 import smartpy as sp
 
-from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error
+from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error, EMPTY_TREE
 from contracts.tezos.utils.bytes import Bytes
-
-
-def update_signers(payload):
-    return sp.variant("update_signers", payload)
-
 
 def update_administrator(payload):
     return sp.variant("update_administrator", payload)
 
 
-def update_history_ttl(payload):
-    return sp.variant("update_history_ttl", payload)
+def update_snapshot_duration(payload):
+    return sp.variant("update_snapshot_duration", payload)
 
 
 def update_max_state_size(payload):
     return sp.variant("update_max_state_size", payload)
-
-
-def update_max_states(payload):
-    return sp.variant("update_max_states", payload)
-
 
 @sp.add_test(name="IBCF")
 def test():
@@ -49,14 +39,13 @@ def test():
         sp.record(
             config=sp.record(
                 administrator=admin.address,
-                signers=sp.set(),
-                history_ttl=5,
                 max_state_size=32,
-                max_states=1000,
+                snapshot_duration=5
             ),
-            merkle_history=sp.big_map(),
-            merkle_history_indexes=[],
-            latest_state_update=sp.big_map(),
+            snapshot_start_level        = 0,
+            snapshot_counter            = 0,
+            snapshot_level              = sp.big_map(),
+            merkle_tree                 = EMPTY_TREE
         )
     )
 
@@ -73,49 +62,23 @@ def test():
     ibcf.configure([update_administrator(admin.address)]).run(sender=alice.address)
     scenario.verify(ibcf.data.config.administrator == admin.address)
 
-    # Verify that there are no signers
-    scenario.verify(sp.len(ibcf.data.config.signers) == 0)
-    # Add signers
-    ibcf.configure(
-        [
-            update_signers(
-                sp.set(
-                    [
-                        sp.variant("add", alice.address),
-                        sp.variant("add", bob.address),
-                        sp.variant("add", claus.address),
-                    ]
-                )
-            )
-        ]
-    ).run(sender=admin.address)
-    # Verify that signer claus was added
-    scenario.verify(ibcf.data.config.signers.contains(claus.address))
-    # Remove signer
-    ibcf.configure([update_signers(sp.set([sp.variant("remove", claus.address)]))]).run(
-        sender=admin.address
-    )
-    # Verify that signer was removed
-    scenario.verify(~ibcf.data.config.signers.contains(claus.address))
-
-    # Try to remove a signer without having permissions
-    ibcf.configure([update_signers(sp.set([sp.variant("remove", alice.address)]))]).run(
-        sender=bob.address, valid=False, exception=Error.NOT_ADMINISTRATOR
-    )
-
     # Update history_ttl and max_state_size
     ibcf.configure(
-        [update_history_ttl(10), update_max_state_size(16), update_max_states(100)]
+        [update_snapshot_duration(10), update_max_state_size(16)]
     ).run(
         sender=admin.address,
     )
-    scenario.verify(ibcf.data.config.history_ttl == 10)
+    scenario.verify(ibcf.data.config.snapshot_duration == 10)
     scenario.verify(ibcf.data.config.max_state_size == 16)
-    scenario.verify(ibcf.data.config.max_states == 100)
-
     # Revert max_state_size change
     ibcf.configure([update_max_state_size(32)]).run(
         sender=admin.address,
+    )
+
+    # Cannot snapshot before a whole snapshot cycle has passed.
+    ibcf.snapshot().run(
+        valid=False,
+        exception=Error.CANNOT_SNAPSHOT
     )
 
     # Do not allow states bigger than 32 bytes
@@ -143,45 +106,15 @@ def test():
         sender=claus.address, level=BLOCK_LEVEL_1
     )
 
-    # Submit a signature for a given level
-    proof = ibcf.submit_signature(
-        sp.record(
-            level=BLOCK_LEVEL_1,
-            signature=sp.record(
-                r=sp.bytes("0x01"),
-                s=sp.bytes("0x02"),
-            ),
-        )
-    ).run(sender=alice.address)
-    # Try to submit a signature for a given level without being a signer
-    proof = ibcf.submit_signature(
-        sp.record(
-            level=BLOCK_LEVEL_1,
-            signature=sp.record(
-                r=sp.bytes("0x01"),
-                s=sp.bytes("0x02"),
-            ),
-        )
-    ).run(sender=claus.address, valid=False, exception=Error.NOT_SIGNER)
+    # Get proof of inclusion
+    proof = scenario.compute(ibcf.get_proof(
+        sp.record(owner=alice.address, key=encoded_counter_key)
+    ))
 
-    # Get proof of inclusion for key="price" and price="1"
-    proof = ibcf.get_proof(
-        sp.record(owner=alice.address, key=encoded_counter_key, level=sp.none)
-    )
-    explicit_proof = ibcf.get_proof(
-        sp.record(
-            owner=alice.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_1)
-        )
-    )
-
-    # Proofs must be equal
-    scenario.verify_equal(proof, explicit_proof)
-
-    # Verify proof for block 1 (Valid)
+    # Verify proof (Valid)
     scenario.verify(
         ibcf.verify_proof(
             sp.record(
-                level=BLOCK_LEVEL_1,
                 proof=proof.proof,
                 state=sp.record(
                     owner=encoded_alice_address,
@@ -193,23 +126,6 @@ def test():
         == sp.unit
     )
 
-    # Verify proof for block 2 (Invalid)
-    ex = sp.catch_exception(
-        ibcf.verify_proof(
-            sp.record(
-                level=BLOCK_LEVEL_2,
-                proof=proof.proof,
-                state=sp.record(
-                    owner=encoded_alice_address,
-                    key=encoded_counter_key,
-                    value=encoded_counter_value_1,
-                ),
-            )
-        ),
-        t=sp.TString,
-    )
-    scenario.verify(ex == sp.some(Error.PROOF_INVALID))
-
     # Insert multiple new states
     ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_2)).run(
         sender=alice.address, level=BLOCK_LEVEL_2
@@ -217,15 +133,18 @@ def test():
     ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_1)).run(
         sender=bob.address, level=BLOCK_LEVEL_2
     )
-    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_3)).run(
-        sender=claus.address, level=BLOCK_LEVEL_2
-    )
 
-    # Verify old proof on block 2 (Invalid)
+    # Finalize snapshot and start a new one
+    scenario.verify(ibcf.data.snapshot_counter == 0)
+    ibcf.insert(sp.record(key=encoded_counter_key, value=encoded_counter_value_3)).run(
+        sender=claus.address, level=BLOCK_LEVEL_2 + 10
+    )
+    scenario.verify(ibcf.data.snapshot_counter == 1)
+
+    # Verify old proof against a fresh snapshot (Invalid)
     ex = sp.catch_exception(
         ibcf.verify_proof(
             sp.record(
-                level=BLOCK_LEVEL_2,
                 proof=proof.proof,
                 state=sp.record(
                     owner=encoded_alice_address,
@@ -238,24 +157,24 @@ def test():
     )
     scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 
-    # Get proof of inclusion for key="price" and price="1" on block 2
+    # Get proof of inclusion
     proof = ibcf.get_proof(
-        sp.record(owner=claus.address, key=encoded_counter_key, level=sp.none)
-    )
-    explicit_proof = ibcf.get_proof(
-        sp.record(
-            owner=claus.address, key=encoded_counter_key, level=sp.some(BLOCK_LEVEL_2)
-        )
+        sp.record(owner=claus.address, key=encoded_counter_key)
     )
 
-    # Proofs must be equal
-    scenario.verify_equal(proof, explicit_proof)
+    # Cannot generate a proof for an item that does not exist
+    ex = sp.catch_exception(
+        ibcf.get_proof(
+            sp.record(owner=alice.address, key=encoded_counter_key)
+        ),
+        t=sp.TString,
+    )
+    scenario.verify(ex == sp.some(Error.PROOF_NOT_FOUND))
 
-    # Verify proof for block 2 (Valid)
+    # Verify proof (Valid)
     scenario.verify(
         ibcf.verify_proof(
             sp.record(
-                level=BLOCK_LEVEL_2,
                 proof=proof.proof,
                 state=sp.record(
                     owner=encoded_claus_address,
@@ -265,4 +184,11 @@ def test():
             )
         )
         == sp.unit
+    )
+
+    # Cannot snapshot before a new snapshot cycle starts
+    ibcf.snapshot().run(
+        level = BLOCK_LEVEL_2 + 10,
+        valid=False,
+        exception=Error.CANNOT_SNAPSHOT
     )

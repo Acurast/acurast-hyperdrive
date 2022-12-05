@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator
+from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
 
 sp.add_compilation_target(
     "IBCF_Aggregator",
@@ -8,13 +8,12 @@ sp.add_compilation_target(
     storage=sp.record(
         config=sp.record(
             administrator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-            signers=sp.set(),
-            history_ttl=5,
             max_state_size=32,
-            max_states=1000,
+            snapshot_duration=5
         ),
-        merkle_history=sp.big_map(),
-        merkle_history_indexes=[],
-        latest_state_update=sp.big_map(),
+        snapshot_start_level = 0,
+        snapshot_counter            = 0,
+        snapshot_level              = sp.big_map(),
+        merkle_tree                 = EMPTY_TREE
     ),
 )
