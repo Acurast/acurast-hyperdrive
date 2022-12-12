@@ -4,19 +4,15 @@
 //
 // More info: https://eips.ethereum.org/EIPS/eip-1186
 // ---------------------------------------------------------------------------
-pragma solidity 0.7.6;
-
-import {EllipticCurve} from "./libs/secp256r1.sol";
+pragma solidity ^0.8.17;
 
 library Err {
     string constant NOT_ADMIN = "NOT_ADMIN";
     string constant PROOF_INVALID = "PROOF_INVALID";
-    string constant MERKLE_ROOT_INVALID = "MERKLE_ROOT_INVALID";
     string constant NOT_ALLOWED = "NOT_ALLOWED";
     string constant VALIDATOR_EXISTS = "VALIDATOR_EXISTS";
     string constant INVALID_SNAPSHOT = "INVALID_SNAPSHOT";
     string constant SNAPSHOT_NOT_FINALIZED = "SNAPSHOT_NOT_FINALIZED";
-    string constant ALREADY_ENDORSED = "ALREADY_ENDORSED";
 }
 
 struct Validator {
@@ -30,13 +26,13 @@ struct StateRootSubmission {
 }
 
 contract IBCF_Validator {
+    uint current_snapshot = 1;
     address administrator;
     // Minimum expected endorsements for a given state root to be considered valid
     uint8 minimum_endorsements;
-    bytes tezos_chain_id;
-    uint current_snapshot = 1;
     // The validator only stores the state roots of the latest `history_length` blocks
     uint16 history_length;
+    bytes tezos_chain_id;
     uint[] history;
     Validator[] validators;
     mapping(uint => StateRootSubmission[]) state_root;
@@ -259,5 +255,9 @@ contract IBCF_Validator {
         }
 
         return has_enough_endorsements && single_most_endorsed;
+    }
+
+    function get_current_snapshot() public view returns (uint) {
+        return current_snapshot;
     }
 }

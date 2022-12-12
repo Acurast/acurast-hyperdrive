@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
-
 // --------------------------------------------------------------------------
 // This contract implements a bridging protocol.
 //
 // It allows users to wrap/unwrap Ethereum assets on the Tezos blockchain.
 // --------------------------------------------------------------------------
+pragma solidity ^0.8.17;
 
 import "../libs/RLPReader.sol";
 import {IBCF_Validator} from "../IBCF_Validator.sol";
