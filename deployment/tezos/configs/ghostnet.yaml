@@ -31,6 +31,7 @@ actions:
                   - signer_3
                   - admin_address
               minimum_endorsements: 1
+              history_length: 10
 
     # Blueprints
 
