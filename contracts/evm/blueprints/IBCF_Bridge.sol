@@ -62,33 +62,24 @@ contract IBCF_Bridge {
 
     /**
      * @dev Unwrap tokens from the Tezos blockchain.
-     * @param block_level The block level where the unwrap operation occured.
-     * @param merkle_root The block merkle root.
+     * @param snapshot The snapshot where the unwrap operation occured.
      * @param key The unwrap operation key in the merkle tree.
      * @param value The unwrap operation payload (destination and amount).
      * @param proof The operation proof.
-     * @param _signers A list of bridge validators. (Gas optimization)
-     * @param signatures A list of signatures for each validator (uses the same order as _signers)
      */
     function unwrap(
-        uint block_level,
-        bytes32 merkle_root,
+        uint snapshot,
         bytes memory key,
         bytes memory value,
-        bytes32[2][] memory proof,
-        address[] memory _signers,
-        uint[2][] memory signatures
+        bytes32[2][] memory proof
     ) public {
         // Validate the proof
         validator.verify_proof(
-            block_level,
-            merkle_root,
+            snapshot,
             tezos_bridge_address,
             key,
             value,
-            proof,
-            _signers,
-            signatures
+            proof
         );
 
         // Decode RLP bytes

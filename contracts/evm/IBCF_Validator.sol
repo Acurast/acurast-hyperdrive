@@ -13,55 +13,134 @@ library Err {
     string constant PROOF_INVALID = "PROOF_INVALID";
     string constant MERKLE_ROOT_INVALID = "MERKLE_ROOT_INVALID";
     string constant NOT_ALLOWED = "NOT_ALLOWED";
-    string constant SIGNATURE_INVALID = "SIGNATURE_INVALID";
-    string constant SIGNER_EXISTS = "SIGNER_EXISTS";
+    string constant VALIDATOR_EXISTS = "VALIDATOR_EXISTS";
+    string constant INVALID_SNAPSHOT = "INVALID_SNAPSHOT";
+    string constant SNAPSHOT_NOT_FINALIZED = "SNAPSHOT_NOT_FINALIZED";
+    string constant ALREADY_ENDORSED = "ALREADY_ENDORSED";
+}
+
+struct Validator {
+    address addr;
+    uint current_snapshot;
+}
+
+struct StateRootSubmission {
+    address validator;
+    bytes32 state_root;
 }
 
 contract IBCF_Validator {
-    address private administrator;
-    uint8 signatures_threshold;
+    address administrator;
+    // Minimum expected endorsements for a given state root to be considered valid
+    uint8 minimum_endorsements;
     bytes tezos_chain_id;
-    address[] private signers;
-    mapping(address => uint[2]) signer_public_key;
+    uint current_snapshot = 1;
+    // The validator only stores the state roots of the latest `history_length` blocks
+    uint16 history_length;
+    uint[] history;
+    Validator[] validators;
+    mapping(uint => StateRootSubmission[]) state_root;
 
-    constructor(address _administrator, uint8 _signatures_threshold, bytes memory _tezos_chain_id) {
+    constructor(address _administrator, uint8 _minimum_endorsements, bytes memory _tezos_chain_id, uint16 _history_length, address[] memory _validators) {
         administrator = _administrator;
-        signatures_threshold = _signatures_threshold;
+        minimum_endorsements = _minimum_endorsements;
         tezos_chain_id = _tezos_chain_id;
+        history_length = _history_length;
+
+        // Add initial validators
+        for (uint i=0; i<_validators.length; i++) {
+            validators.push(Validator(_validators[i], 0));
+        }
     }
 
-    // modifier to check if caller is the administrator
+    /**
+     * Modifier to check if caller is the administrator
+     */
     modifier is_admin() {
         require(msg.sender == administrator, Err.NOT_ADMIN);
         _;
+    }
+
+    /**
+     * Modifier to check if caller is a validator
+     */
+    modifier is_validator() {
+        for (uint i=0; i<validators.length; i++) {
+            if(validators[i].addr == msg.sender) {
+                _;
+                return;
+            }
+        }
+        revert(Err.NOT_ALLOWED);
     }
 
     function update_administrator(address new_admnistrator) public is_admin {
         administrator = new_admnistrator;
     }
 
-    function update_signatures_threshold(uint8 _signatures_threshold) public is_admin {
-        signatures_threshold = _signatures_threshold;
+    function update_minimum_endorsements(uint8 _minimum_endorsements) public is_admin {
+        minimum_endorsements = _minimum_endorsements;
     }
 
-    function add_signers(address[] memory _signers, uint[2][] memory _signer_public_key) public is_admin {
-        for (uint i=0; i<_signers.length; i++) {
-            // Fail if signer already exists
-            require(signer_public_key[_signers[i]][0] == 0, Err.SIGNER_EXISTS);
-            // Add signer
-            signers.push(_signers[i]);
-            signer_public_key[_signers[i]] = _signer_public_key[i];
+    function add_validators(address[] memory _validators) public is_admin {
+        for (uint i=0; i<_validators.length; i++) {
+            for (uint j=0; j<validators.length; j++) {
+                // Validator must not exist.
+                require(_validators[i] != validators[j].addr, Err.VALIDATOR_EXISTS);
+            }
+            // Add validator
+            validators.push(Validator(_validators[i], 0));
         }
     }
 
-    function remove_signers(address[] memory _signers) public is_admin {
-        for (uint i=0; i<_signers.length; i++) {
-            for(uint j=0; j<signers.length; j++) {
-                if(signers[j] == _signers[i]) {
-                    delete signers[j];
+    function remove_validators(address[] memory _validators) public is_admin {
+        for (uint i=0; i<_validators.length; i++) {
+            for(uint j=0; j<validators.length; j++) {
+                if(validators[j].addr == _validators[i]) {
+                    delete validators[j];
                 }
             }
-            delete signer_public_key[_signers[i]];
+        }
+    }
+
+    /**
+     * Adds the state root for a given snapshot.
+     */
+    function submit_state_root(uint snapshot_number, bytes32 _state_root) public is_validator {
+        // Ensure state roots are processed sequentially
+        require(current_snapshot == snapshot_number, Err.INVALID_SNAPSHOT);
+
+        // Add state root submission
+        bool endorsed = false;
+        for(uint i=0; i<state_root[current_snapshot].length; i++) {
+            // Override previous endorsement
+            if (state_root[current_snapshot][i].validator == msg.sender) {
+                state_root[current_snapshot][i].state_root =_state_root;
+                endorsed = true;
+                break;
+            }
+        }
+        if (!endorsed) {
+            state_root[current_snapshot].push(StateRootSubmission(msg.sender, _state_root));
+        }
+
+        // Finalize state root submissions
+        if (can_finalize_snapshot()) {
+            history.push(current_snapshot);
+            current_snapshot += 1;
+        }
+
+        // Remove old state root
+        if(history.length > history_length) {
+            uint oldest_index = 0;
+            for (uint i=0; i<history.length; i++) {
+                if(history[i] < history[oldest_index]) {
+                    oldest_index = i;
+                }
+            }
+            uint oldest_snapshot = history[oldest_index];
+            delete history[oldest_index];
+            delete state_root[oldest_snapshot];
         }
     }
 
@@ -72,18 +151,12 @@ contract IBCF_Validator {
      * then validates the proof against the trusted block state.
      */
     function verify_proof(
-        uint block_level,
-        bytes32 merkle_root,
+        uint snapshot_number,
         bytes memory owner,
         bytes memory key,
         bytes memory value,
-        bytes32[2][] memory proof,
-        address[] memory _signers,
-        uint[2][] memory signatures
+        bytes32[2][] memory proof
     ) public view {
-        // Validates the 'merkle_root' authenticity
-        validate_merkle_root(block_level, merkle_root, _signers, signatures);
-
         bytes32 hash = keccak256(abi.encodePacked(owner, key, value)); // starts with state_hash
         for (uint i=0; i<proof.length; i++) {
             if(proof[i][0] == 0x0) {
@@ -92,46 +165,99 @@ contract IBCF_Validator {
                 hash = keccak256(abi.encodePacked(proof[i][0], hash));
             }
         }
-        require(merkle_root == hash, Err.PROOF_INVALID);
+        require(get_state_root(snapshot_number) == hash, Err.PROOF_INVALID);
     }
 
     /**
-     * Validates the 'merkle_root' authenticity
+     * Get the most endorsed state root for a give snapshot.
+     *
+     * Fails if snapshot was not finalized.
      */
-    function validate_merkle_root(
-        uint block_level,
-        bytes32 merkle_root,
-        address[] memory _signers,
-        uint[2][] memory signatures
-    ) internal view {
-        bytes32 content_hash = sha256(abi.encodePacked(tezos_chain_id, block_level, merkle_root));
-        uint valid_signatures = 0;
+    function get_state_root(uint snapshot_number) public view returns (bytes32) {
+        require(snapshot_number < current_snapshot, Err.SNAPSHOT_NOT_FINALIZED);
 
-        // Revert transaction if any signer is repeated
-        validate_signers(_signers);
+        StateRootSubmission[] memory submissions = state_root[snapshot_number];
 
-        for (uint i=0; i<signatures.length; i++) {
-            if(validate_signature(content_hash, _signers[i], signatures[i])) {
-                valid_signatures += 1;
-            }
-        }
-        require(valid_signatures >= signatures_threshold, Err.MERKLE_ROOT_INVALID);
-    }
-
-    /**
-     * Revert transaction if any signer is repeated
-     */
-    function validate_signers(address[] memory _signers) internal pure {
-        for (uint i=0; i<_signers.length; i++) {
-            for (uint j=i+1; j<_signers.length; j++) {
-                if(_signers[i] == _signers[j]) {
-                    revert();
+        // EVM does not support dynamic memory arrays :(
+        bytes32[] memory unique_submissions = new bytes32[](submissions.length);
+        uint8 uniques = 0;
+        for (uint i=0; i<submissions.length; i++) {
+            bool exists = false;
+            for (uint j=0; j<unique_submissions.length; j++) {
+                if (submissions[i].state_root == unique_submissions[j]) {
+                    exists = true;
                 }
             }
+            if (!exists) {
+                unique_submissions[uniques++] = submissions[i].state_root;
+            }
         }
+
+        uint8[] memory root_count = new uint8[](uniques);
+        uint most_endorsed = 0;
+        for (uint i=0; i<uniques; i++) {
+            for (uint j=0; j<submissions.length; j++) {
+                if (unique_submissions[i] == submissions[j].state_root) {
+                    root_count[i] += 1;
+                }
+            }
+            if (root_count[most_endorsed] < root_count[i]) {
+                most_endorsed = i;
+            }
+        }
+
+        return unique_submissions[most_endorsed];
     }
 
-    function validate_signature(bytes32 content_hash, address signer, uint[2] memory rs /* Signature */) internal view returns(bool) {
-        return EllipticCurve.validateSignature(content_hash, rs, signer_public_key[signer]);
+    /**
+     * Verify if snapshot can be finalized.
+     *
+     * The snapshot cannot be finalized if:
+     *  - The state root has not been endorsed at least `minimum_endorsements` times;
+     *  - There are multiple most endorsed state roots.
+     */
+    function can_finalize_snapshot() internal view returns (bool) {
+        StateRootSubmission[] memory submissions = state_root[current_snapshot];
+
+        // EVM does not support dynamic memory arrays :(
+        bytes32[] memory unique_submissions = new bytes32[](submissions.length);
+        uint8 uniques = 0;
+        for (uint i=0; i<submissions.length; i++) {
+            bool exists = false;
+            for (uint j=0; j<unique_submissions.length; j++) {
+                if (submissions[i].state_root == unique_submissions[j]) {
+                    exists = true;
+                }
+            }
+            if (!exists) {
+                unique_submissions[uniques++] = submissions[i].state_root;
+            }
+        }
+
+        uint8[] memory root_count = new uint8[](uniques);
+        uint most_endorsed = 0;
+        for (uint i=0; i<uniques; i++) {
+            for (uint j=0; j<submissions.length; j++) {
+                if (unique_submissions[i] == submissions[j].state_root) {
+                    root_count[i] += 1;
+                }
+            }
+            if (root_count[most_endorsed] < root_count[i]) {
+                most_endorsed = i;
+            }
+        }
+
+        // Make sure the root has enough endorsements
+        bool has_enough_endorsements = root_count[most_endorsed] >= minimum_endorsements;
+
+        // Make sure there is only one most endorsed root
+        bool single_most_endorsed = true;
+        for (uint i=0; i<uniques; i++) {
+            if (most_endorsed != i && root_count[most_endorsed] == root_count[i]) {
+                single_most_endorsed = false;
+            }
+        }
+
+        return has_enough_endorsements && single_most_endorsed;
     }
 }

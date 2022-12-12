@@ -1,23 +1,47 @@
-const { signContent, buildBuffer, expectsFailure, createSecp256r1KeyPair} = require("./utils");
+const { expectsFailure } = require("./utils");
 
 const IBCF_Validator = artifacts.require('IBCF_Validator')
 
-let [public_key, pemFormattedKeyPair] = createSecp256r1KeyPair();
 const chain_id = "0xaf1864d9"
 
-contract('IBCF_Validator', async ([_, primary]) => {
+contract('IBCF_Validator', async ([alice, primary]) => {
+    const state_root_1 = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
+
     let instance;
     beforeEach('deploy proof validator', async () => {
-        instance = await IBCF_Validator.new(primary, 1, chain_id, { from: primary })
+        instance = await IBCF_Validator.new(primary, 2, chain_id, 5, [alice, primary], { from: primary })
+    })
 
-        // Add signers
-        await instance.add_signers([primary], [public_key], { from: primary })
+    it("Test `submit_state_root` function", async function() {
+        const state_root_2 = "0x" + "2".repeat(64);
+
+        await expectsFailure(async () => await instance.submit_state_root(2, state_root_1, { from: primary }), "Snapshots must be sequential");
+
+        await instance.submit_state_root(1, state_root_1, { from: primary })
+        await instance.submit_state_root(1, state_root_1, { from: alice  })
+
+        await instance.submit_state_root(2, state_root_2, { from: primary })
+    })
+
+    it("Test `get_state_root` view", async function() {
+        const state_root_2 = "0x" + "2".repeat(64);
+        const state_root_3 = "0x" + "3".repeat(64);
+
+        await instance.submit_state_root(1, state_root_2, { from: primary })
+        await instance.submit_state_root(1, state_root_3, { from: primary })
+        await instance.submit_state_root(1, state_root_1, { from: primary })
+        await expectsFailure(async () => await instance.get_state_root.call(1), "State root should not have enough endorsements");
+
+        await instance.submit_state_root(1, state_root_1, { from: alice });
+        const state_root = await instance.get_state_root.call(1);
+        assert(state_root == state_root_1)
     })
 
     it('Call verify_proof (Valid proof)', async function() {
-        const level = 1;
-        const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const signature = signContent(pemFormattedKeyPair, buildBuffer(chain_id, level, valid_merkle_root));
+        const snapshot = 1;
+
+        await instance.submit_state_root(snapshot, state_root_1, { from: primary })
+        await instance.submit_state_root(snapshot, state_root_1, { from: alice })
 
         const proof = [
             ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
@@ -35,17 +59,15 @@ contract('IBCF_Validator', async ([_, primary]) => {
         const owner = "0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9";
         const key = "0x0000000000000000000000000003e7";
         const value = "0x0000000000000000000000000003e7";
-        await instance.verify_proof.call(level, valid_merkle_root, owner, key, value, proof, [primary], [signature]);
-        console.log("\n\tConsumed gas: ", await instance.verify_proof.estimateGas(level, valid_merkle_root, owner, key, value, proof, [primary], [signature]))
+        await instance.verify_proof.call(snapshot, owner, key, value, proof);
+        console.log("\n\tConsumed gas: ", await instance.verify_proof.estimateGas(snapshot, owner, key, value, proof))
     })
 
     it('Call verify_proof (Invalid signature)', async function() {
-        const level = 1;
-        const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const signature = [
-            "0x007d5d392b8f88052321a2d90ae0834f78eabe04c746db08def160fe53add526ae",
-            "0x00e9c63d65b43492b646d94bc0cf8cc90e4f8b1eb92a06a90534ccf02d9d2d2b1b"
-        ];
+        const snapshot = 1;
+
+        await instance.submit_state_root(snapshot, state_root_1, { from: primary })
+        await instance.submit_state_root(snapshot, state_root_1, { from: alice })
 
         const proof = [
             ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
@@ -56,28 +78,12 @@ contract('IBCF_Validator', async ([_, primary]) => {
             ['0x0000000000000000000000000000000000000000000000000000000000000000', '0xfe9181cc5392bc544a245964b1d39301c9ebd75c2128765710888ba4de9e61ea'],
             ['0x0000000000000000000000000000000000000000000000000000000000000000', '0x12f6db53d79912f90fd2a58ec4c30ebd078c490a6c5bd68c32087a3439ba111a'],
             ['0x0000000000000000000000000000000000000000000000000000000000000000', '0xefac0c32a7c7ab5ee5140850b5d7cbd6ebfaa406964a7e1c10239ccb816ea75e'],
-            ['0xceceb700876e9abc4848969882032d426e67b103dc96f55eeab84f773a7eeb5c', '0x0000000000000000000000000000000000000000000000000000000000000000'],
-            ['0xabce2c418c92ca64a98baf9b20a3fcf7b5e9441e1166feedf4533b57c4bfa6a4', '0x0000000000000000000000000000000000000000000000000000000000000000']
+            ['0xceceb700876e9abc4848969882032d426e67b103dc96f55eeab84f773a7eeb5c', '0x0000000000000000000000000000000000000000000000000000000000000000']
         ]
 
         const owner = "0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9";
         const key = "0x0000000000000000000000000003e7";
         const value = "0x0000000000000000000000000003e7";
-        await expectsFailure(async () => await instance.verify_proof.call(level, valid_merkle_root, owner, key, value, proof, [primary], [signature]), "Signature expected to be invalid.");
-    })
-
-    it('Call verify_proof (Invalid proof)', async function() {
-        const level = 1;
-        const valid_merkle_root = "0xfd5f82b627a0b2c5ac0022a95422d435b204c4c1071d5dbda84ae8708d0110fd";
-        const content = buildBuffer(chain_id, level, valid_merkle_root);
-        const signature = signContent(pemFormattedKeyPair, content);
-        const proof = [
-            ['0x19520b9dd118ede4c96c2f12718d43e22e9c0412b39cd15a36b40bce2121ddff', '0x0000000000000000000000000000000000000000000000000000000000000000'],
-        ]
-
-        const owner = "0x050a0000001600009f7f36d0241d3e6a82254216d7de5780aa67d8f9";
-        const key = "0x0000000000000000000000000003e7";
-        const value = "0x0000000000000000000000000003e7";
-        await expectsFailure(async () => await instance.verify_proof.call(level, valid_merkle_root, owner, key, value, proof, [primary], [signature]), "Proof expected to be invalid.");
+        await expectsFailure(async () => await instance.verify_proof.call(snapshot, owner, key, value, proof), "Signature expected to be invalid.");
     })
 })

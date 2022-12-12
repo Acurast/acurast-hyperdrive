@@ -7,15 +7,9 @@ const administrator_public_key = ["0x80b156abc1b94075eb95ba6c397d50e987acf2bb810
 const tezos_chain_id = "0xaf1864d9"
 
 module.exports = async function(deployer, _network, _accounts) {
-    await deployer.deploy(IBCF_Validator, administrator, 1, tezos_chain_id);
+    await deployer.deploy(IBCF_Validator, administrator, 1, tezos_chain_id, 5, [administrator]);
 
-    // Add signers
-    console.log("\nAdd signers\n")
     const validator = await IBCF_Validator.deployed();
-    await validator.add_signers(
-        [administrator],
-        [administrator_public_key]
-    );
 
     const asset = await deployer.deploy(ERC20, "TEST", "TEST", administrator);
     // Fund accounts
