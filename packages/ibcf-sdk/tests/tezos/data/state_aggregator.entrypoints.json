@@ -1,0 +1,57 @@
+{
+    "entrypoints": {
+        "snapshot": {
+            "prim": "unit"
+        },
+        "insert": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "bytes",
+                    "annots": [
+                        "%key"
+                    ]
+                },
+                {
+                    "prim": "bytes",
+                    "annots": [
+                        "%value"
+                    ]
+                }
+            ]
+        },
+        "configure": {
+            "prim": "list",
+            "args": [
+                {
+                    "prim": "or",
+                    "args": [
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%update_administrator"
+                            ]
+                        },
+                        {
+                            "prim": "or",
+                            "args": [
+                                {
+                                    "prim": "nat",
+                                    "annots": [
+                                        "%update_max_state_size"
+                                    ]
+                                },
+                                {
+                                    "prim": "nat",
+                                    "annots": [
+                                        "%update_snapshot_duration"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

@@ -1,6 +1,5 @@
 import type { Eth } from 'web3-eth';
 import Web3 from 'web3';
-import RLP from 'rlp';
 
 import ABI from './abi';
 import { Wrap } from '../common';
@@ -22,12 +21,17 @@ export async function getAssetAddress(web3_eth: Eth, eth_bridge_address: string)
     );
 }
 
-export async function getWraps(web3_eth: Eth, eth_bridge_address: string): Promise<Wrap[]> {
+export async function getWraps(
+    web3_eth: Eth,
+    eth_bridge_address: string,
+    fromBlock = 0,
+    toBlock: number | string = 'latest',
+): Promise<Wrap[]> {
     const contract = new web3_eth.Contract(ABI as any, eth_bridge_address);
     const wraps: Wrap[] = await contract
         .getPastEvents('Wrap', {
-            fromBlock: 0,
-            toBlock: 'latest', // You can also specify 'latest'
+            fromBlock,
+            toBlock,
         })
         .then((events) =>
             events.map((event) => ({
@@ -48,10 +52,10 @@ export async function getWraps(web3_eth: Eth, eth_bridge_address: string): Promi
 //     return Web3.utils.sha3(tezos_address + STORAGE_SLOT.tezos_nonce);
 // }
 
-// function getTeleportRegistryStorageKey(tezos_address: string, nonce: number) {
-//     const hexNonce = Web3.utils.toHex(nonce).slice(2).padStart(64, '0');
-//     return Web3.utils.sha3(tezos_address + hexNonce + STORAGE_SLOT.registry);
-// }
+export function getWrapRegistryStorageKey(tezos_address: string, nonce: number) {
+    const hexNonce = Web3.utils.toHex(nonce).slice(2).padStart(64, '0');
+    return Web3.utils.sha3(tezos_address + hexNonce + STORAGE_SLOT.registry);
+}
 
 // async function getTezosNonce(web3_eth: Eth, eth_bridge_address: string, tezos_address: string) {
 //     const indexKey = getTezosNonceStorageKey(tezos_address);

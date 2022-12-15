@@ -1,6 +1,4 @@
-import Web3 from 'web3';
-import type { Eth } from 'web3-eth';
-import * as RLP from 'rlp';
+import { ethers } from 'ethers';
 import { toBuffer } from 'eth-util-lite';
 
 export interface EthereumProof {
@@ -18,21 +16,21 @@ function buildHeaderBytes(block: any) {
         toBuffer(block.transactionsRoot),
         toBuffer(block.receiptsRoot),
         toBuffer(block.logsBloom),
-        toBuffer(Web3.utils.toHex(block.difficulty)),
-        toBuffer(Web3.utils.toHex(block.number)),
-        toBuffer(Web3.utils.toHex(block.gasLimit)),
-        toBuffer(Web3.utils.toHex(block.gasUsed)),
-        toBuffer(Web3.utils.toHex(block.timestamp)),
+        toBuffer(ethers.utils.hexlify(block.difficulty)),
+        toBuffer(ethers.utils.hexlify(block.number)),
+        toBuffer(ethers.utils.hexlify(block.gasLimit)),
+        toBuffer(ethers.utils.hexlify(block.gasUsed)),
+        toBuffer(ethers.utils.hexlify(block.timestamp)),
         toBuffer(block.extraData),
         toBuffer(block.mixHash),
         toBuffer(block.nonce),
-        toBuffer(Web3.utils.toHex(block.baseFeePerGas)),
+        toBuffer(ethers.utils.hexlify(block.baseFeePerGas)),
     ];
-    return Buffer.from(RLP.encode(fields)).toString('hex');
+    return Buffer.from(ethers.utils.RLP.encode(fields)).toString('hex');
 }
 
-export async function generateEthereumProof(
-    web3_eth: Eth,
+export async function generateProof(
+    provider: ethers.providers.JsonRpcProvider,
     address: string,
     slot: string,
     block_number: number,
@@ -40,13 +38,19 @@ export async function generateEthereumProof(
     // const block = await web3_eth.getBlock(block_number);
     // const block_header_rlp = buildHeaderBytes(block);
 
-    const proof = await web3_eth.getProof(address, [slot], block_number);
-    const account_proof_rlp = Buffer.from(RLP.encode(proof.accountProof.map((r) => RLP.decode(r)) as any)).toString(
-        'hex',
-    );
-    const storage_proof_rlp = Buffer.from(
-        RLP.encode(proof.storageProof[0].proof.map((r) => RLP.decode(r)) as any),
-    ).toString('hex');
+    const proof = await provider.send('eth_getProof', [address, [slot], block_number]);
+    const account_proof_rlp =
+        '0x' +
+        Buffer.from(
+            ethers.utils.RLP.encode(proof.accountProof.map((node: string) => ethers.utils.RLP.decode(node)) as any),
+        ).toString('hex');
+    const storage_proof_rlp =
+        '0x' +
+        Buffer.from(
+            ethers.utils.RLP.encode(
+                proof.storageProof[0].proof.map((node: string) => ethers.utils.RLP.decode(node)) as any,
+            ),
+        ).toString('hex');
 
     console.log(proof);
 

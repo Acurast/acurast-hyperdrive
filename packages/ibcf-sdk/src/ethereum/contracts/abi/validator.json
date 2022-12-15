@@ -1,0 +1,197 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_administrator",
+                "type": "address"
+            },
+            {
+                "internalType": "uint8",
+                "name": "_minimum_endorsements",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_tezos_chain_id",
+                "type": "bytes"
+            },
+            {
+                "internalType": "uint16",
+                "name": "_history_length",
+                "type": "uint16"
+            },
+            {
+                "internalType": "address[]",
+                "name": "_validators",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "new_admnistrator",
+                "type": "address"
+            }
+        ],
+        "name": "update_administrator",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "_minimum_endorsements",
+                "type": "uint8"
+            }
+        ],
+        "name": "update_minimum_endorsements",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address[]",
+                "name": "_validators",
+                "type": "address[]"
+            }
+        ],
+        "name": "add_validators",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address[]",
+                "name": "_validators",
+                "type": "address[]"
+            }
+        ],
+        "name": "remove_validators",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "snapshot_number",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "_state_root",
+                "type": "bytes32"
+            }
+        ],
+        "name": "submit_state_root",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "snapshot_number",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes",
+                "name": "owner",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bytes",
+                "name": "key",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bytes",
+                "name": "value",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bytes32[2][]",
+                "name": "proof",
+                "type": "bytes32[2][]"
+            }
+        ],
+        "name": "verify_proof",
+        "outputs": [],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "snapshot_number",
+                "type": "uint256"
+            }
+        ],
+        "name": "get_state_root",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [],
+        "name": "get_current_snapshot",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [],
+        "name": "get_current_snapshot_submissions",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "validator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "state_root",
+                        "type": "bytes32"
+                    }
+                ],
+                "internalType": "struct StateRootSubmission[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    }
+]
