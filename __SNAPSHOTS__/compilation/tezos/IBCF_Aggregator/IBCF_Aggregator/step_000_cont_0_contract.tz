@@ -41,6 +41,18 @@ code
         LT;         
         IF
           {
+            PUSH bytes 0x; 
+            DUP 4;      
+            GET 3;      
+            GET 3;      
+            COMPARE;    
+            NEQ;        
+          }
+          {
+            PUSH bool False; 
+          }; 
+        IF
+          {
             DIG 2;      
             DUP;        
             GET 5;      

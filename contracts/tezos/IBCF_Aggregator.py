@@ -17,9 +17,9 @@ HASH_LENGTH = 256
 NULL_HASH = sp.bytes("0x")
 
 EMPTY_TREE = sp.record(
-    root=sp.bytes("0x"),
+    root=NULL_HASH,
     root_edge=sp.record(
-        node=sp.bytes("0x"),
+        node=NULL_HASH,
         key=sp.record(data=0, length=0),
     ),
     nodes=sp.map(),
@@ -314,7 +314,7 @@ class IBCF_Aggregator(sp.Contract):
             self.data.snapshot_start_level = sp.level
             self.data.merkle_tree = EMPTY_TREE
 
-        with sp.if_(self.data.snapshot_start_level + self.data.config.snapshot_duration < sp.level):
+        with sp.if_((self.data.snapshot_start_level + self.data.config.snapshot_duration < sp.level) & (self.data.merkle_tree.root != NULL_HASH)):
             # Finalize snapshot
             self.data.snapshot_counter += 1
             self.data.snapshot_level[self.data.snapshot_counter] = sp.as_nat(sp.level-1)

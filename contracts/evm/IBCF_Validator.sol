@@ -15,11 +15,6 @@ library Err {
     string constant SNAPSHOT_NOT_FINALIZED = "SNAPSHOT_NOT_FINALIZED";
 }
 
-struct Validator {
-    address addr;
-    uint current_snapshot;
-}
-
 struct StateRootSubmission {
     address validator;
     bytes32 state_root;
@@ -34,7 +29,7 @@ contract IBCF_Validator {
     uint16 history_length;
     bytes tezos_chain_id;
     uint[] history;
-    Validator[] validators;
+    address[] validators;
     mapping(uint => StateRootSubmission[]) state_root;
 
     constructor(address _administrator, uint8 _minimum_endorsements, bytes memory _tezos_chain_id, uint16 _history_length, address[] memory _validators) {
@@ -45,7 +40,7 @@ contract IBCF_Validator {
 
         // Add initial validators
         for (uint i=0; i<_validators.length; i++) {
-            validators.push(Validator(_validators[i], 0));
+            validators.push(_validators[i]);
         }
     }
 
@@ -62,7 +57,7 @@ contract IBCF_Validator {
      */
     modifier is_validator() {
         for (uint i=0; i<validators.length; i++) {
-            if(validators[i].addr == msg.sender) {
+            if(validators[i] == msg.sender) {
                 _;
                 return;
             }
@@ -82,17 +77,17 @@ contract IBCF_Validator {
         for (uint i=0; i<_validators.length; i++) {
             for (uint j=0; j<validators.length; j++) {
                 // Validator must not exist.
-                require(_validators[i] != validators[j].addr, Err.VALIDATOR_EXISTS);
+                require(_validators[i] != validators[j], Err.VALIDATOR_EXISTS);
             }
             // Add validator
-            validators.push(Validator(_validators[i], 0));
+            validators.push(_validators[i]);
         }
     }
 
     function remove_validators(address[] memory _validators) public is_admin {
         for (uint i=0; i<_validators.length; i++) {
             for(uint j=0; j<validators.length; j++) {
-                if(validators[j].addr == _validators[i]) {
+                if(validators[j] == _validators[i]) {
                     delete validators[j];
                 }
             }
@@ -259,5 +254,9 @@ contract IBCF_Validator {
 
     function get_current_snapshot() public view returns (uint) {
         return current_snapshot;
+    }
+
+    function get_current_snapshot_submissions() public view returns (StateRootSubmission[] memory) {
+        return state_root[current_snapshot];
     }
 }

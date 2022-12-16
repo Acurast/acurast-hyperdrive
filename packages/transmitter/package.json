@@ -16,10 +16,10 @@
 		"lint": "eslint"
 	},
 	"dependencies": {
-		"@taquito/michel-codec": "14.1.0",
-		"@taquito/utils": "14.1.0",
-		"@taquito/taquito": "14.1.0",
-		"@taquito/signer": "14.1.0",
+		"@taquito/michel-codec": "^15.0.0",
+		"@taquito/utils": "^15.0.0",
+		"@taquito/taquito": "^15.0.0",
+		"@taquito/signer": "^15.0.0",
 		"web3": "1.7.4",
 		"eth-util-lite": "1.0.1",
 		"@ethereumjs/tx": "3.5.2",

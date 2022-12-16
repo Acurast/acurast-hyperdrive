@@ -1,5 +1,11 @@
-import { Schema } from '@taquito/michelson-encoder';
-import { BigMapAbstraction, TezosToolkit, TransactionOperation } from '@taquito/taquito';
+import { MichelsonMap, Schema } from '@taquito/michelson-encoder';
+import {
+    BigMapAbstraction,
+    ContractMethod,
+    ContractProvider,
+    TezosToolkit,
+    TransactionOperation,
+} from '@taquito/taquito';
 import { smartContractAbstractionSemantic } from './semantic';
 import BigNumber from 'bignumber.js';
 
@@ -11,6 +17,7 @@ export interface StateAggregatorStorage {
     };
     merkle_tree: {
         root: string;
+        states: MichelsonMap<string, string>;
     };
     snapshot_counter: BigNumber;
     snapshot_level: BigMapAbstraction;
@@ -65,8 +72,8 @@ export async function getProof(
 export async function snapshot(
     tezos_sdk: TezosToolkit,
     state_aggregator_address: string,
-): Promise<TransactionOperation> {
+): Promise<ContractMethod<ContractProvider>> {
     const contract = await tezos_sdk.contract.at(state_aggregator_address);
 
-    return contract.methods.snapshot().send();
+    return contract.methods.snapshot();
 }
