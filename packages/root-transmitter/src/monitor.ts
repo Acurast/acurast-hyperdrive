@@ -1,4 +1,4 @@
-import { TezosToolkit, TransferParams } from '@taquito/taquito';
+import { MichelsonMap, TezosToolkit, TransferParams } from '@taquito/taquito';
 import { InMemorySigner } from '@taquito/signer';
 import { BigNumber, ethers } from 'ethers';
 
@@ -10,17 +10,22 @@ interface MonitorContext {
     tezos_finalize_snapshots: boolean;
     tezos_sdk: TezosToolkit;
     tezos_state_address: string;
+    tezos_validator_address: string;
     ethereum_signer: ethers.Wallet;
     ethereum_finality: number;
     evm_validator_address: string;
-    validator_address: string;
+    processor_address: string;
 }
 
 class Monitor {
     constructor(private context: MonitorContext) {}
+    tezos_operations: TransferParams[] = [];
 
     public async run() {
-        const tezos_operations: TransferParams[] = [];
+        this.tezos_operations = [];
+
+        // Transmit new ethereum block states to Tezos
+        await this.ethereumToTezos();
 
         const state_aggregator_storage = await Tezos.Contracts.StateAggregator.getStorage(
             this.context.tezos_sdk,
@@ -29,12 +34,7 @@ class Monitor {
         const tezosBlockLevel = (await this.context.tezos_sdk.rpc.getBlockHeader()).level;
 
         // Snapshot state if it can be done.
-        if (this.context.tezos_finalize_snapshots) {
-            const op = await this.snapshotIfPossible(state_aggregator_storage, tezosBlockLevel);
-            if (op) {
-                tezos_operations.push(op);
-            }
-        }
+        await this.snapshotIfPossible(state_aggregator_storage, tezosBlockLevel);
 
         const eth_current_snapshot = await Ethereum.Contracts.Validator.getCurrentSnapshot(
             this.context.ethereum_signer.provider,
@@ -58,10 +58,11 @@ class Monitor {
                     '[ETHEREUM]',
                     'Confirming snapshot:',
                     `${eth_current_snapshot} of ${state_aggregator_storage.snapshot_counter}`,
-                    `\n\tSubmissions: ${JSON.stringify(eth_current_snapshot_submissions, null, 4)}`,
+                    `\n\tSubmissions:`,
+                    eth_current_snapshot_submissions,
                 );
 
-                if (!eth_current_snapshot_submissions.includes(this.context.validator_address)) {
+                if (!eth_current_snapshot_submissions.includes(this.context.ethereum_signer.address)) {
                     const storage_at_snapshot = await Tezos.Contracts.StateAggregator.getStorage(
                         this.context.tezos_sdk,
                         this.context.tezos_state_address,
@@ -79,36 +80,92 @@ class Monitor {
                     await result.wait(this.context.ethereum_finality);
 
                     Logger.info(
-                        '[ETHEREUM]',
-                        `Submitted state root "${storage_at_snapshot.merkle_tree.root}" for snapshot ${eth_current_snapshot}.`,
+                        '[Tezos->ETHEREUM]',
+                        `Submit state root "${storage_at_snapshot.merkle_tree.root}" for snapshot ${eth_current_snapshot}.`,
                         `\n\tOperation hash: ${result.hash}`,
                     );
                 }
             }
         }
 
-        if (tezos_operations.length > 0) {
-            const op = await tezos_operations
-                .reduce((batch, op) => batch.withTransfer(op), this.context.tezos_sdk.contract.batch())
-                .send();
+        // Commit operations
+        await this.commitTezosOperations();
+    }
 
-            // Wait for operation to be included.
-            await op.confirmation(this.context.tezos_finality);
+    /**
+     * Transmit Ethereum block states to Tezos
+     */
+    private async ethereumToTezos() {
+        const validator_storage = await Tezos.Contracts.Validator.getStorage(
+            this.context.tezos_sdk,
+            this.context.tezos_validator_address,
+        );
+        const current_snapshot = validator_storage.current_snapshot.toNumber();
+
+        // Get endorsers
+        const snapshot_submissions = await validator_storage.state_root.get<MichelsonMap<string, string>>(
+            current_snapshot,
+        );
+        const endorsers: string[] = [];
+        const keys = snapshot_submissions?.keys() || [];
+        for (const key of keys) {
+            endorsers.push(key);
+        }
+
+        Logger.debug('[Tezos]', 'Confirming block:', current_snapshot, `\n\tSubmissions:`, endorsers);
+
+        if (!endorsers.includes(this.context.processor_address)) {
+            const provider = this.context.ethereum_signer.provider as ethers.providers.JsonRpcProvider;
+            const rawBlock = await provider.send('eth_getBlockByNumber', [
+                ethers.utils.hexValue(current_snapshot),
+                true,
+            ]);
+            const state_root = provider.formatter.hash(rawBlock.stateRoot);
+
+            Logger.info('[ETHEREUM->TEZOS]', `Submit state root "${state_root}" for block:`, current_snapshot);
+
+            this.tezos_operations.push(
+                (
+                    await Tezos.Contracts.Validator.submit_block_state_root(
+                        this.context.tezos_sdk,
+                        this.context.tezos_validator_address,
+                        current_snapshot,
+                        state_root,
+                    )
+                ).toTransferParams(),
+            );
         }
     }
 
-    public async snapshotIfPossible(
+    private async snapshotIfPossible(
         storage: Tezos.Contracts.StateAggregator.StateAggregatorStorage,
         blockLevel: number,
-    ): Promise<TransferParams | void> {
+    ) {
         if (
             storage.snapshot_start_level.plus(storage.config.snapshot_duration).lt(blockLevel) &&
             storage.merkle_tree.root
         ) {
             Logger.info('[TEZOS]', `Finalizing snapshot:`, storage.snapshot_counter.toNumber());
-            return (
-                await Tezos.Contracts.StateAggregator.snapshot(this.context.tezos_sdk, this.context.tezos_state_address)
-            ).toTransferParams();
+
+            this.tezos_operations.push(
+                (
+                    await Tezos.Contracts.StateAggregator.snapshot(
+                        this.context.tezos_sdk,
+                        this.context.tezos_state_address,
+                    )
+                ).toTransferParams(),
+            );
+        }
+    }
+
+    private async commitTezosOperations() {
+        if (this.tezos_operations.length > 0) {
+            const op = await this.tezos_operations
+                .reduce((batch, op) => batch.withTransfer(op), this.context.tezos_sdk.contract.batch())
+                .send();
+
+            // Wait for operation to be included.
+            await op.confirmation(this.context.tezos_finality);
         }
     }
 }
@@ -119,6 +176,7 @@ function getEnv() {
         TEZOS_FINALITY: Number(process.env['TEZOS_FINALITY']!),
         TEZOS_FINALIZE_SNAPSHOTS: process.env['TEZOS_FINALIZE_SNAPSHOTS'] == '1',
         TEZOS_AGGREGATOR_ADDRESS: process.env['TEZOS_AGGREGATOR_ADDRESS']!,
+        TEZOS_VALIDATOR_ADDRESS: process.env['TEZOS_VALIDATOR_ADDRESS']!,
         TEZOS_PRIVATE_KEY: process.env['TEZOS_PRIVATE_KEY2']!,
         ETHEREUM_RPC: process.env['ETHEREUM_RPC']!,
         ETHEREUM_FINALITY: Number(process.env['ETHEREUM_FINALITY']!),
@@ -135,7 +193,7 @@ function getEnv() {
     return env;
 }
 
-export async function run_tezos_monitor() {
+export async function run_monitor() {
     const env = getEnv();
     // Tezos
     const tezos_sdk = new TezosToolkit(env.TEZOS_RPC);
@@ -151,8 +209,9 @@ export async function run_tezos_monitor() {
         ethereum_finality: env.ETHEREUM_FINALITY,
         ethereum_signer,
         tezos_state_address: env.TEZOS_AGGREGATOR_ADDRESS,
+        tezos_validator_address: env.TEZOS_VALIDATOR_ADDRESS,
         evm_validator_address: env.EVM_VALIDATOR_ADDRESS,
-        validator_address: await tezos_sdk.signer.publicKeyHash(),
+        processor_address: await tezos_sdk.signer.publicKeyHash(),
     };
 
     const monitor = new Monitor(context);

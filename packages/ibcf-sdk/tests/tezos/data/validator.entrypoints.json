@@ -1,0 +1,73 @@
+{
+    "entrypoints": {
+        "submit_block_state_root": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%block_number"
+                    ]
+                },
+                {
+                    "prim": "bytes",
+                    "annots": [
+                        "%state_root"
+                    ]
+                }
+            ]
+        },
+        "configure": {
+            "prim": "list",
+            "args": [
+                {
+                    "prim": "or",
+                    "args": [
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%update_administrator"
+                            ]
+                        },
+                        {
+                            "prim": "or",
+                            "args": [
+                                {
+                                    "prim": "nat",
+                                    "annots": [
+                                        "%update_minimum_endorsements"
+                                    ]
+                                },
+                                {
+                                    "prim": "set",
+                                    "args": [
+                                        {
+                                            "prim": "or",
+                                            "args": [
+                                                {
+                                                    "prim": "address",
+                                                    "annots": [
+                                                        "%add"
+                                                    ]
+                                                },
+                                                {
+                                                    "prim": "address",
+                                                    "annots": [
+                                                        "%remove"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "annots": [
+                                        "%update_validators"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

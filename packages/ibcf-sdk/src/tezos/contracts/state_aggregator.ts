@@ -1,11 +1,5 @@
 import { MichelsonMap, Schema } from '@taquito/michelson-encoder';
-import {
-    BigMapAbstraction,
-    ContractMethod,
-    ContractProvider,
-    TezosToolkit,
-    TransactionOperation,
-} from '@taquito/taquito';
+import { BigMapAbstraction, ContractMethod, ContractProvider, TezosToolkit } from '@taquito/taquito';
 import { smartContractAbstractionSemantic } from './semantic';
 import BigNumber from 'bignumber.js';
 
@@ -26,10 +20,10 @@ export interface StateAggregatorStorage {
 
 export async function getStorage(
     tezos_sdk: TezosToolkit,
-    validator_address: string,
+    state_aggregator_address: string,
     block = 'head',
 ): Promise<StateAggregatorStorage> {
-    const script = await tezos_sdk.rpc.getScript(validator_address, { block });
+    const script = await tezos_sdk.rpc.getScript(state_aggregator_address, { block });
     const contractSchema = Schema.fromRPCResponse({ script: script });
 
     return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(tezos_sdk.contract));

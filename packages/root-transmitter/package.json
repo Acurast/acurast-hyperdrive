@@ -16,15 +16,9 @@
 		"lint": "eslint"
 	},
 	"dependencies": {
-		"@ethereumjs/tx": "3.5.2",
-		"@ethereumjs/util": "8.0.0-beta.1",
 		"@ibcf/sdk": "workspace:*",
-		"@taquito/michel-codec": "^15.0.0",
 		"@taquito/signer": "^15.0.0",
 		"@taquito/taquito": "^15.0.0",
-		"@taquito/utils": "^15.0.0",
-		"ec-pem": "0.18.0",
-		"eth-util-lite": "1.0.1",
 		"ethers": "5.7.2"
 	},
 	"devDependencies": {

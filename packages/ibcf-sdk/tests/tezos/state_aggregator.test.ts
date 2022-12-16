@@ -28,7 +28,7 @@ describe('Tezos > State Aggregator', () => {
 
     it('getStorage', async () => {
         const contractStorage = await IBCF.Tezos.Contracts.StateAggregator.getStorage(tezos_sdk, contract);
-        // console.log(contractStorage);
+
         expect(contractStorage.snapshot_counter).toEqual(new BigNumber(3));
         expect(contractStorage.merkle_tree.root).toEqual(
             'a45c3c2bb154f7ee78a28d825c2b77d283a3d57acc5e979876971d0e8d2b7dbb',
@@ -44,28 +44,17 @@ describe('Tezos > State Aggregator', () => {
             );
 
             const result = await IBCF.Tezos.Contracts.StateAggregator.snapshot(tezos_sdk, contract);
-            expect(result.hash).toEqual('opLyi4ZBGDf3pb4A8eLkyouiFqNVgQ8X59ZStMesgYsHrQSLMGQ');
+            expect(result.toTransferParams()).toEqual({
+                amount: 0,
+                fee: undefined,
+                gasLimit: undefined,
+                mutez: false,
+                parameter: { entrypoint: 'snapshot', value: { prim: 'Unit' } },
+                source: undefined,
+                storageLimit: undefined,
+                to: 'KT1PgvJ629MCN99k9EKYTaWZJXB9zd5bzvzd',
+            });
         });
-
-        // it('getProof', async () => {
-        //     const contract = 'KT1PgvJ629MCN99k9EKYTaWZJXB9zd5bzvzd';
-        //     server.on({
-        //         method: '*',
-        //         path: `*`,
-        //         reply: {
-        //             status: 200,
-        //             headers: { 'content-type': 'application/json' },
-        //             body: function (req: any) {
-        //                 return '';
-        //             },
-        //         },
-        //     });
-
-        //     const tezos_sdk = new TezosToolkit('http://localhost:10000');
-
-        //     const current_snapshot = await IBCF.Tezos.Contracts.StateAggregator.getProof(tezos_sdk, contract, '', '', '');
-
-        //     // expect(current_snapshot).toEqual(new BigNumber(0));
     });
 });
 
