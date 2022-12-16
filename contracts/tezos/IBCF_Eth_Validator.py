@@ -25,6 +25,7 @@ class Error:
     NOT_VALIDATOR = "NOT_VALIDATOR"
     UNPROCESSED_BLOCK_STATE = "UNPROCESSED_BLOCK_STATE"
     NO_CONSENSUS_FOR_STATE = "NO_CONSENSUS_FOR_STATE"
+    INVALID_SNAPSHOT = "NO_CONSENSUS_FOR_STATE"
 
 
 class Type:
@@ -108,14 +109,11 @@ class Lambdas:
             ):
                 state_root.value = root_state
 
-        # Make sure consensus has been reached
-        sp.verify(
-            (sp.len(endorsements_per_root.value) != 0)
-            & (endorsements_per_root.value[state_root.value] >= minimum_endorsements),
-            Error.NO_CONSENSUS_FOR_STATE,
-        )
-
-        sp.result(state_root.value)
+        with sp.if_((sp.len(endorsements_per_root.value) == 0) | (endorsements_per_root.value[state_root.value] < minimum_endorsements)):
+            # Return None if state root was not endorsed enough
+            sp.result(sp.none)
+        with sp.else_():
+            sp.result(sp.some(state_root.value))
 
 
 class RLP_utils:
@@ -145,7 +143,10 @@ class IBCF_Eth_Validator(sp.Contract):
                     minimum_endorsements=sp.TNat,
                     # The validator only stores the state roots of the latest `history_length` blocks
                     history_length=sp.TNat,
+                    # Number of blocks between each snapshot
+                    snapshot_interval=sp.TNat,
                 ),
+                current_snapshot=sp.TNat,
                 state_root=sp.TBigMap(sp.TNat, sp.TMap(sp.TAddress, sp.TBytes)),
                 history=sp.TSet(sp.TNat)
             )
@@ -162,21 +163,43 @@ class IBCF_Eth_Validator(sp.Contract):
         # Check if sender is a validator
         Inlined.failIfNotValidator(self)
 
-        # Remove old root states
-        with sp.if_(sp.len(self.data.history) == self.data.config.history_length):
-            oldest = sp.local("oldest", sp.level)
-            with sp.for_("block", self.data.history.elements()) as b:
-                with sp.if_(b < oldest.value):
-                    oldest.value = b
-
-            del self.data.state_root[oldest.value]
-            self.data.history.remove(oldest.value)
+        # Make sure the snapshots are submitted sequencially
+        with sp.if_(self.data.current_snapshot == 0):
+            self.data.current_snapshot = block_number
+        with sp.else_():
+            sp.verify(self.data.current_snapshot == block_number, Error.INVALID_SNAPSHOT)
 
         # Store the block state root
         with sp.if_(self.data.state_root.contains(block_number)):
             self.data.state_root[block_number][sp.sender] = state_root
         with sp.else_():
             self.data.state_root[block_number] = sp.map({sp.sender: state_root})
+
+        # Finalize snapshot if consensus has been reached
+        block_state_roots = sp.compute(
+            self.data.state_root.get(block_number, message=Error.UNPROCESSED_BLOCK_STATE)
+        )
+        can_finalize_snapshot = sp.compute(
+            sp.build_lambda(Lambdas.validate_block_state_root)(
+                sp.record(
+                    state_roots=block_state_roots,
+                    minimum_endorsements=self.data.config.minimum_endorsements,
+                )
+            ).is_some()
+        )
+        with sp.if_(can_finalize_snapshot):
+            self.data.current_snapshot += self.data.config.snapshot_interval
+            self.data.history.add(block_number)
+
+            # Remove old root states
+            with sp.if_(sp.len(self.data.history) > self.data.config.history_length):
+                oldest = sp.local("oldest", block_number)
+                with sp.for_("block", self.data.history.elements()) as b:
+                    with sp.if_(b < oldest.value):
+                        oldest.value = b
+
+                del self.data.state_root[oldest.value]
+                self.data.history.remove(oldest.value)
 
     @sp.entry_point(parameter_type=Type.Configure_argument)
     def configure(self, actions):
@@ -385,7 +408,7 @@ class IBCF_Eth_Validator(sp.Contract):
                     state_roots=block_state_roots,
                     minimum_endorsements=self.data.config.minimum_endorsements,
                 )
-            )
+            ).open_some(Error.NO_CONSENSUS_FOR_STATE)
         )
 
         rlp = sp.record(

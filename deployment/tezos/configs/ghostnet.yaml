@@ -32,6 +32,7 @@ actions:
                   - admin_address
               minimum_endorsements: 1
               history_length: 10
+              snapshot_interval: 5
 
     # Blueprints
 
