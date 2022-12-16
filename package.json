@@ -2,28 +2,29 @@
   "name": "ibcf-protocol-monorepo",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "devDependencies": {
-    "truffle": "5.6.5",
-    "@truffle/hdwallet-provider": "2.1.1",
-    "web3": "1.8.1",
-    "@openzeppelin/contracts": "4.8.0",
     "@ethereumjs/trie": "5.0.1",
+    "@openzeppelin/contracts": "4.8.0",
+    "@truffle/hdwallet-provider": "2.1.1",
     "eslint-config-custom": "*",
     "prettier": "latest",
-    "turbo": "latest"
+    "truffle": "5.6.5",
+    "web3": "1.8.1"
   },
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test --migrations_directory migrations_null",
     "deploy": "truffle deploy --network goerli --reset",
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
-    "lint:check": "turbo run lint -- 'src/**/*.{js,ts}'",
-    "lint:fix": "turbo run lint -- 'src/**/*.{js,ts}' --quiet --fix",
-    "prettier:check": "turbo run prettier -- --check 'src/**/*.{js,ts}'",
-    "prettier:fix": "turbo run prettier -- --write 'src/**/*.{js,ts}'"
-  }
+    "build": "yarn workspaces foreach --verbose run build",
+    "lint:check": "yarn workspaces foreach --parallel --verbose run lint:check",
+    "lint:fix": "yarn workspaces foreach --parallel --verbose run lint:fix",
+    "prettier:check": "yarn workspaces foreach --parallel --verbose run prettier:check",
+    "prettier:fix": "yarn workspaces foreach --parallel --verbose run prettier:fix",
+    "fmt": "yarn lint:fix && yarn prettier:fix"
+  },
+  "workspaces": [
+    "packages/ibcf-sdk",
+    "packages/root-transmitter"
+  ],
+  "packageManager": "yarn@3.3.0"
 }
