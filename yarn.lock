@@ -691,23 +691,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethereumjs/tx@npm:3.5.2, @ethereumjs/tx@npm:^3.3.0, @ethereumjs/tx@npm:^3.3.2":
+"@ethereumjs/tx@npm:^3.3.0, @ethereumjs/tx@npm:^3.3.2":
   version: 3.5.2
   resolution: "@ethereumjs/tx@npm:3.5.2"
   dependencies:
     "@ethereumjs/common": ^2.6.4
     ethereumjs-util: ^7.1.5
   checksum: a34a7228a623b40300484d15875b9f31f0a612cfeab64a845f6866cf0bfe439519e9455ac6396149f29bc527cf0ee277ace082ae013a1075dcbf7193220a0146
-  languageName: node
-  linkType: hard
-
-"@ethereumjs/util@npm:8.0.0-beta.1":
-  version: 8.0.0-beta.1
-  resolution: "@ethereumjs/util@npm:8.0.0-beta.1"
-  dependencies:
-    ethereum-cryptography: ^1.0.3
-    rlp: 4.0.0-beta.1
-  checksum: b178d49b771cfca856be79aa2c96b58b1a772a365fdb4f805a791100600a8ea6600c53d6efb2ce5b5b2c8cdfec9b8d980c8c0ef8ee44ca178890dcf4da1cc8a9
   languageName: node
   linkType: hard
 
@@ -1289,23 +1279,17 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@ibcf/root-transmitter@workspace:packages/root-transmitter"
   dependencies:
-    "@ethereumjs/tx": 3.5.2
-    "@ethereumjs/util": 8.0.0-beta.1
     "@ibcf/sdk": "workspace:*"
-    "@taquito/michel-codec": ^15.0.0
     "@taquito/signer": ^15.0.0
     "@taquito/taquito": ^15.0.0
-    "@taquito/utils": ^15.0.0
     "@types/elliptic": 6.4.14
     "@types/node": 18.6.1
     "@typescript-eslint/eslint-plugin": 5.31.0
     "@typescript-eslint/parser": 5.31.0
     dotenv: 16.0.1
-    ec-pem: 0.18.0
     eslint: 8.20.0
     eslint-config-prettier: 8.5.0
     eslint-plugin-prettier: 4.2.1
-    eth-util-lite: 1.0.1
     ethers: 5.7.2
     prettier: 2.7.1
     ts-node: 10.9.1
@@ -3894,17 +3878,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asn1.js@npm:^4.10.1":
-  version: 4.10.1
-  resolution: "asn1.js@npm:4.10.1"
-  dependencies:
-    bn.js: ^4.0.0
-    inherits: ^2.0.1
-    minimalistic-assert: ^1.0.0
-  checksum: 9289a1a55401238755e3142511d7b8f6fc32f08c86ff68bd7100da8b6c186179dd6b14234fba2f7f6099afcd6758a816708485efe44bc5b2a6ec87d9ceeddbb5
-  languageName: node
-  linkType: hard
-
 "asn1.js@npm:^5.2.0":
   version: 5.4.1
   resolution: "asn1.js@npm:5.4.1"
@@ -5647,16 +5620,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ec-pem@npm:0.18.0":
-  version: 0.18.0
-  resolution: "ec-pem@npm:0.18.0"
-  dependencies:
-    asn1.js: ^4.10.1
-    tmp: ^0.0.33
-  checksum: 794be73d4594f414248b832bb546c9e215305bca1053bdb6733811c64e643667471d5db3164c3cd3d42ac21d6260e13c98ff9dd4f6d7938933971b4af17b7410
-  languageName: node
-  linkType: hard
-
 "ecc-jsbn@npm:~0.1.1":
   version: 0.1.2
   resolution: "ecc-jsbn@npm:0.1.2"
@@ -6513,7 +6476,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethereum-cryptography@npm:1.1.2, ethereum-cryptography@npm:^1.0.3, ethereum-cryptography@npm:^1.1.2":
+"ethereum-cryptography@npm:1.1.2, ethereum-cryptography@npm:^1.1.2":
   version: 1.1.2
   resolution: "ethereum-cryptography@npm:1.1.2"
   dependencies:
@@ -11739,15 +11702,6 @@ __metadata:
     hash-base: ^3.0.0
     inherits: ^2.0.1
   checksum: 006accc40578ee2beae382757c4ce2908a826b27e2b079efdcd2959ee544ddf210b7b5d7d5e80467807604244e7388427330f5c6d4cd61e6edaddc5773ccc393
-  languageName: node
-  linkType: hard
-
-"rlp@npm:4.0.0-beta.1":
-  version: 4.0.0-beta.1
-  resolution: "rlp@npm:4.0.0-beta.1"
-  bin:
-    rlp: bin/rlp
-  checksum: f42fd31cb0b208d29e2b7c3a8d5be293eb911b42637023c40501b74834eb43feaf0bc57ab3cf85b53585d7056ed2572ba9c0669edd85810fe7b41b08f7cfdb58
   languageName: node
   linkType: hard
 

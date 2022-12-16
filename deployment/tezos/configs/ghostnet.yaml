@@ -1,11 +1,11 @@
 pytezos:
     rpc_endpoint: https://tezos-ghostnet-node-1.diamond.papers.tech
-    private_key: edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
+    private_key: edskS8xUePnvXXp3XHjYkDBBKDRwigGF95uHtJzDakV74azm9y6KHvkw4gLjPUvenWiY7H9xRQN729ipPutLVLiHXHMYfaf9hS
 known_addresses:
     signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
     signer_2: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3
     signer_3: tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB
-    eth_bridge_address: "0x7651c6BE451a6E71f8e34A04b3101aD216deB9ac"
+    eth_bridge_address: "0xF8D0dcb8F3Af348586360971b3561B3b139a2929"
 actions:
     - kind: origination
       contract_kind: IBCF_Aggragator
@@ -33,6 +33,7 @@ actions:
               minimum_endorsements: 1
               history_length: 10
               snapshot_interval: 5
+          current_snapshot: 8147540
 
     # Blueprints
 

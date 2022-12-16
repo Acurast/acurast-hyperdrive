@@ -25,7 +25,7 @@ class Error:
     NOT_VALIDATOR = "NOT_VALIDATOR"
     UNPROCESSED_BLOCK_STATE = "UNPROCESSED_BLOCK_STATE"
     NO_CONSENSUS_FOR_STATE = "NO_CONSENSUS_FOR_STATE"
-    INVALID_SNAPSHOT = "NO_CONSENSUS_FOR_STATE"
+    INVALID_SNAPSHOT = "INVALID_SNAPSHOT"
 
 
 class Type:
@@ -55,6 +55,8 @@ class Type:
                 sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
             ),
             update_minimum_endorsements=sp.TNat,
+            update_history_length=sp.TNat,
+            update_snapshot_interval=sp.TNat
         ).right_comb()
     )
     Submit_account_proof_argument = sp.TRecord(
@@ -220,6 +222,10 @@ class IBCF_Eth_Validator(sp.Contract):
                     self.data.config.administrator = administrator
                 with cases.match("update_minimum_endorsements") as payload:
                     self.data.config.minimum_endorsements = payload
+                with cases.match("update_history_length") as payload:
+                    self.data.config.history_length = payload
+                with cases.match("update_snapshot_interval") as payload:
+                    self.data.config.snapshot_interval = payload
 
     @sp.onchain_view()
     def verify(self, arg):
