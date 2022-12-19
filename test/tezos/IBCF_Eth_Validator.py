@@ -54,11 +54,11 @@ def test():
             validators=sp.set([alice.address, bob.address, claus.address]),
             minimum_endorsements=2,
             history_length=5,
-            snapshot_interval=5
+            snapshot_interval=5,
         ),
         current_snapshot=0,
         state_root=sp.big_map(),
-        history=sp.set()
+        history=sp.set(),
     )
 
     scenario += ibcf

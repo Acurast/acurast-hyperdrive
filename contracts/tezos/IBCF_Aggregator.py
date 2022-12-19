@@ -23,7 +23,7 @@ EMPTY_TREE = sp.record(
         key=sp.record(data=0, length=0),
     ),
     nodes=sp.map(),
-    states=sp.map()
+    states=sp.map(),
 )
 
 
@@ -97,7 +97,7 @@ class Type:
         root=sp.TBytes,
         root_edge=Edge,
         nodes=sp.TMap(sp.TBytes, Node),
-        states=sp.TMap(sp.TBytes, sp.TBytes)
+        states=sp.TMap(sp.TBytes, sp.TBytes),
     ).right_comb()
 
     # Entry points
@@ -106,15 +106,12 @@ class Type:
         sp.TVariant(
             update_administrator=sp.TAddress,
             update_snapshot_duration=sp.TNat,
-            update_max_state_size=sp.TNat
+            update_max_state_size=sp.TNat,
         ).right_comb()
     )
 
     # Views
-    Get_proof_argument = sp.TRecord(
-        owner=sp.TAddress,
-        key=sp.TBytes
-    ).right_comb()
+    Get_proof_argument = sp.TRecord(owner=sp.TAddress, key=sp.TBytes).right_comb()
     Get_proof_result = sp.TRecord(
         level=sp.TNat,
         merkle_root=sp.TBytes,
@@ -143,10 +140,10 @@ class IBCF_Aggregator(sp.Contract):
                     # This constant is used to limit the data length being inserted (in bytes).
                     max_state_size=sp.TNat,
                 ),
-                snapshot_start_level = sp.TNat,
-                snapshot_counter     = sp.TNat,
-                snapshot_level       = sp.TBigMap(sp.TNat, sp.TNat),
-                merkle_tree          = Type.Tree
+                snapshot_start_level=sp.TNat,
+                snapshot_counter=sp.TNat,
+                snapshot_level=sp.TBigMap(sp.TNat, sp.TNat),
+                merkle_tree=Type.Tree,
             ).right_comb()
         )
 
@@ -252,7 +249,9 @@ class IBCF_Aggregator(sp.Contract):
                 "prefix",
                 "suffix",
             )
-            sp.verify(prefix.length == root_edge.value.key.length, Error.PROOF_NOT_FOUND)
+            sp.verify(
+                prefix.length == root_edge.value.key.length, Error.PROOF_NOT_FOUND
+            )
 
             with sp.if_(suffix.length == 0):
                 # Proof found
@@ -303,7 +302,7 @@ class IBCF_Aggregator(sp.Contract):
                     key=arg.key,
                     value=tree.value.states[root_edge.value.node],
                     merkle_root=tree.value.root,
-                    proof=blinded_path.value
+                    proof=blinded_path.value,
                 )
             )
 
@@ -314,19 +313,30 @@ class IBCF_Aggregator(sp.Contract):
             self.data.snapshot_start_level = sp.level
             self.data.merkle_tree = EMPTY_TREE
 
-        with sp.if_((self.data.snapshot_start_level + self.data.config.snapshot_duration < sp.level) & (self.data.merkle_tree.root != NULL_HASH)):
+        with sp.if_(
+            (
+                self.data.snapshot_start_level + self.data.config.snapshot_duration
+                < sp.level
+            )
+            & (self.data.merkle_tree.root != NULL_HASH)
+        ):
             # Finalize snapshot
             self.data.snapshot_counter += 1
-            self.data.snapshot_level[self.data.snapshot_counter] = sp.as_nat(sp.level-1)
+            self.data.snapshot_level[self.data.snapshot_counter] = sp.as_nat(
+                sp.level - 1
+            )
 
             # Start snapshot
             self.data.snapshot_start_level = sp.level
             self.data.merkle_tree = EMPTY_TREE
 
-            sp.emit(sp.record(snapshot= self.data.snapshot_counter, level = sp.level), with_type = True, tag = "SNAPSHOT_FINALIZED")
+            sp.emit(
+                sp.record(snapshot=self.data.snapshot_counter, level=sp.level),
+                with_type=True,
+                tag="SNAPSHOT_FINALIZED",
+            )
         with sp.else_():
             sp.verify(~require, Error.CANNOT_SNAPSHOT)
-
 
     @sp.onchain_view()
     def verify_proof(self, arg):
@@ -344,7 +354,9 @@ class IBCF_Aggregator(sp.Contract):
                 with cases.match("Right") as right:
                     derived_hash.value = HASH_FUNCTION(derived_hash.value + right)
 
-        sp.verify((self.data.merkle_tree.root == derived_hash.value), Error.PROOF_INVALID)
+        sp.verify(
+            (self.data.merkle_tree.root == derived_hash.value), Error.PROOF_INVALID
+        )
 
     @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
     def insert_at_edge(self, arg):

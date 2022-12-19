@@ -69,7 +69,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 320; 
+                PUSH int 325; 
                 FAILWITH;   
               }
               {}; 
@@ -456,7 +456,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 393; 
+                PUSH int 405; 
                 FAILWITH;   
               }
               {}; 
@@ -518,7 +518,7 @@ code
                 SWAP;       
                 IF_NONE
                   {
-                    PUSH int 412; 
+                    PUSH int 424; 
                     FAILWITH;   
                   }
                   {}; 
@@ -527,7 +527,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 413; 
+                    PUSH int 425; 
                     FAILWITH;   
                   }
                   {}; 
@@ -535,7 +535,7 @@ code
                 DIG 4;      
                 IF_NONE
                   {
-                    PUSH int 413; 
+                    PUSH int 425; 
                     FAILWITH;   
                   }
                   {}; 
@@ -547,7 +547,7 @@ code
                 DIG 5;      
                 IF_NONE
                   {
-                    PUSH int 416; 
+                    PUSH int 428; 
                     FAILWITH;   
                   }
                   {}; 
@@ -590,7 +590,7 @@ code
                 SWAP;       
                 IF_NONE
                   {
-                    PUSH int 420; 
+                    PUSH int 432; 
                     FAILWITH;   
                   }
                   {}; 
@@ -775,7 +775,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 476; 
+                            PUSH int 488; 
                             FAILWITH;   
                           }
                           {}; 
@@ -804,7 +804,7 @@ code
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 480; 
+                            PUSH int 492; 
                             FAILWITH;   
                           }
                           {}; 
@@ -829,7 +829,7 @@ code
         GET;        
         IF_NONE
           {
-            PUSH int 490; 
+            PUSH int 502; 
             FAILWITH;   
           }
           {}; 
@@ -1630,7 +1630,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 282; 
+                    PUSH int 281; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1638,7 +1638,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 282; 
+                    PUSH int 281; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1653,7 +1653,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 290; 
+                    PUSH int 289; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1661,7 +1661,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 290; 
+                    PUSH int 289; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1679,7 +1679,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 296; 
+                PUSH int 295; 
                 FAILWITH;   
               }
               {}; 
@@ -1687,7 +1687,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 296; 
+                PUSH int 295; 
                 FAILWITH;   
               }
               {}; 
@@ -1703,7 +1703,7 @@ view
     GET;        
     IF_NONE
       {
-        PUSH int 304; 
+        PUSH int 303; 
         FAILWITH;   
       }
       {}; 

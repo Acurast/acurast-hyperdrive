@@ -56,7 +56,7 @@ class Type:
             ),
             update_minimum_endorsements=sp.TNat,
             update_history_length=sp.TNat,
-            update_snapshot_interval=sp.TNat
+            update_snapshot_interval=sp.TNat,
         ).right_comb()
     )
     Submit_account_proof_argument = sp.TRecord(
@@ -111,7 +111,10 @@ class Lambdas:
             ):
                 state_root.value = root_state
 
-        with sp.if_((sp.len(endorsements_per_root.value) == 0) | (endorsements_per_root.value[state_root.value] < minimum_endorsements)):
+        with sp.if_(
+            (sp.len(endorsements_per_root.value) == 0)
+            | (endorsements_per_root.value[state_root.value] < minimum_endorsements)
+        ):
             # Return None if state root was not endorsed enough
             sp.result(sp.none)
         with sp.else_():
@@ -150,7 +153,7 @@ class IBCF_Eth_Validator(sp.Contract):
                 ),
                 current_snapshot=sp.TNat,
                 state_root=sp.TBigMap(sp.TNat, sp.TMap(sp.TAddress, sp.TBytes)),
-                history=sp.TSet(sp.TNat)
+                history=sp.TSet(sp.TNat),
             )
         )
 
@@ -169,7 +172,9 @@ class IBCF_Eth_Validator(sp.Contract):
         with sp.if_(self.data.current_snapshot == 0):
             self.data.current_snapshot = block_number
         with sp.else_():
-            sp.verify(self.data.current_snapshot == block_number, Error.INVALID_SNAPSHOT)
+            sp.verify(
+                self.data.current_snapshot == block_number, Error.INVALID_SNAPSHOT
+            )
 
         # Store the block state root
         with sp.if_(self.data.state_root.contains(block_number)):
@@ -179,7 +184,9 @@ class IBCF_Eth_Validator(sp.Contract):
 
         # Finalize snapshot if consensus has been reached
         block_state_roots = sp.compute(
-            self.data.state_root.get(block_number, message=Error.UNPROCESSED_BLOCK_STATE)
+            self.data.state_root.get(
+                block_number, message=Error.UNPROCESSED_BLOCK_STATE
+            )
         )
         can_finalize_snapshot = sp.compute(
             sp.build_lambda(Lambdas.validate_block_state_root)(
@@ -405,7 +412,9 @@ class IBCF_Eth_Validator(sp.Contract):
         )
 
         block_state_roots = sp.compute(
-            self.data.state_root.get( block_number, message=Error.UNPROCESSED_BLOCK_STATE)
+            self.data.state_root.get(
+                block_number, message=Error.UNPROCESSED_BLOCK_STATE
+            )
         )
         validate_block_state_root = sp.build_lambda(Lambdas.validate_block_state_root)
         state_root = sp.compute(

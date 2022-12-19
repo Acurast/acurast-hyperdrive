@@ -45,14 +45,12 @@ def test():
     aggregator.update_initial_storage(
         sp.record(
             config=sp.record(
-                administrator=admin.address,
-                max_state_size=32,
-                snapshot_duration=5
+                administrator=admin.address, max_state_size=32, snapshot_duration=5
             ),
-            snapshot_start_level        = 0,
-            snapshot_counter            = 0,
-            snapshot_level              = sp.big_map(),
-            merkle_tree                 = EMPTY_TREE
+            snapshot_start_level=0,
+            snapshot_counter=0,
+            snapshot_level=sp.big_map(),
+            merkle_tree=EMPTY_TREE,
         )
     )
     scenario += aggregator
@@ -64,7 +62,7 @@ def test():
             validators=sp.set([alice.address, bob.address, claus.address]),
             minimum_endorsements=2,
             history_length=5,
-            snapshot_interval=5
+            snapshot_interval=5,
         ),
         current_snapshot=0,
         state_root=sp.big_map(),
@@ -93,14 +91,14 @@ def test():
 
     # Submit account proof for a given block (validator: alice)
     validator.submit_block_state_root(
-        block_number = ETH_BLOCK_NUMBER,
-        state_root = ETH_BLOCK_ROOT_STATE,
+        block_number=ETH_BLOCK_NUMBER,
+        state_root=ETH_BLOCK_ROOT_STATE,
     ).run(sender=alice.address)
 
     # Submit account proof for a given block (validator: bob)
     validator.submit_block_state_root(
-        block_number = ETH_BLOCK_NUMBER,
-        state_root = ETH_BLOCK_ROOT_STATE,
+        block_number=ETH_BLOCK_NUMBER,
+        state_root=ETH_BLOCK_ROOT_STATE,
     ).run(sender=bob.address)
 
     bridge.wrap(
@@ -159,12 +157,7 @@ def test():
 
     rlp_nonce = RLP.Lambda.encode_nat(1)
 
-    proof = aggregator.get_proof(
-        sp.record(
-            owner=bridge.address,
-            key=rlp_nonce
-        )
-    )
+    proof = aggregator.get_proof(sp.record(owner=bridge.address, key=rlp_nonce))
     scenario.show(proof)
 
     scenario.verify(

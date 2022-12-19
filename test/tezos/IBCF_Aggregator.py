@@ -3,6 +3,7 @@ import smartpy as sp
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error, EMPTY_TREE
 from contracts.tezos.utils.bytes import Bytes
 
+
 def update_administrator(payload):
     return sp.variant("update_administrator", payload)
 
@@ -13,6 +14,7 @@ def update_snapshot_duration(payload):
 
 def update_max_state_size(payload):
     return sp.variant("update_max_state_size", payload)
+
 
 @sp.add_test(name="IBCF")
 def test():
@@ -38,14 +40,12 @@ def test():
     ibcf.update_initial_storage(
         sp.record(
             config=sp.record(
-                administrator=admin.address,
-                max_state_size=32,
-                snapshot_duration=5
+                administrator=admin.address, max_state_size=32, snapshot_duration=5
             ),
-            snapshot_start_level        = 0,
-            snapshot_counter            = 0,
-            snapshot_level              = sp.big_map(),
-            merkle_tree                 = EMPTY_TREE
+            snapshot_start_level=0,
+            snapshot_counter=0,
+            snapshot_level=sp.big_map(),
+            merkle_tree=EMPTY_TREE,
         )
     )
 
@@ -63,9 +63,7 @@ def test():
     scenario.verify(ibcf.data.config.administrator == admin.address)
 
     # Update history_ttl and max_state_size
-    ibcf.configure(
-        [update_snapshot_duration(10), update_max_state_size(16)]
-    ).run(
+    ibcf.configure([update_snapshot_duration(10), update_max_state_size(16)]).run(
         sender=admin.address,
     )
     scenario.verify(ibcf.data.config.snapshot_duration == 10)
@@ -76,10 +74,7 @@ def test():
     )
 
     # Cannot snapshot before a whole snapshot cycle has passed.
-    ibcf.snapshot().run(
-        valid=False,
-        exception=Error.CANNOT_SNAPSHOT
-    )
+    ibcf.snapshot().run(valid=False, exception=Error.CANNOT_SNAPSHOT)
 
     # Do not allow states bigger than 32 bytes
     ibcf.insert(
@@ -107,9 +102,9 @@ def test():
     )
 
     # Get proof of inclusion
-    proof = scenario.compute(ibcf.get_proof(
-        sp.record(owner=alice.address, key=encoded_counter_key)
-    ))
+    proof = scenario.compute(
+        ibcf.get_proof(sp.record(owner=alice.address, key=encoded_counter_key))
+    )
 
     # Verify proof (Valid)
     scenario.verify(
@@ -158,15 +153,11 @@ def test():
     scenario.verify(ex == sp.some(Error.PROOF_INVALID))
 
     # Get proof of inclusion
-    proof = ibcf.get_proof(
-        sp.record(owner=claus.address, key=encoded_counter_key)
-    )
+    proof = ibcf.get_proof(sp.record(owner=claus.address, key=encoded_counter_key))
 
     # Cannot generate a proof for an item that does not exist
     ex = sp.catch_exception(
-        ibcf.get_proof(
-            sp.record(owner=alice.address, key=encoded_counter_key)
-        ),
+        ibcf.get_proof(sp.record(owner=alice.address, key=encoded_counter_key)),
         t=sp.TString,
     )
     scenario.verify(ex == sp.some(Error.PROOF_NOT_FOUND))
@@ -188,7 +179,5 @@ def test():
 
     # Cannot snapshot before a new snapshot cycle starts
     ibcf.snapshot().run(
-        level = BLOCK_LEVEL_2 + 10,
-        valid=False,
-        exception=Error.CANNOT_SNAPSHOT
+        level=BLOCK_LEVEL_2 + 10, valid=False, exception=Error.CANNOT_SNAPSHOT
     )
