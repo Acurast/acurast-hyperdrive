@@ -3723,6 +3723,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"asn1.js@npm:^4.10.1":
+  version: 4.10.1
+  resolution: "asn1.js@npm:4.10.1"
+  dependencies:
+    bn.js: ^4.0.0
+    inherits: ^2.0.1
+    minimalistic-assert: ^1.0.0
+  checksum: 9289a1a55401238755e3142511d7b8f6fc32f08c86ff68bd7100da8b6c186179dd6b14234fba2f7f6099afcd6758a816708485efe44bc5b2a6ec87d9ceeddbb5
+  languageName: node
+  linkType: hard
+
 "asn1.js@npm:^5.2.0":
   version: 5.4.1
   resolution: "asn1.js@npm:5.4.1"
@@ -5408,6 +5419,16 @@ __metadata:
   version: 0.1.5
   resolution: "duplexer3@npm:0.1.5"
   checksum: e677cb4c48f031ca728601d6a20bf6aed4c629d69ef9643cb89c67583d673c4ec9317cc6427501f38bd8c368d3a18f173987cc02bd99d8cf8fe3d94259a22a20
+  languageName: node
+  linkType: hard
+
+"ec-pem@npm:0.18.0":
+  version: 0.18.0
+  resolution: "ec-pem@npm:0.18.0"
+  dependencies:
+    asn1.js: ^4.10.1
+    tmp: ^0.0.33
+  checksum: 794be73d4594f414248b832bb546c9e215305bca1053bdb6733811c64e643667471d5db3164c3cd3d42ac21d6260e13c98ff9dd4f6d7938933971b4af17b7410
   languageName: node
   linkType: hard
 
@@ -7362,6 +7383,7 @@ __metadata:
     "@truffle/hdwallet-provider": 2.1.1
     "@typescript-eslint/eslint-plugin": 5.42.1
     "@typescript-eslint/parser": 5.42.1
+    ec-pem: 0.18.0
     eslint: 8.27.0
     eslint-config-prettier: 8.5.0
     eslint-plugin-prettier: 4.2.1

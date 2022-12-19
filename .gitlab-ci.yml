@@ -45,11 +45,11 @@ docker_build:
   tags:
     - docker
 
-format-check:
-  extends: .setup
-  stage: checks
-  script:
-    - make fmt-check
+# format-check:
+#   extends: .setup
+#   stage: checks
+#   script:
+#     - make fmt-check
 
 compile_tezos_contracts:
   extends: .setup

@@ -8,13 +8,13 @@
     "@truffle/hdwallet-provider": "2.1.1",
     "@typescript-eslint/eslint-plugin": "5.42.1",
     "@typescript-eslint/parser": "5.42.1",
+    "ec-pem": "0.18.0",
     "eslint": "8.27.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
     "prettier": "2.8.1",
     "truffle": "5.6.5",
-    "web3": "1.8.1",
-    "ec-pem": "0.18.0"
+    "web3": "1.8.1"
   },
   "scripts": {
     "compile": "truffle compile",
