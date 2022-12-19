@@ -1,19 +1,19 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es2015",
-		"lib": ["es5", "es6", "es7", "dom"],
-		"pretty": true,
-		"strict": true,
-		"alwaysStrict": true,
-		"noImplicitReturns": true,
-		"esModuleInterop": true,
-		"declaration": true,
-		"outDir": "./dist",
-		"moduleResolution": "node",
-		"resolveJsonModule": true,
-		"rootDir": "./src"
-	},
-	"include": ["./src"],
-	"exclude": ["dist", "node_modules"]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2015",
+        "lib": ["es5", "es6", "es7", "dom"],
+        "pretty": true,
+        "strict": true,
+        "alwaysStrict": true,
+        "noImplicitReturns": true,
+        "esModuleInterop": true,
+        "declaration": true,
+        "outDir": "./dist",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "rootDir": "./src"
+    },
+    "include": ["./src"],
+    "exclude": ["dist", "node_modules"]
 }

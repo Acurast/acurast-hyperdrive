@@ -4,8 +4,8 @@ default:
     - docker
 
 variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-    GOOGLE_TAG_LATEST: eu.gcr.io/papers-dev-kubernetes/$CI_PROJECT_NAMESPACE/ci_$CI_PROJECT_NAME:latest
+  GIT_SUBMODULE_STRATEGY: recursive
+  GOOGLE_TAG_LATEST: eu.gcr.io/papers-dev-kubernetes/$CI_PROJECT_NAMESPACE/ci_$CI_PROJECT_NAME:latest
 
 services:
   - docker:dind
@@ -35,7 +35,6 @@ docker_build:
   script:
     - docker build -t $GOOGLE_TAG_LATEST .
     - docker push $GOOGLE_TAG_LATEST
-  when: manual
 
 .setup:
   image: $GOOGLE_TAG_LATEST

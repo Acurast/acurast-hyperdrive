@@ -8,15 +8,11 @@
             "args": [
                 {
                     "prim": "bytes",
-                    "annots": [
-                        "%key"
-                    ]
+                    "annots": ["%key"]
                 },
                 {
                     "prim": "bytes",
-                    "annots": [
-                        "%value"
-                    ]
+                    "annots": ["%value"]
                 }
             ]
         },
@@ -28,24 +24,18 @@
                     "args": [
                         {
                             "prim": "address",
-                            "annots": [
-                                "%update_administrator"
-                            ]
+                            "annots": ["%update_administrator"]
                         },
                         {
                             "prim": "or",
                             "args": [
                                 {
                                     "prim": "nat",
-                                    "annots": [
-                                        "%update_max_state_size"
-                                    ]
+                                    "annots": ["%update_max_state_size"]
                                 },
                                 {
                                     "prim": "nat",
-                                    "annots": [
-                                        "%update_snapshot_duration"
-                                    ]
+                                    "annots": ["%update_snapshot_duration"]
                                 }
                             ]
                         }

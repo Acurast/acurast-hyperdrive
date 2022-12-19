@@ -8,13 +8,7 @@
     "timestamp": "2022-12-15T16:39:50Z",
     "validation_pass": 4,
     "operations_hash": "LLobE2WavKhUzAttjw9YBz2ku99t9FZaRquUQSX1jn8HvcERByN9u",
-    "fitness": [
-        "02",
-        "00196fee",
-        "",
-        "fffffffe",
-        "00000000"
-    ],
+    "fitness": ["02", "00196fee", "", "fffffffe", "00000000"],
     "context": "CoVKPfuMgGJ4YJQNnHGYGHHPFGSddnnDuiMCoFksXeYJiSANpYkp",
     "payload_hash": "vh3aLXvv7mDD9BVXfWXaGnWUV49wazrjzWktQ5ZmwDMWrVQ2v89j",
     "payload_round": 0,

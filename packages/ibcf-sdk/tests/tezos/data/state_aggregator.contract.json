@@ -16,33 +16,25 @@
                                         "args": [
                                             {
                                                 "prim": "address",
-                                                "annots": [
-                                                    "%update_administrator"
-                                                ]
+                                                "annots": ["%update_administrator"]
                                             },
                                             {
                                                 "prim": "or",
                                                 "args": [
                                                     {
                                                         "prim": "nat",
-                                                        "annots": [
-                                                            "%update_max_state_size"
-                                                        ]
+                                                        "annots": ["%update_max_state_size"]
                                                     },
                                                     {
                                                         "prim": "nat",
-                                                        "annots": [
-                                                            "%update_snapshot_duration"
-                                                        ]
+                                                        "annots": ["%update_snapshot_duration"]
                                                     }
                                                 ]
                                             }
                                         ]
                                     }
                                 ],
-                                "annots": [
-                                    "%configure"
-                                ]
+                                "annots": ["%configure"]
                             },
                             {
                                 "prim": "or",
@@ -52,26 +44,18 @@
                                         "args": [
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%key"
-                                                ]
+                                                "annots": ["%key"]
                                             },
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%value"
-                                                ]
+                                                "annots": ["%value"]
                                             }
                                         ],
-                                        "annots": [
-                                            "%insert"
-                                        ]
+                                        "annots": ["%insert"]
                                     },
                                     {
                                         "prim": "unit",
-                                        "annots": [
-                                            "%snapshot"
-                                        ]
+                                        "annots": ["%snapshot"]
                                     }
                                 ]
                             }
@@ -90,31 +74,23 @@
                                 "args": [
                                     {
                                         "prim": "address",
-                                        "annots": [
-                                            "%administrator"
-                                        ]
+                                        "annots": ["%administrator"]
                                     },
                                     {
                                         "prim": "pair",
                                         "args": [
                                             {
                                                 "prim": "nat",
-                                                "annots": [
-                                                    "%max_state_size"
-                                                ]
+                                                "annots": ["%max_state_size"]
                                             },
                                             {
                                                 "prim": "nat",
-                                                "annots": [
-                                                    "%snapshot_duration"
-                                                ]
+                                                "annots": ["%snapshot_duration"]
                                             }
                                         ]
                                     }
                                 ],
-                                "annots": [
-                                    "%config"
-                                ]
+                                "annots": ["%config"]
                             },
                             {
                                 "prim": "pair",
@@ -142,44 +118,32 @@
                                                                         "args": [
                                                                             {
                                                                                 "prim": "nat",
-                                                                                "annots": [
-                                                                                    "%data"
-                                                                                ]
+                                                                                "annots": ["%data"]
                                                                             },
                                                                             {
                                                                                 "prim": "nat",
-                                                                                "annots": [
-                                                                                    "%length"
-                                                                                ]
+                                                                                "annots": ["%length"]
                                                                             }
                                                                         ],
-                                                                        "annots": [
-                                                                            "%key"
-                                                                        ]
+                                                                        "annots": ["%key"]
                                                                     },
                                                                     {
                                                                         "prim": "bytes",
-                                                                        "annots": [
-                                                                            "%node"
-                                                                        ]
+                                                                        "annots": ["%node"]
                                                                     }
                                                                 ]
                                                             }
                                                         ]
                                                     }
                                                 ],
-                                                "annots": [
-                                                    "%nodes"
-                                                ]
+                                                "annots": ["%nodes"]
                                             },
                                             {
                                                 "prim": "pair",
                                                 "args": [
                                                     {
                                                         "prim": "bytes",
-                                                        "annots": [
-                                                            "%root"
-                                                        ]
+                                                        "annots": ["%root"]
                                                     },
                                                     {
                                                         "prim": "pair",
@@ -192,31 +156,21 @@
                                                                         "args": [
                                                                             {
                                                                                 "prim": "nat",
-                                                                                "annots": [
-                                                                                    "%data"
-                                                                                ]
+                                                                                "annots": ["%data"]
                                                                             },
                                                                             {
                                                                                 "prim": "nat",
-                                                                                "annots": [
-                                                                                    "%length"
-                                                                                ]
+                                                                                "annots": ["%length"]
                                                                             }
                                                                         ],
-                                                                        "annots": [
-                                                                            "%key"
-                                                                        ]
+                                                                        "annots": ["%key"]
                                                                     },
                                                                     {
                                                                         "prim": "bytes",
-                                                                        "annots": [
-                                                                            "%node"
-                                                                        ]
+                                                                        "annots": ["%node"]
                                                                     }
                                                                 ],
-                                                                "annots": [
-                                                                    "%root_edge"
-                                                                ]
+                                                                "annots": ["%root_edge"]
                                                             },
                                                             {
                                                                 "prim": "map",
@@ -228,27 +182,21 @@
                                                                         "prim": "bytes"
                                                                     }
                                                                 ],
-                                                                "annots": [
-                                                                    "%states"
-                                                                ]
+                                                                "annots": ["%states"]
                                                             }
                                                         ]
                                                     }
                                                 ]
                                             }
                                         ],
-                                        "annots": [
-                                            "%merkle_tree"
-                                        ]
+                                        "annots": ["%merkle_tree"]
                                     },
                                     {
                                         "prim": "pair",
                                         "args": [
                                             {
                                                 "prim": "nat",
-                                                "annots": [
-                                                    "%snapshot_counter"
-                                                ]
+                                                "annots": ["%snapshot_counter"]
                                             },
                                             {
                                                 "prim": "pair",
@@ -263,15 +211,11 @@
                                                                 "prim": "nat"
                                                             }
                                                         ],
-                                                        "annots": [
-                                                            "%snapshot_level"
-                                                        ]
+                                                        "annots": ["%snapshot_level"]
                                                     },
                                                     {
                                                         "prim": "nat",
-                                                        "annots": [
-                                                            "%snapshot_start_level"
-                                                        ]
+                                                        "annots": ["%snapshot_start_level"]
                                                     }
                                                 ]
                                             }
@@ -1191,22 +1135,16 @@
                                                             "args": [
                                                                 {
                                                                     "prim": "nat",
-                                                                    "annots": [
-                                                                        "%level"
-                                                                    ]
+                                                                    "annots": ["%level"]
                                                                 },
                                                                 {
                                                                     "prim": "nat",
-                                                                    "annots": [
-                                                                        "%snapshot"
-                                                                    ]
+                                                                    "annots": ["%snapshot"]
                                                                 }
                                                             ]
                                                         }
                                                     ],
-                                                    "annots": [
-                                                        "%SNAPSHOT_FINALIZED"
-                                                    ]
+                                                    "annots": ["%SNAPSHOT_FINALIZED"]
                                                 },
                                                 {
                                                     "prim": "CONS"
@@ -7276,15 +7214,11 @@
                         "args": [
                             {
                                 "prim": "bytes",
-                                "annots": [
-                                    "%key"
-                                ]
+                                "annots": ["%key"]
                             },
                             {
                                 "prim": "address",
-                                "annots": [
-                                    "%owner"
-                                ]
+                                "annots": ["%owner"]
                             }
                         ]
                     },
@@ -7293,27 +7227,21 @@
                         "args": [
                             {
                                 "prim": "bytes",
-                                "annots": [
-                                    "%key"
-                                ]
+                                "annots": ["%key"]
                             },
                             {
                                 "prim": "pair",
                                 "args": [
                                     {
                                         "prim": "nat",
-                                        "annots": [
-                                            "%level"
-                                        ]
+                                        "annots": ["%level"]
                                     },
                                     {
                                         "prim": "pair",
                                         "args": [
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%merkle_root"
-                                                ]
+                                                "annots": ["%merkle_root"]
                                             },
                                             {
                                                 "prim": "pair",
@@ -7326,28 +7254,20 @@
                                                                 "args": [
                                                                     {
                                                                         "prim": "bytes",
-                                                                        "annots": [
-                                                                            "%Left"
-                                                                        ]
+                                                                        "annots": ["%Left"]
                                                                     },
                                                                     {
                                                                         "prim": "bytes",
-                                                                        "annots": [
-                                                                            "%Right"
-                                                                        ]
+                                                                        "annots": ["%Right"]
                                                                     }
                                                                 ]
                                                             }
                                                         ],
-                                                        "annots": [
-                                                            "%proof"
-                                                        ]
+                                                        "annots": ["%proof"]
                                                     },
                                                     {
                                                         "prim": "bytes",
-                                                        "annots": [
-                                                            "%value"
-                                                        ]
+                                                        "annots": ["%value"]
                                                     }
                                                 ]
                                             }
@@ -9976,53 +9896,39 @@
                                         "args": [
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%Left"
-                                                ]
+                                                "annots": ["%Left"]
                                             },
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%Right"
-                                                ]
+                                                "annots": ["%Right"]
                                             }
                                         ]
                                     }
                                 ],
-                                "annots": [
-                                    "%proof"
-                                ]
+                                "annots": ["%proof"]
                             },
                             {
                                 "prim": "pair",
                                 "args": [
                                     {
                                         "prim": "bytes",
-                                        "annots": [
-                                            "%key"
-                                        ]
+                                        "annots": ["%key"]
                                     },
                                     {
                                         "prim": "pair",
                                         "args": [
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%owner"
-                                                ]
+                                                "annots": ["%owner"]
                                             },
                                             {
                                                 "prim": "bytes",
-                                                "annots": [
-                                                    "%value"
-                                                ]
+                                                "annots": ["%value"]
                                             }
                                         ]
                                     }
                                 ],
-                                "annots": [
-                                    "%state"
-                                ]
+                                "annots": ["%state"]
                             }
                         ]
                     },
