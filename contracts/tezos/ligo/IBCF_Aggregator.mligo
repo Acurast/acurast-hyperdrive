@@ -31,10 +31,15 @@ type storage = [@layout:comb] {
   merkle_tree : tree;
 }
 
+type configure_parameter =
+  Update_administrator of address
+| Update_snapshot_duration of nat
+| Update_max_state_size of nat
+
 type parameter =
   Snapshot
 | Insert of int
-| Configure
+| Configure of configure_parameter
 
 type return = operation list * storage
 
@@ -57,6 +62,8 @@ let empty_tree : tree = {
   nodes = Map.empty;
   states = Map.empty;
 }
+
+(* Lambdas *)
 
 let finalize_snapshot (required, store : bool * storage) : return =
   let store = if store.snapshot_start_level = 0n
@@ -91,11 +98,29 @@ let finalize_snapshot (required, store : bool * storage) : return =
     let () = assert_with_error (not required) Error.cannot_snapshot in
     ([], store)
 
-(* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. *)
+(* Entrypoints *)
+
+let configure (action, store : configure_parameter * storage) : storage =
+  match action with
+    Update_administrator (new_admin) -> { store with
+      config = {
+        store.config with administrator = new_admin
+      }
+    }
+  | Update_snapshot_duration (duration) -> { store with
+      config = {
+        store.config with snapshot_duration = duration
+      }
+    }
+  | Update_max_state_size (size) -> { store with
+      config = {
+        store.config with max_state_size = size
+      }
+    }
 
 let main (action, store : parameter * storage) : return =
- (match action with
-   Snapshot -> finalize_snapshot(true, store)
+ let global_finalize_snapshot = finalize_snapshot in
+ match action with
+   Snapshot -> global_finalize_snapshot(true, store)
  | Insert (_n) -> ([] : operation list), store
- | Configure  -> ([] : operation list), store)
+ | Configure (action) -> [], configure(action, store)
