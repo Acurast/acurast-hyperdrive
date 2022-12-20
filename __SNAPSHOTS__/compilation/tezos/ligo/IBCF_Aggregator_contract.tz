@@ -1,0 +1,88 @@
+{ parameter (or (or (unit %configure) (int %insert)) (unit %snapshot)) ;
+  storage
+    (pair (pair %config
+             (address %administrator)
+             (nat %snapshot_duration)
+             (nat %max_state_size))
+          (nat %snapshot_start_level)
+          (nat %snapshot_counter)
+          (big_map %snapshot_level nat nat)
+          (pair %merkle_tree
+             (bytes %root)
+             (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node))
+             (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node))))
+             (map %states bytes bytes))) ;
+  code { PUSH bytes 0x ;
+         EMPTY_MAP bytes bytes ;
+         EMPTY_MAP bytes (map int (pair (pair nat nat) bytes)) ;
+         DUP 3 ;
+         PUSH nat 0 ;
+         PUSH nat 0 ;
+         PAIR ;
+         PAIR ;
+         DUP 4 ;
+         PAIR 4 ;
+         DIG 2 ;
+         UNPAIR ;
+         IF_LEFT
+           { DIG 2 ; DIG 3 ; DROP 2 ; IF_LEFT { DROP } { DROP } ; NIL operation }
+           { DROP ;
+             PUSH nat 0 ;
+             DUP 2 ;
+             GET 3 ;
+             COMPARE ;
+             EQ ;
+             IF { LEVEL ; UPDATE 3 ; DUP 2 ; UPDATE 8 } {} ;
+             DIG 2 ;
+             DUP 2 ;
+             GET 8 ;
+             CAR ;
+             COMPARE ;
+             NEQ ;
+             LEVEL ;
+             DUP 3 ;
+             CAR ;
+             GET 3 ;
+             DUP 4 ;
+             GET 3 ;
+             ADD ;
+             COMPARE ;
+             LT ;
+             AND ;
+             IF { PUSH nat 1 ;
+                  DUP 2 ;
+                  GET 5 ;
+                  ADD ;
+                  LEVEL ;
+                  DUP 3 ;
+                  GET 5 ;
+                  LEVEL ;
+                  PAIR ;
+                  DUP 4 ;
+                  DUP 4 ;
+                  UPDATE 5 ;
+                  DUP 3 ;
+                  UPDATE 3 ;
+                  DIG 4 ;
+                  GET 7 ;
+                  PUSH int 1 ;
+                  DIG 4 ;
+                  SUB ;
+                  ISNAT ;
+                  DIG 4 ;
+                  UPDATE ;
+                  UPDATE 7 ;
+                  DIG 2 ;
+                  UPDATE 8 ;
+                  NIL operation ;
+                  DIG 2 ;
+                  EMIT %SNAPSHOT_FINALIZED (pair (nat %level) (nat %snapshot)) ;
+                  CONS }
+                { SWAP ;
+                  DROP ;
+                  PUSH bool True ;
+                  NOT ;
+                  IF {} { PUSH string "CANNOT_SNAPSHOT" ; FAILWITH } ;
+                  NIL operation } } ;
+         PAIR } }
+

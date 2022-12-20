@@ -27,7 +27,7 @@ contracts/%: contracts/%.mligo
 ifeq (, ${HAS_DOCKER})
 	@echo "Skipping compilation $<, it requires docker."
 else
-	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*.tz
+	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
 endif
 
 compilation/%: compilation/%.py install-dependencies
