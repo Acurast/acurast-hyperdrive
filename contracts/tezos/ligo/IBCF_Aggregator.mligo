@@ -45,5 +45,5 @@ let main (action, store : parameter * storage) : return =
  ([] : operation list),    // No operations
  (match action with
    Snapshot -> store
- | Insert (n) -> store
+ | Insert (_n) -> store
  | Configure  -> store)

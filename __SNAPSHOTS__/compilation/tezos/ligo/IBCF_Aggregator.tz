@@ -1,0 +1,18 @@
+{ parameter (or (or (unit %configure) (int %insert)) (unit %snapshot)) ;
+  storage
+    (pair (pair (pair (pair %config
+                         (pair (address %administrator) (nat %max_state_size))
+                         (nat %snapshot_duration))
+                      (pair %merkle_tree
+                         (pair (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node))))
+                               (bytes %root))
+                         (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node))
+                         (map %states bytes bytes)))
+                (nat %snapshot_counter)
+                (big_map %snapshot_level nat nat))
+          (nat %snapshot_start_level)) ;
+  code { UNPAIR ;
+         IF_LEFT { IF_LEFT { DROP } { DROP } } { DROP } ;
+         NIL operation ;
+         PAIR } }
+

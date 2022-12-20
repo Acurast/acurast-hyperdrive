@@ -5,8 +5,12 @@ PYTHONPATH := $(SMARTPY_CLI_PATH):$(shell pwd)
 FLEXTESA_IMAGE=oxheadalpha/flextesa:latest
 FLEXTESA_SCRIPT=jakartabox
 CONTAINER_NAME=ibc-tezos-sandbox
+LIGO_VERSION=0.57.0
 
-COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilation/**/*.py)) $(wildcard compilation/**/**/*.py)
+HAS_DOCKER := $(shell which docker)
+
+LIGO_COMPILATIONS := $(wildcard contracts/tezos/ligo/*.mligo) $(wildcard contracts/tezos/ligo/**/*.mligo)
+SMARTPY_COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilation/**/*.py)) $(wildcard compilation/**/**/*.py)
 TESTS := $(filter-out %/__init__.py, $(wildcard test/**/*.py)) $(wildcard test/**/**/*.py)
 
 touch_done=@mkdir -p $(@D) && touch $@;
@@ -16,20 +20,30 @@ all: install-dependencies
 ##
 ## + Compilations
 ##
+$(SNAPSHOTS_FOLDER)/compilation/tezos/ligo:
+	@mkdir -p $(SNAPSHOTS_FOLDER)/compilation/tezos/ligo
+
+contracts/%: contracts/%.mligo
+ifeq (, ${HAS_DOCKER})
+	@echo "Skipping compilation $<, it requires docker."
+else
+	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*.tz
+endif
+
 compilation/%: compilation/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh compile $< $(SNAPSHOTS_FOLDER)/compilation/$* --erase-comments
 
-clean_tezos_compilations:
+clean-tezos-compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation/tezos
 
-clean_evm_compilations:
+clean-evm-compilations:
 	@rm -rf $(SNAPSHOTS_FOLDER)/compilation/evm
 
-compile-tezos: clean_tezos_compilations $(COMPILATIONS:%.py=%) setup_env
+compile-tezos: clean-tezos-compilations $(SNAPSHOTS_FOLDER)/compilation/tezos/ligo $(LIGO_COMPILATIONS:%.mligo=%) $(SMARTPY_COMPILATIONS:%.py=%) setup_env
 	@find $(SNAPSHOTS_FOLDER)/compilation/ -name "*_contract.tz" -exec sed -i -E 's/#.*//' {} \; -exec wc -c {} \; | sort > $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
 	@cat $(SNAPSHOTS_FOLDER)/compilation/tezos/sizes.txt
 
-compile-evm: setup_env clean_evm_compilations
+compile-evm: setup_env clean-evm-compilations
 	@npm run compile
 
 compile: compile-tezos compile-evm
@@ -44,15 +58,15 @@ compile: compile-tezos compile-evm
 test/%: test/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh test $< $(SNAPSHOTS_FOLDER)/test/$* --html
 
-clean_tezos_tests:
+clean-tezos-tests:
 	@rm -rf $(SNAPSHOTS_FOLDER)/test/tezos
 
-clean_evm_tests:
+clean-evm-tests:
 	@rm -rf $(SNAPSHOTS_FOLDER)/test/evm
 
-test-tezos: clean_tezos_tests $(TESTS:%.py=%) setup_env
+test-tezos: clean-tezos-tests $(TESTS:%.py=%) setup_env
 
-test-evm: setup_env clean_evm_tests
+test-evm: setup_env clean-evm-tests
 	@npm run test
 
 test: test-tezos test-evm
