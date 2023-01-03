@@ -2,7 +2,6 @@ import smartpy as sp
 
 from contracts.tezos.utils.misc import generate_var
 
-
 class Bytes:
     @staticmethod
     def pad_start(arg):
@@ -29,24 +28,34 @@ class Bytes:
         )
 
     @staticmethod
-    def of_uint8(n):
+    def of_nat8(n):
+        """ Convert 8-bit nat into bytes """
+        sp.verify(n < 256, "NUMBER_TOO_BIG")
         return sp.slice(
             sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1
         ).open_some()
 
     @staticmethod
     def of_nat(n):
-        # Bls12_381_fr does not work for numbers above 254 bits
-        sp.verify(n < 2**254, "NUMBER_TOO_BIG")
-
-        result = sp.local(generate_var("bytes"), sp.bytes("0x"))
-        value = sp.local(generate_var("value"), n)
+        value = sp.local(generate_var("value"), sp.set_type_expr(n, sp.TNat))
+        left_nibble = sp.local(generate_var("left_nibble"), sp.none)
+        bytes = sp.local(generate_var("bytes"), [])
         with sp.while_(value.value != 0):
-            result.value = Bytes.of_uint8(value.value) + result.value
-            value.value >>= 8
+            (quotient, remainder) = sp.match_pair(sp.ediv(value.value, 16).open_some())
+            value.value = quotient
+            with left_nibble.value.match_cases() as arg:
+                with arg.match("Some") as v:
+                    left_nibble.value = sp.none
+                    bytes.value.push(Bytes.of_nat8((remainder << 4) | v))
+                with arg.match("None"):
+                    left_nibble.value = sp.some(remainder)
 
-        sp.result(result.value)
+        with left_nibble.value.match_cases() as arg:
+            with arg.match("Some") as v:
+                left_nibble.value = sp.none
+                bytes.value.push(Bytes.of_nat8((0 << 4) | v))
 
+        sp.result(sp.concat(bytes.value))
 
 """
 ########################################################################

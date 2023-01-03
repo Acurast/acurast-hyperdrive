@@ -19,15 +19,15 @@ class Encoder:
         (length, offset) = sp.match_pair(arg)
 
         bytes_of_nat = sp.build_lambda(Bytes.of_nat)
-        bytes_of_uint8 = sp.build_lambda(lambda x: sp.result(Bytes.of_uint8(x)))
+        bytes_of_nat8 = sp.build_lambda(lambda x: sp.result(Bytes.of_nat8(x)))
 
         with sp.if_(length < 56):
-            sp.result(bytes_of_uint8(offset + length))
+            sp.result(bytes_of_nat8(offset + length))
         with sp.else_():
             with sp.if_(length < 256**8):
                 encoded_length = sp.compute(bytes_of_nat(offset + length))
                 sp.result(
-                    bytes_of_uint8(sp.len(encoded_length) + 55 + length)
+                    bytes_of_nat8(sp.len(encoded_length) + 55 + length)
                     + encoded_length
                 )
             with sp.else_():

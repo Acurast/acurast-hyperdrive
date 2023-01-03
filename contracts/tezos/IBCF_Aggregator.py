@@ -113,7 +113,7 @@ class Type:
     # Views
     Get_proof_argument = sp.TRecord(owner=sp.TAddress, key=sp.TBytes).right_comb()
     Get_proof_result = sp.TRecord(
-        level=sp.TNat,
+        snapshot=sp.TNat,
         merkle_root=sp.TBytes,
         key=sp.TBytes,
         value=sp.TBytes,
@@ -139,13 +139,14 @@ class IBCF_Aggregator(sp.Contract):
                     snapshot_duration=sp.TNat,
                     # This constant is used to limit the data length being inserted (in bytes).
                     max_state_size=sp.TNat,
-                ),
+                ).right_comb(),
                 snapshot_start_level=sp.TNat,
                 snapshot_counter=sp.TNat,
                 snapshot_level=sp.TBigMap(sp.TNat, sp.TNat),
                 merkle_tree=Type.Tree,
             ).right_comb()
         )
+        self.init_entry_points_layout(("snapshot", ("insert", "configure")))
 
     @sp.entry_point()
     def snapshot(self):
@@ -181,15 +182,15 @@ class IBCF_Aggregator(sp.Contract):
         )
         self.data.merkle_tree.states[state_hash] = param.value
 
-        with sp.if_(self.data.merkle_tree.root != NULL_HASH):
-            # Skip on first insertion
-            self.data.merkle_tree = self.insert_at_edge(
-                sp.record(tree=self.data.merkle_tree, key=key, value=state_hash)
-            )
-        with sp.else_():
+        with sp.if_(self.data.merkle_tree.root == NULL_HASH):
+            # The tree is empty
             edge = sp.compute(sp.record(key=key, node=state_hash))
             self.data.merkle_tree.root = Inlined.hash_edge(edge)
             self.data.merkle_tree.root_edge = edge
+        with sp.else_():
+            self.data.merkle_tree = self.insert_at_edge(
+                sp.record(tree=self.data.merkle_tree, key=key, value=state_hash)
+            )
 
     @sp.entry_point(parameter_type=Type.Configure_argument)
     def configure(self, actions):
@@ -298,7 +299,7 @@ class IBCF_Aggregator(sp.Contract):
         with sp.set_result_type(Type.Get_proof_result):
             sp.result(
                 sp.record(
-                    level=sp.level,
+                    snapshot=self.data.snapshot_counter + 1,
                     key=arg.key,
                     value=tree.value.states[root_edge.value.node],
                     merkle_root=tree.value.root,

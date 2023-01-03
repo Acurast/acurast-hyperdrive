@@ -9,9 +9,10 @@ LIGO_VERSION=0.57.0
 
 HAS_DOCKER := $(shell which docker)
 
-LIGO_COMPILATIONS := $(wildcard contracts/tezos/ligo/*.mligo) $(wildcard contracts/tezos/ligo/**/*.mligo)
+LIGO_COMPILATIONS := $(wildcard contracts/tezos/ligo/*.mligo)
 SMARTPY_COMPILATIONS := $(filter-out %/__init__.py, $(wildcard compilation/**/*.py)) $(wildcard compilation/**/**/*.py)
-TESTS := $(filter-out %/__init__.py, $(wildcard test/**/*.py)) $(wildcard test/**/**/*.py)
+SMARTPY_TESTS := $(filter-out %/__init__.py, $(wildcard test/**/*.py)) $(wildcard test/**/**/*.py)
+LIGO_TESTS := $(wildcard test/tezos/ligo/*.mligo) $(wildcard test/tezos/ligo/**/*.mligo)
 
 touch_done=@mkdir -p $(@D) && touch $@;
 
@@ -27,7 +28,8 @@ contracts/%: contracts/%.mligo
 ifeq (, ${HAS_DOCKER})
 	@echo "Skipping compilation $<, it requires docker."
 else
-	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
+	@./ligo compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
+#@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
 endif
 
 compilation/%: compilation/%.py install-dependencies
@@ -58,13 +60,21 @@ compile: compile-tezos compile-evm
 test/%: test/%.py install-dependencies
 	@$(SMARTPY_CLI_PATH)/SmartPy.sh test $< $(SNAPSHOTS_FOLDER)/test/$* --html
 
+test/tezos/ligo/%: test/tezos/ligo/%.mligo
+ifeq (, ${HAS_DOCKER})
+	@echo "Skipping compilation $<, it requires docker."
+else
+	@./ligo run test $<
+#@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
+endif
+
 clean-tezos-tests:
 	@rm -rf $(SNAPSHOTS_FOLDER)/test/tezos
 
 clean-evm-tests:
 	@rm -rf $(SNAPSHOTS_FOLDER)/test/evm
 
-test-tezos: clean-tezos-tests $(TESTS:%.py=%) setup_env
+test-tezos: clean-tezos-tests $(SMARTPY_TESTS:%.py=%) $(LIGO_TESTS:%.mligo=%) setup_env
 
 test-evm: setup_env clean-evm-tests
 	@npm run test

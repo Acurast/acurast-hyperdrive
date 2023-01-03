@@ -1,9 +1,9 @@
 { parameter
-    (or (or (or %configure
-               (or (address %update_administrator) (nat %update_max_state_size))
-               (nat %update_snapshot_duration))
-            (int %insert))
-        (unit %snapshot)) ;
+    (or (unit %snapshot)
+        (or (pair %insert bytes bytes)
+            (list %configure
+               (or (address %update_administrator)
+                   (or (nat %update_max_state_size) (nat %update_snapshot_duration)))))) ;
   storage
     (pair (pair %config
              (address %administrator)
@@ -14,10 +14,13 @@
           (big_map %snapshot_level nat nat)
           (pair %merkle_tree
              (bytes %root)
-             (pair %root_edge (pair %key (nat %data) (nat %length)) (bytes %node))
-             (map %nodes bytes (map int (pair (pair %key (nat %data) (nat %length)) (bytes %node))))
+             (pair %root_edge (pair %label (nat %data) (nat %length)) (bytes %node))
+             (map %nodes
+                bytes
+                (map int (pair (pair %label (nat %data) (nat %length)) (bytes %node))))
              (map %states bytes bytes))) ;
-  code { PUSH bytes 0x ;
+  code { LAMBDA bytes bytes { KECCAK } ;
+         PUSH bytes 0x ;
          EMPTY_MAP bytes bytes ;
          EMPTY_MAP bytes (map int (pair (pair nat nat) bytes)) ;
          DUP 3 ;
@@ -27,28 +30,43 @@
          PAIR ;
          DUP 4 ;
          PAIR 4 ;
-         DIG 2 ;
+         DIG 3 ;
          UNPAIR ;
-         IF_LEFT
-           { DIG 2 ;
-             DIG 3 ;
-             DROP 2 ;
-             IF_LEFT
-               { IF_LEFT
-                   { IF_LEFT
-                       { DUP 2 ; DIG 2 ; CAR ; DIG 2 ; UPDATE 1 ; UPDATE 1 }
-                       { DUP 2 ; DIG 2 ; CAR ; DIG 2 ; UPDATE 4 ; UPDATE 1 } }
-                   { DUP 2 ; DIG 2 ; CAR ; DIG 2 ; UPDATE 3 ; UPDATE 1 } }
-               { DROP } ;
-             NIL operation }
-           { DROP ;
+         LAMBDA
+           (pair (pair (pair bytes
+                             (pair (pair nat nat) bytes)
+                             (map bytes (map int (pair (pair nat nat) bytes)))
+                             (map bytes bytes))
+                       bytes)
+                 (pair bool
+                       (pair address nat nat)
+                       nat
+                       nat
+                       (big_map nat nat)
+                       (pair bytes
+                             (pair (pair nat nat) bytes)
+                             (map bytes (map int (pair (pair nat nat) bytes)))
+                             (map bytes bytes))))
+           (pair (list operation)
+                 (pair address nat nat)
+                 nat
+                 nat
+                 (big_map nat nat)
+                 (pair bytes
+                       (pair (pair nat nat) bytes)
+                       (map bytes (map int (pair (pair nat nat) bytes)))
+                       (map bytes bytes)))
+           { UNPAIR ;
+             UNPAIR ;
+             DIG 2 ;
+             UNPAIR ;
              PUSH nat 0 ;
-             DUP 2 ;
+             DUP 3 ;
              GET 3 ;
              COMPARE ;
              EQ ;
-             IF { LEVEL ; UPDATE 3 ; DUP 2 ; UPDATE 8 } {} ;
-             DIG 2 ;
+             IF { SWAP ; LEVEL ; UPDATE 3 ; DUP 3 ; UPDATE 8 } { SWAP } ;
+             DIG 3 ;
              DUP 2 ;
              GET 8 ;
              CAR ;
@@ -64,7 +82,9 @@
              COMPARE ;
              LT ;
              AND ;
-             IF { PUSH nat 1 ;
+             IF { SWAP ;
+                  DROP ;
+                  PUSH nat 1 ;
                   DUP 2 ;
                   GET 5 ;
                   ADD ;
@@ -93,11 +113,306 @@
                   DIG 2 ;
                   EMIT %SNAPSHOT_FINALIZED (pair (nat %level) (nat %snapshot)) ;
                   CONS }
-                { SWAP ;
+                { DIG 2 ;
                   DROP ;
-                  PUSH bool True ;
+                  SWAP ;
                   NOT ;
                   IF {} { PUSH string "CANNOT_SNAPSHOT" ; FAILWITH } ;
-                  NIL operation } } ;
-         PAIR } }
+                  NIL operation } ;
+             PAIR } ;
+         DUP 5 ;
+         DUP 5 ;
+         PAIR ;
+         APPLY ;
+         DIG 3 ;
+         DROP ;
+         SWAP ;
+         IF_LEFT
+           { DIG 3 ; DIG 4 ; DROP 3 ; SWAP ; PUSH bool True ; PAIR ; EXEC }
+           { IF_LEFT
+               { UNPAIR ;
+                 DIG 3 ;
+                 PUSH bool False ;
+                 PAIR ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 UNPAIR ;
+                 DUP 2 ;
+                 CAR ;
+                 GET 4 ;
+                 DUP 5 ;
+                 SIZE ;
+                 COMPARE ;
+                 LE ;
+                 IF {} { PUSH string "STATE_TOO_LARGE" ; FAILWITH } ;
+                 DUP 4 ;
+                 DUP 7 ;
+                 SWAP ;
+                 EXEC ;
+                 DUP 3 ;
+                 DUP 4 ;
+                 GET 8 ;
+                 DIG 4 ;
+                 GET 8 ;
+                 GET 6 ;
+                 DIG 6 ;
+                 SOME ;
+                 DUP 5 ;
+                 UPDATE ;
+                 UPDATE 6 ;
+                 UPDATE 8 ;
+                 PUSH nat 256 ;
+                 DIG 4 ;
+                 SENDER ;
+                 PACK ;
+                 CONCAT ;
+                 DIG 6 ;
+                 SWAP ;
+                 EXEC ;
+                 DUP ;
+                 SIZE ;
+                 PUSH nat 0 ;
+                 DUP 2 ;
+                 PUSH nat 0 ;
+                 PAIR ;
+                 PAIR ;
+                 LEFT nat ;
+                 LOOP_LEFT
+                   { UNPAIR ;
+                     UNPAIR ;
+                     DUP 2 ;
+                     DUP 2 ;
+                     COMPARE ;
+                     EQ ;
+                     IF { DROP 2 ; RIGHT (pair (pair nat nat) nat) }
+                        { PUSH nat 2 ;
+                          PUSH int 1 ;
+                          DUP 3 ;
+                          ADD ;
+                          DUP 6 ;
+                          SUB ;
+                          ISNAT ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          MUL ;
+                          NIL bytes ;
+                          PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000 ;
+                          CONS ;
+                          DUP 7 ;
+                          PUSH nat 1 ;
+                          DUP 5 ;
+                          SLICE ;
+                          IF_NONE { PUSH string "SLICE" ; FAILWITH } {} ;
+                          CONS ;
+                          PUSH bytes 0x050a00000020 ;
+                          CONS ;
+                          CONCAT ;
+                          UNPACK bls12_381_fr ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          INT ;
+                          PUSH nat 1 ;
+                          DIG 2 ;
+                          PUSH nat 16 ;
+                          PAIR 3 ;
+                          LEFT nat ;
+                          LOOP_LEFT
+                            { UNPAIR 3 ;
+                              PUSH nat 0 ;
+                              DUP 3 ;
+                              COMPARE ;
+                              EQ ;
+                              IF { DROP 2 ; RIGHT (pair nat nat nat) }
+                                 { PUSH nat 1 ;
+                                   PUSH nat 1 ;
+                                   DUP 4 ;
+                                   AND ;
+                                   COMPARE ;
+                                   EQ ;
+                                   IF { DUP ; DIG 3 ; MUL } { DIG 2 } ;
+                                   PUSH nat 1 ;
+                                   DIG 3 ;
+                                   LSR ;
+                                   DUP 3 ;
+                                   DIG 3 ;
+                                   MUL ;
+                                   PAIR 3 ;
+                                   LEFT nat } } ;
+                          SWAP ;
+                          MUL ;
+                          ISNAT ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          DIG 3 ;
+                          ADD ;
+                          DIG 2 ;
+                          PUSH nat 1 ;
+                          DIG 3 ;
+                          ADD ;
+                          PAIR ;
+                          PAIR ;
+                          LEFT nat } } ;
+                 SWAP ;
+                 DIG 2 ;
+                 DROP 2 ;
+                 PAIR ;
+                 PUSH nat 0 ;
+                 DUP 3 ;
+                 GET 8 ;
+                 GET 3 ;
+                 CAR ;
+                 CDR ;
+                 COMPARE ;
+                 EQ ;
+                 DIG 5 ;
+                 DUP 4 ;
+                 GET 8 ;
+                 GET 3 ;
+                 CDR ;
+                 COMPARE ;
+                 EQ ;
+                 AND ;
+                 IF { DIG 2 ; SWAP ; PAIR }
+                    { DIG 2 ;
+                      DROP ;
+                      DUP 2 ;
+                      GET 8 ;
+                      GET 3 ;
+                      DUP ;
+                      CAR ;
+                      CDR ;
+                      DUP 3 ;
+                      CDR ;
+                      COMPARE ;
+                      GE ;
+                      IF {} { PUSH string "KEY_LENGTH_MISMATCH" ; FAILWITH } ;
+                      DUP ;
+                      CAR ;
+                      PUSH nat 0 ;
+                      DUP 4 ;
+                      CDR ;
+                      DUP 3 ;
+                      CDR ;
+                      COMPARE ;
+                      LT ;
+                      IF { DUP 2 ; CDR } { DUP 4 ; CDR } ;
+                      PAIR ;
+                      DUP 4 ;
+                      DIG 2 ;
+                      PAIR ;
+                      PAIR ;
+                      LEFT nat ;
+                      LOOP_LEFT
+                        { UNPAIR ;
+                          UNPAIR ;
+                          DIG 2 ;
+                          UNPAIR ;
+                          DUP 3 ;
+                          UNPAIR ;
+                          DUP 4 ;
+                          DIG 2 ;
+                          SUB ;
+                          ISNAT ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          SWAP ;
+                          LSR ;
+                          DUP 5 ;
+                          UNPAIR ;
+                          DUP 5 ;
+                          DIG 2 ;
+                          SUB ;
+                          ISNAT ;
+                          IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                          SWAP ;
+                          LSR ;
+                          DUP 4 ;
+                          DUP 4 ;
+                          COMPARE ;
+                          LT ;
+                          SWAP ;
+                          DIG 2 ;
+                          COMPARE ;
+                          EQ ;
+                          AND ;
+                          IF { PUSH nat 1 ; DIG 2 ; ADD ; SWAP ; PAIR ; DUG 2 ; PAIR ; PAIR ; LEFT nat }
+                             { DIG 2 ; DIG 3 ; DROP 3 ; RIGHT (pair (pair (pair nat nat) nat nat) nat nat) } } ;
+                      DIG 2 ;
+                      PUSH nat 256 ;
+                      DUP 3 ;
+                      COMPARE ;
+                      LE ;
+                      DUP 2 ;
+                      CDR ;
+                      DUP 4 ;
+                      COMPARE ;
+                      LE ;
+                      AND ;
+                      IF {} { PUSH string "Bad position" ; FAILWITH } ;
+                      PUSH nat 0 ;
+                      DUP 3 ;
+                      COMPARE ;
+                      EQ ;
+                      IF { DUP 2 ; PUSH nat 0 }
+                         { DUP 2 ;
+                           DUP 2 ;
+                           UNPAIR ;
+                           DUP 5 ;
+                           DIG 2 ;
+                           SUB ;
+                           ISNAT ;
+                           IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                           SWAP ;
+                           LSR } ;
+                      PAIR ;
+                      DIG 2 ;
+                      DUP 3 ;
+                      CDR ;
+                      SUB ;
+                      ISNAT ;
+                      IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+                      DUP ;
+                      PUSH int 1 ;
+                      DIG 2 ;
+                      PUSH nat 1 ;
+                      LSL ;
+                      SUB ;
+                      ISNAT ;
+                      IF_NONE { PUSH string "option is None" ; FAILWITH } { DROP 4 } } ;
+                 DUP 2 ;
+                 DIG 2 ;
+                 GET 8 ;
+                 DUP 3 ;
+                 CDR ;
+                 UPDATE 1 ;
+                 DIG 2 ;
+                 UPDATE 3 ;
+                 UPDATE 8 ;
+                 SWAP }
+               { SWAP ;
+                 DIG 3 ;
+                 DIG 4 ;
+                 DROP 3 ;
+                 ITER { IF_LEFT
+                          { DUP 2 ; DIG 2 ; CAR ; DIG 2 ; UPDATE 1 ; UPDATE 1 }
+                          { IF_LEFT
+                              { DUP 2 ; DIG 2 ; CAR ; DIG 2 ; UPDATE 4 ; UPDATE 1 }
+                              { DUP 2 ; DIG 2 ; CAR ; DIG 2 ; UPDATE 3 ; UPDATE 1 } } } ;
+                 NIL operation } ;
+             PAIR } } ;
+  view "get_proof"
+       (pair (address %owner) (bytes %key))
+       (pair (nat %snapshot)
+             (bytes %merkle_root)
+             (bytes %key)
+             (bytes %value)
+             (list %proof (or (bytes %left) (bytes %right))))
+       { UNPAIR ;
+         NIL (or bytes bytes) ;
+         PUSH bytes 0x00 ;
+         DIG 2 ;
+         CDR ;
+         PUSH bytes 0x00 ;
+         PUSH nat 1 ;
+         DIG 5 ;
+         GET 5 ;
+         ADD ;
+         PAIR 5 } }
 
