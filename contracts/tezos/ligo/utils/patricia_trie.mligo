@@ -86,7 +86,7 @@ let split_at (label, position : edge_label * nat) : edge_label * edge_label =
     then
         {
             data = 0n;
-            length = position;
+            length = 0n;
         }
     else
         {
@@ -106,9 +106,13 @@ let split_at (label, position : edge_label * nat) : edge_label * edge_label =
 (* Returns the length of the longest common prefix of the two keys. *)
 let common_prefix (a, b: edge_label * edge_label): nat =
     let rec find_common_prefix (a, b, max_length, len : edge_label * edge_label * nat * nat) : nat =
-        let bit_a = get_prefix(a.data, a.length, len) in
-        let bit_b = get_prefix(b.data, b.length, len) in
-        if bit_a = bit_b && len < max_length then find_common_prefix(a, b, max_length, len + 1n) else len
+        if len < max_length
+        then
+            let bit_a = get_prefix(a.data, a.length, len + 1n) in
+            let bit_b = get_prefix(b.data, b.length, len + 1n) in
+            if bit_a = bit_b then find_common_prefix(a, b, max_length, len + 1n) else len
+        else
+            len
     in
     let max_length = if (a.length < b.length) then a.length else b.length in
 

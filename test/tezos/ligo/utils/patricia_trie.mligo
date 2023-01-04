@@ -8,18 +8,25 @@ let test_common_prefix =
     let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 7n; length = 3n; }, { data = 15n; length = 4n; }) in
     let result = Test.run PatriciaTrie.common_prefix input in
     let expected_result = Test.eval 3n in
+    let () = assert (Test.michelson_equal result expected_result) in
+    let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 32790450749271752764346364856143980207165848111769501219716576803845872506964n; length = 256n; }, { data = 74827488720072639062921549391092031742095690064102560656854585938741003766824n; length = 256n; }) in
+    let result = Test.run PatriciaTrie.common_prefix input in
+    let expected_result = Test.eval 0n in
+    let () = assert (Test.michelson_equal result expected_result) in
+    let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 10548592n; length = 24n; }, { data = 43981n; length = 16n; }) in
+    let result = Test.run PatriciaTrie.common_prefix input in
+    let expected_result = Test.eval 4n in
     assert (Test.michelson_equal result expected_result)
 
-// let test_split_common_prefix =
-//     let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 15n; length = 4n; }, { data = 7n; length = 3n; }) in
-//     let result = Test.run PatriciaTrie.split_common_prefix input in
-//     let expected_result = Test.eval ({ data = 7n; length = 3n; }, { data = 1n; length = 1n; }) in
-//     let () = assert (Test.michelson_equal result expected_result) in
-//     let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 10548592n; length = 20n; }, { data = 43981n; length = 16n; }) in
-//     let result = Test.run PatriciaTrie.split_common_prefix input in
-//     let expected_result = Test.eval ({ data = 160n; length = 4n; }, { data = 62832n; length = 16n; }) in
-//     let () = Test.log ("Result:", result) in
-//     assert (Test.michelson_equal result expected_result)
+let test_split_common_prefix =
+    let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 15n; length = 4n; }, { data = 7n; length = 3n; }) in
+    let result = Test.run PatriciaTrie.split_common_prefix input in
+    let expected_result = Test.eval ({ data = 7n; length = 3n; }, { data = 1n; length = 1n; }) in
+    let () = assert (Test.michelson_equal result expected_result) in
+    let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 10548592n; length = 24n; }, { data = 43981n; length = 16n; }) in
+    let result = Test.run PatriciaTrie.split_common_prefix input in
+    let expected_result = Test.eval ({ data = 10n; length = 4n; }, { data = 62832n; length = 20n; }) in
+    assert (Test.michelson_equal result expected_result)
 
 let test_chop_first_bit =
     let input : PatriciaTrie.edge_label = { data = 14n; length = 4n; } in
@@ -56,6 +63,12 @@ let test_get_prefix =
     let expected_result = Test.eval 0n in
     let () = assert (Test.michelson_equal result expected_result) in
     let result = Test.run PatriciaTrie.get_prefix (1n, 2n, 2n)  in
+    let expected_result = Test.eval 1n in
+    let () = assert (Test.michelson_equal result expected_result) in
+    let result = Test.run PatriciaTrie.get_prefix (32790450749271752764346364856143980207165848111769501219716576803845872506964n, 256n, 1n)  in
+    let expected_result = Test.eval 0n in
+    let () = assert (Test.michelson_equal result expected_result) in
+    let result = Test.run PatriciaTrie.get_prefix (74827488720072639062921549391092031742095690064102560656854585938741003766824n, 256n, 1n)  in
     let expected_result = Test.eval 1n in
     assert (Test.michelson_equal result expected_result)
 
