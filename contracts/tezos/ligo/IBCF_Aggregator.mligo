@@ -36,6 +36,7 @@ module Error =
     type t = string
     let cannot_snapshot : t = "CANNOT_SNAPSHOT"
     let state_too_large : t = "STATE_TOO_LARGE"
+    let proof_not_found : t = "PROOF_NOT_FOUND"
   end
 
 (* Lambdas *)
@@ -112,8 +113,7 @@ let insert (key, value, store, finalize_snapshot, insert_at_edge : bytes * bytes
   } in
 
   let label = {
-    data = Nat.of_bytes(PatriciaTrie.hash_function(key));
-    // TODO : data = Nat.of_bytes(PatriciaTrie.hash_key(Tezos.get_sender(), key));
+    data = Nat.of_bytes(PatriciaTrie.hash_key(Tezos.get_sender(), key));
     length = PatriciaTrie.hash_length;
   } in
 
@@ -154,22 +154,84 @@ type get_proof_parameter = [@layout:comb] {
   key: bytes;
 }
 
+type path_node = [@layout:comb]
+| Left of bytes
+| Right of bytes
+
 type get_proof_result = [@layout:comb] {
   snapshot: nat;
   merkle_root: bytes;
   key: bytes;
   value: bytes;
-  proof: (Left of bytes | Right of bytes) list;
+  proof: path_node list;
 }
 
-
 (* Returns the Merkle-proof for the given key. *)
-[@view] let get_proof (param, store: get_proof_parameter * storage) : get_proof_result =
-  (* TODO *)
+[@view] let get_proof ((owner, key), store: (address * bytes) * storage) : get_proof_result =
+  let label = {
+    data = Nat.of_bytes(PatriciaTrie.hash_key(owner, key));
+    length = PatriciaTrie.hash_length;
+  } in
+
+  let rec get_path(tree, edge, label, proof : PatriciaTrie.tree * PatriciaTrie.edge * PatriciaTrie.edge_label * path_node list): bytes * path_node list =
+    let prefix, suffix = PatriciaTrie.split_common_prefix(label, edge.label) in
+    // Ensure that the path exists
+    let () = assert_with_error (prefix.length = edge.label.length) Error.state_too_large in
+
+    if suffix.length = 0n
+    then
+        // Proof found
+        let value = Option.unopt (Map.find_opt edge.node tree.states) in
+        (value, proof)
+    else
+      let head, tail = PatriciaTrie.chop_first_bit suffix in
+      // Add hash to proof path with direction (0=left or 1=right)
+      //
+      // For head = 0
+      //
+      //      h(a+b)
+      //       /   \
+      //    0 /     \ 1
+      //   h(a)    h(b)
+      //    |        |
+      //   head    complement
+      //
+      // The proof path must include the complement, since
+      // the head is already known.
+      let node = Option.unopt (Map.find_opt edge.node tree.nodes) in
+      let edge_hash = PatriciaTrie.hash_edge(Option.unopt (Map.find_opt (1-head) node)) in
+      let path_node = if head = 0 then (Right edge_hash) else (Left edge_hash) in
+
+      let new_edge = Option.unopt (Map.find_opt head node) in
+      get_path(tree, new_edge, tail, path_node :: proof)
+  in
+  let value, proof = get_path(store.merkle_tree, store.merkle_tree.root_edge, label, []) in
   {
     snapshot = store.snapshot_counter + 1n;
-    merkle_root = 0x00;
-    key = param.key;
-    value = 0x00;
-    proof = [];
+    merkle_root = store.merkle_tree.root;
+    key = key;
+    value;
+    proof;
   }
+
+
+type verify_proof_argument = [@layout:comb] {
+  state_root: bytes;
+  owner: bytes;
+  key: bytes;
+  value: bytes;
+  proof: path_node list;
+}
+
+(* Validates a proof against a given state. *)
+[@view] let verify_proof (param, _store: verify_proof_argument * storage) : bool =
+  let derive_hash (acc, node : bytes * path_node): bytes =
+    match node with
+    | Left (h) ->
+      PatriciaTrie.hash_function (Bytes.concat h acc)
+    | Right (h) ->
+      PatriciaTrie.hash_function (Bytes.concat acc h)
+  in
+  let value_hash = PatriciaTrie.hash_function(param.value) in
+  let derived_hash = List.fold_left derive_hash value_hash param.proof in
+  derived_hash = param.state_root

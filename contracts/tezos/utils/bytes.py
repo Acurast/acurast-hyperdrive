@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.utils.misc import generate_var
 
+
 class Bytes:
     @staticmethod
     def pad_start(arg):
@@ -29,7 +30,7 @@ class Bytes:
 
     @staticmethod
     def of_nat8(n):
-        """ Convert 8-bit nat into bytes """
+        """Convert 8-bit nat into bytes"""
         sp.verify(n < 256, "NUMBER_TOO_BIG")
         return sp.slice(
             sp.pack(sp.mul(sp.to_int(n), sp.bls12_381_fr("0x01"))), 6, 1
@@ -56,6 +57,7 @@ class Bytes:
                 bytes.value.push(Bytes.of_nat8((0 << 4) | v))
 
         sp.result(sp.concat(bytes.value))
+
 
 """
 ########################################################################

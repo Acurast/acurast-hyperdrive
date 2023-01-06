@@ -81,6 +81,16 @@ code
                                   nat
                                   bytes
                                   {
+                                    DUP;        
+                                    PUSH nat 256; 
+                                    COMPARE;    
+                                    GT;         
+                                    IF
+                                      {}
+                                      {
+                                        PUSH string "NUMBER_TOO_BIG"; 
+                                        FAILWITH;   
+                                      }; 
                                     INT;        
                                     PUSH bls12_381_fr 0x01; 
                                     SWAP;       
@@ -91,7 +101,7 @@ code
                                     SLICE;      
                                     IF_NONE
                                       {
-                                        PUSH int 35; 
+                                        PUSH int 36; 
                                         FAILWITH;   
                                       }
                                       {}; 
@@ -114,27 +124,115 @@ code
                                       bytes
                                       {
                                         DUP;        
-                                        PUSH nat 28948022309329048855892746252171976963317496166410141009864396001978282409984; 
-                                        COMPARE;    
-                                        GT;         
-                                        IF
-                                          {}
-                                          {
-                                            PUSH string "NUMBER_TOO_BIG"; 
-                                            FAILWITH;   
-                                          }; 
-                                        DUP;        
-                                        PUSH bytes 0x; 
-                                        SWAP;       
-                                        DUP;        
+                                        NONE nat;   
+                                        NIL bytes;  
                                         PUSH nat 0; 
+                                        DUP 4;      
                                         COMPARE;    
                                         NEQ;        
                                         LOOP
                                           {
+                                            PUSH nat 16; 
+                                            DIG 3;      
+                                            EDIV;       
+                                            IF_NONE
+                                              {
+                                                PUSH int 44; 
+                                                FAILWITH;   
+                                              }
+                                              {}; 
+                                            UNPAIR;     
+                                            DUP;        
+                                            DUG 4;      
+                                            DUP 4;      
+                                            IF_NONE
+                                              {
+                                                DIG 3;      
+                                                DROP 2;     
+                                                SOME;       
+                                                SWAP;       
+                                              }
+                                              {
+                                                SWAP;       
+                                                DROP;       
+                                                DIG 3;      
+                                                DROP;       
+                                                NONE nat;   
+                                                DUG 3;      
+                                                DUP;        
+                                                PUSH nat 256; 
+                                                SWAP;       
+                                                PUSH nat 4; 
+                                                DUP 5;      
+                                                LSL;        
+                                                OR;         
+                                                COMPARE;    
+                                                LT;         
+                                                IF
+                                                  {}
+                                                  {
+                                                    PUSH string "NUMBER_TOO_BIG"; 
+                                                    FAILWITH;   
+                                                  }; 
+                                                DIG 2;      
+                                                PUSH bls12_381_fr 0x01; 
+                                                DIG 2;      
+                                                PUSH nat 4; 
+                                                DIG 4;      
+                                                LSL;        
+                                                OR;         
+                                                INT;        
+                                                MUL;        
+                                                PACK;       
+                                                PUSH nat 1; 
+                                                PUSH nat 6; 
+                                                SLICE;      
+                                                IF_NONE
+                                                  {
+                                                    PUSH int 36; 
+                                                    FAILWITH;   
+                                                  }
+                                                  {}; 
+                                                CONS;       
+                                              }; 
+                                            PUSH nat 0; 
+                                            DUP 4;      
+                                            COMPARE;    
+                                            NEQ;        
+                                          }; 
+                                        DIG 2;      
+                                        DROP;       
+                                        DIG 2;      
+                                        DROP;       
+                                        SWAP;       
+                                        DUP;        
+                                        DUG 2;      
+                                        IF_NONE
+                                          {
+                                            SWAP;       
+                                            DROP;       
+                                          }
+                                          {
+                                            DIG 2;      
+                                            DROP;       
+                                            DUP;        
+                                            PUSH nat 256; 
+                                            SWAP;       
+                                            PUSH nat 0; 
+                                            OR;         
+                                            COMPARE;    
+                                            LT;         
+                                            IF
+                                              {}
+                                              {
+                                                PUSH string "NUMBER_TOO_BIG"; 
+                                                FAILWITH;   
+                                              }; 
                                             SWAP;       
                                             PUSH bls12_381_fr 0x01; 
-                                            DUP 3;      
+                                            DIG 2;      
+                                            PUSH nat 0; 
+                                            OR;         
                                             INT;        
                                             MUL;        
                                             PACK;       
@@ -143,23 +241,13 @@ code
                                             SLICE;      
                                             IF_NONE
                                               {
-                                                PUSH int 35; 
+                                                PUSH int 36; 
                                                 FAILWITH;   
                                               }
                                               {}; 
-                                            CONCAT;     
-                                            SWAP;       
-                                            PUSH nat 8; 
-                                            SWAP;       
-                                            LSR;        
-                                            DUP;        
-                                            PUSH nat 0; 
-                                            COMPARE;    
-                                            NEQ;        
+                                            CONS;       
                                           }; 
-                                        DROP;       
-                                        SWAP;       
-                                        DROP;       
+                                        CONCAT;     
                                       }; 
                                     SWAP;       
                                     DIG 3;      
@@ -170,6 +258,16 @@ code
                                       nat
                                       bytes
                                       {
+                                        DUP;        
+                                        PUSH nat 256; 
+                                        COMPARE;    
+                                        GT;         
+                                        IF
+                                          {}
+                                          {
+                                            PUSH string "NUMBER_TOO_BIG"; 
+                                            FAILWITH;   
+                                          }; 
                                         INT;        
                                         PUSH bls12_381_fr 0x01; 
                                         SWAP;       
@@ -180,7 +278,7 @@ code
                                         SLICE;      
                                         IF_NONE
                                           {
-                                            PUSH int 35; 
+                                            PUSH int 36; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -213,27 +311,115 @@ code
                   bytes
                   {
                     DUP;        
-                    PUSH nat 28948022309329048855892746252171976963317496166410141009864396001978282409984; 
-                    COMPARE;    
-                    GT;         
-                    IF
-                      {}
-                      {
-                        PUSH string "NUMBER_TOO_BIG"; 
-                        FAILWITH;   
-                      }; 
-                    DUP;        
-                    PUSH bytes 0x; 
-                    SWAP;       
-                    DUP;        
+                    NONE nat;   
+                    NIL bytes;  
                     PUSH nat 0; 
+                    DUP 4;      
                     COMPARE;    
                     NEQ;        
                     LOOP
                       {
+                        PUSH nat 16; 
+                        DIG 3;      
+                        EDIV;       
+                        IF_NONE
+                          {
+                            PUSH int 44; 
+                            FAILWITH;   
+                          }
+                          {}; 
+                        UNPAIR;     
+                        DUP;        
+                        DUG 4;      
+                        DUP 4;      
+                        IF_NONE
+                          {
+                            DIG 3;      
+                            DROP 2;     
+                            SOME;       
+                            SWAP;       
+                          }
+                          {
+                            SWAP;       
+                            DROP;       
+                            DIG 3;      
+                            DROP;       
+                            NONE nat;   
+                            DUG 3;      
+                            DUP;        
+                            PUSH nat 256; 
+                            SWAP;       
+                            PUSH nat 4; 
+                            DUP 5;      
+                            LSL;        
+                            OR;         
+                            COMPARE;    
+                            LT;         
+                            IF
+                              {}
+                              {
+                                PUSH string "NUMBER_TOO_BIG"; 
+                                FAILWITH;   
+                              }; 
+                            DIG 2;      
+                            PUSH bls12_381_fr 0x01; 
+                            DIG 2;      
+                            PUSH nat 4; 
+                            DIG 4;      
+                            LSL;        
+                            OR;         
+                            INT;        
+                            MUL;        
+                            PACK;       
+                            PUSH nat 1; 
+                            PUSH nat 6; 
+                            SLICE;      
+                            IF_NONE
+                              {
+                                PUSH int 36; 
+                                FAILWITH;   
+                              }
+                              {}; 
+                            CONS;       
+                          }; 
+                        PUSH nat 0; 
+                        DUP 4;      
+                        COMPARE;    
+                        NEQ;        
+                      }; 
+                    DIG 2;      
+                    DROP;       
+                    DIG 2;      
+                    DROP;       
+                    SWAP;       
+                    DUP;        
+                    DUG 2;      
+                    IF_NONE
+                      {
+                        SWAP;       
+                        DROP;       
+                      }
+                      {
+                        DIG 2;      
+                        DROP;       
+                        DUP;        
+                        PUSH nat 256; 
+                        SWAP;       
+                        PUSH nat 0; 
+                        OR;         
+                        COMPARE;    
+                        LT;         
+                        IF
+                          {}
+                          {
+                            PUSH string "NUMBER_TOO_BIG"; 
+                            FAILWITH;   
+                          }; 
                         SWAP;       
                         PUSH bls12_381_fr 0x01; 
-                        DUP 3;      
+                        DIG 2;      
+                        PUSH nat 0; 
+                        OR;         
                         INT;        
                         MUL;        
                         PACK;       
@@ -242,23 +428,13 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 35; 
+                            PUSH int 36; 
                             FAILWITH;   
                           }
                           {}; 
-                        CONCAT;     
-                        SWAP;       
-                        PUSH nat 8; 
-                        SWAP;       
-                        LSR;        
-                        DUP;        
-                        PUSH nat 0; 
-                        COMPARE;    
-                        NEQ;        
+                        CONS;       
                       }; 
-                    DROP;       
-                    SWAP;       
-                    DROP;       
+                    CONCAT;     
                   }; 
                 DIG 2;      
                 EXEC;       
@@ -296,6 +472,16 @@ code
                           nat
                           bytes
                           {
+                            DUP;        
+                            PUSH nat 256; 
+                            COMPARE;    
+                            GT;         
+                            IF
+                              {}
+                              {
+                                PUSH string "NUMBER_TOO_BIG"; 
+                                FAILWITH;   
+                              }; 
                             INT;        
                             PUSH bls12_381_fr 0x01; 
                             SWAP;       
@@ -306,7 +492,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 35; 
+                                PUSH int 36; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -329,27 +515,115 @@ code
                               bytes
                               {
                                 DUP;        
-                                PUSH nat 28948022309329048855892746252171976963317496166410141009864396001978282409984; 
-                                COMPARE;    
-                                GT;         
-                                IF
-                                  {}
-                                  {
-                                    PUSH string "NUMBER_TOO_BIG"; 
-                                    FAILWITH;   
-                                  }; 
-                                DUP;        
-                                PUSH bytes 0x; 
-                                SWAP;       
-                                DUP;        
+                                NONE nat;   
+                                NIL bytes;  
                                 PUSH nat 0; 
+                                DUP 4;      
                                 COMPARE;    
                                 NEQ;        
                                 LOOP
                                   {
+                                    PUSH nat 16; 
+                                    DIG 3;      
+                                    EDIV;       
+                                    IF_NONE
+                                      {
+                                        PUSH int 44; 
+                                        FAILWITH;   
+                                      }
+                                      {}; 
+                                    UNPAIR;     
+                                    DUP;        
+                                    DUG 4;      
+                                    DUP 4;      
+                                    IF_NONE
+                                      {
+                                        DIG 3;      
+                                        DROP 2;     
+                                        SOME;       
+                                        SWAP;       
+                                      }
+                                      {
+                                        SWAP;       
+                                        DROP;       
+                                        DIG 3;      
+                                        DROP;       
+                                        NONE nat;   
+                                        DUG 3;      
+                                        DUP;        
+                                        PUSH nat 256; 
+                                        SWAP;       
+                                        PUSH nat 4; 
+                                        DUP 5;      
+                                        LSL;        
+                                        OR;         
+                                        COMPARE;    
+                                        LT;         
+                                        IF
+                                          {}
+                                          {
+                                            PUSH string "NUMBER_TOO_BIG"; 
+                                            FAILWITH;   
+                                          }; 
+                                        DIG 2;      
+                                        PUSH bls12_381_fr 0x01; 
+                                        DIG 2;      
+                                        PUSH nat 4; 
+                                        DIG 4;      
+                                        LSL;        
+                                        OR;         
+                                        INT;        
+                                        MUL;        
+                                        PACK;       
+                                        PUSH nat 1; 
+                                        PUSH nat 6; 
+                                        SLICE;      
+                                        IF_NONE
+                                          {
+                                            PUSH int 36; 
+                                            FAILWITH;   
+                                          }
+                                          {}; 
+                                        CONS;       
+                                      }; 
+                                    PUSH nat 0; 
+                                    DUP 4;      
+                                    COMPARE;    
+                                    NEQ;        
+                                  }; 
+                                DIG 2;      
+                                DROP;       
+                                DIG 2;      
+                                DROP;       
+                                SWAP;       
+                                DUP;        
+                                DUG 2;      
+                                IF_NONE
+                                  {
+                                    SWAP;       
+                                    DROP;       
+                                  }
+                                  {
+                                    DIG 2;      
+                                    DROP;       
+                                    DUP;        
+                                    PUSH nat 256; 
+                                    SWAP;       
+                                    PUSH nat 0; 
+                                    OR;         
+                                    COMPARE;    
+                                    LT;         
+                                    IF
+                                      {}
+                                      {
+                                        PUSH string "NUMBER_TOO_BIG"; 
+                                        FAILWITH;   
+                                      }; 
                                     SWAP;       
                                     PUSH bls12_381_fr 0x01; 
-                                    DUP 3;      
+                                    DIG 2;      
+                                    PUSH nat 0; 
+                                    OR;         
                                     INT;        
                                     MUL;        
                                     PACK;       
@@ -358,23 +632,13 @@ code
                                     SLICE;      
                                     IF_NONE
                                       {
-                                        PUSH int 35; 
+                                        PUSH int 36; 
                                         FAILWITH;   
                                       }
                                       {}; 
-                                    CONCAT;     
-                                    SWAP;       
-                                    PUSH nat 8; 
-                                    SWAP;       
-                                    LSR;        
-                                    DUP;        
-                                    PUSH nat 0; 
-                                    COMPARE;    
-                                    NEQ;        
+                                    CONS;       
                                   }; 
-                                DROP;       
-                                SWAP;       
-                                DROP;       
+                                CONCAT;     
                               }; 
                             SWAP;       
                             DIG 3;      
@@ -385,6 +649,16 @@ code
                               nat
                               bytes
                               {
+                                DUP;        
+                                PUSH nat 256; 
+                                COMPARE;    
+                                GT;         
+                                IF
+                                  {}
+                                  {
+                                    PUSH string "NUMBER_TOO_BIG"; 
+                                    FAILWITH;   
+                                  }; 
                                 INT;        
                                 PUSH bls12_381_fr 0x01; 
                                 SWAP;       
@@ -395,7 +669,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 35; 
+                                    PUSH int 36; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -455,6 +729,16 @@ code
                           nat
                           bytes
                           {
+                            DUP;        
+                            PUSH nat 256; 
+                            COMPARE;    
+                            GT;         
+                            IF
+                              {}
+                              {
+                                PUSH string "NUMBER_TOO_BIG"; 
+                                FAILWITH;   
+                              }; 
                             INT;        
                             PUSH bls12_381_fr 0x01; 
                             SWAP;       
@@ -465,7 +749,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 35; 
+                                PUSH int 36; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -488,27 +772,115 @@ code
                               bytes
                               {
                                 DUP;        
-                                PUSH nat 28948022309329048855892746252171976963317496166410141009864396001978282409984; 
-                                COMPARE;    
-                                GT;         
-                                IF
-                                  {}
-                                  {
-                                    PUSH string "NUMBER_TOO_BIG"; 
-                                    FAILWITH;   
-                                  }; 
-                                DUP;        
-                                PUSH bytes 0x; 
-                                SWAP;       
-                                DUP;        
+                                NONE nat;   
+                                NIL bytes;  
                                 PUSH nat 0; 
+                                DUP 4;      
                                 COMPARE;    
                                 NEQ;        
                                 LOOP
                                   {
+                                    PUSH nat 16; 
+                                    DIG 3;      
+                                    EDIV;       
+                                    IF_NONE
+                                      {
+                                        PUSH int 44; 
+                                        FAILWITH;   
+                                      }
+                                      {}; 
+                                    UNPAIR;     
+                                    DUP;        
+                                    DUG 4;      
+                                    DUP 4;      
+                                    IF_NONE
+                                      {
+                                        DIG 3;      
+                                        DROP 2;     
+                                        SOME;       
+                                        SWAP;       
+                                      }
+                                      {
+                                        SWAP;       
+                                        DROP;       
+                                        DIG 3;      
+                                        DROP;       
+                                        NONE nat;   
+                                        DUG 3;      
+                                        DUP;        
+                                        PUSH nat 256; 
+                                        SWAP;       
+                                        PUSH nat 4; 
+                                        DUP 5;      
+                                        LSL;        
+                                        OR;         
+                                        COMPARE;    
+                                        LT;         
+                                        IF
+                                          {}
+                                          {
+                                            PUSH string "NUMBER_TOO_BIG"; 
+                                            FAILWITH;   
+                                          }; 
+                                        DIG 2;      
+                                        PUSH bls12_381_fr 0x01; 
+                                        DIG 2;      
+                                        PUSH nat 4; 
+                                        DIG 4;      
+                                        LSL;        
+                                        OR;         
+                                        INT;        
+                                        MUL;        
+                                        PACK;       
+                                        PUSH nat 1; 
+                                        PUSH nat 6; 
+                                        SLICE;      
+                                        IF_NONE
+                                          {
+                                            PUSH int 36; 
+                                            FAILWITH;   
+                                          }
+                                          {}; 
+                                        CONS;       
+                                      }; 
+                                    PUSH nat 0; 
+                                    DUP 4;      
+                                    COMPARE;    
+                                    NEQ;        
+                                  }; 
+                                DIG 2;      
+                                DROP;       
+                                DIG 2;      
+                                DROP;       
+                                SWAP;       
+                                DUP;        
+                                DUG 2;      
+                                IF_NONE
+                                  {
+                                    SWAP;       
+                                    DROP;       
+                                  }
+                                  {
+                                    DIG 2;      
+                                    DROP;       
+                                    DUP;        
+                                    PUSH nat 256; 
+                                    SWAP;       
+                                    PUSH nat 0; 
+                                    OR;         
+                                    COMPARE;    
+                                    LT;         
+                                    IF
+                                      {}
+                                      {
+                                        PUSH string "NUMBER_TOO_BIG"; 
+                                        FAILWITH;   
+                                      }; 
                                     SWAP;       
                                     PUSH bls12_381_fr 0x01; 
-                                    DUP 3;      
+                                    DIG 2;      
+                                    PUSH nat 0; 
+                                    OR;         
                                     INT;        
                                     MUL;        
                                     PACK;       
@@ -517,23 +889,13 @@ code
                                     SLICE;      
                                     IF_NONE
                                       {
-                                        PUSH int 35; 
+                                        PUSH int 36; 
                                         FAILWITH;   
                                       }
                                       {}; 
-                                    CONCAT;     
-                                    SWAP;       
-                                    PUSH nat 8; 
-                                    SWAP;       
-                                    LSR;        
-                                    DUP;        
-                                    PUSH nat 0; 
-                                    COMPARE;    
-                                    NEQ;        
+                                    CONS;       
                                   }; 
-                                DROP;       
-                                SWAP;       
-                                DROP;       
+                                CONCAT;     
                               }; 
                             SWAP;       
                             DIG 3;      
@@ -544,6 +906,16 @@ code
                               nat
                               bytes
                               {
+                                DUP;        
+                                PUSH nat 256; 
+                                COMPARE;    
+                                GT;         
+                                IF
+                                  {}
+                                  {
+                                    PUSH string "NUMBER_TOO_BIG"; 
+                                    FAILWITH;   
+                                  }; 
                                 INT;        
                                 PUSH bls12_381_fr 0x01; 
                                 SWAP;       
@@ -554,7 +926,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 35; 
+                                    PUSH int 36; 
                                     FAILWITH;   
                                   }
                                   {}; 

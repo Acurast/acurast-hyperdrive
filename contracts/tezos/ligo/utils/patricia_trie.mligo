@@ -46,9 +46,10 @@ let empty_tree : tree = {
 [@inline] let hash_state (owner, key, value: address * bytes * bytes) = hash_function (Bytes_utils.concat [(Bytes.pack owner); key; value])
 
 [@inline] let hash_edge (e : edge) =
-    let encoded_length = Bytes_utils.pad_start((Bytes_utils.of_nat e.label.length), 0x00, 32n)in
-    let encoded_data = Bytes_utils.pad_start((Bytes_utils.of_nat e.label.data), 0x00, 32n)in
-    hash_function (Bytes_utils.concat [e.node ; encoded_length ; encoded_data])
+    //let encoded_length = Bytes_utils.pad_start((Bytes_utils.of_nat e.label.length), 0x00, 32n)in
+    //let encoded_data = Bytes_utils.pad_start((Bytes_utils.of_nat e.label.data), 0x00, 32n)in
+    //hash_function (Bytes_utils.concat [e.node ; encoded_length ; encoded_data])
+    e.node
 
 [@inline] let hash_node (node : (int, edge) map) = hash_function (Bytes.concat (hash_edge(Option.unopt (Map.find_opt 0 node))) (hash_edge(Option.unopt (Map.find_opt 1 node))))
 

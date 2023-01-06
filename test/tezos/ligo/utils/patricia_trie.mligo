@@ -52,7 +52,7 @@ let test_hash_edge =
         label = { data = 96770479151044334212888682484935290825755157000393274649179700799961558991247n; length = 256n; }
     } in
     let result = Test.run PatriciaTrie.hash_edge input in
-    let expected_result = Test.eval 0x6df4fb9fbef96decc3b9cd5057ab6230edcea7e22efc6f4833db44184dd93958 in
+    let expected_result = Test.eval 0xd5f22674b860adcaf76d66ef9bcf7d5465f73928e366e000e9fc97c207e0c18f in
     assert (Test.michelson_equal result expected_result)
 
 let test_get_prefix =

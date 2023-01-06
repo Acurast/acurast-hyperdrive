@@ -1058,26 +1058,8 @@ code
             GET 3;      
             GET 3;      
             COMPARE;    
-            NEQ;        
+            EQ;         
             IF
-              {
-                DIG 5;      
-                DROP;       
-                DIG 4;      
-                SWAP;       
-                DUP 5;      
-                GET 3;      
-                DIG 3;      
-                PAIR 3;     
-                SWAP;       
-                DIG 3;      
-                DIG 2;      
-                PAIR;       
-                EXEC;       
-                UNPAIR;     
-                UPDATE 3;   
-                SWAP;       
-              }
               {
                 DIG 4;      
                 DROP;       
@@ -1096,6 +1078,24 @@ code
                 GET 3;      
                 DIG 2;      
                 UPDATE 5;   
+                UPDATE 3;   
+                SWAP;       
+              }
+              {
+                DIG 5;      
+                DROP;       
+                DIG 4;      
+                SWAP;       
+                DUP 5;      
+                GET 3;      
+                DIG 3;      
+                PAIR 3;     
+                SWAP;       
+                DIG 3;      
+                DIG 2;      
+                PAIR;       
+                EXEC;       
+                UNPAIR;     
                 UPDATE 3;   
                 SWAP;       
               }; 
@@ -1165,7 +1165,7 @@ code
     PAIR;       
   };
 view
-  "get_proof" (pair (bytes %key) (address %owner)) (pair (bytes %key) (pair (nat %level) (pair (bytes %merkle_root) (pair (list %proof (or (bytes %Left) (bytes %Right))) (bytes %value)))))
+  "get_proof" (pair (bytes %key) (address %owner)) (pair (bytes %key) (pair (bytes %merkle_root) (pair (list %proof (or (bytes %Left) (bytes %Right))) (pair (nat %snapshot) (bytes %value)))))
   {
     UNPAIR;     
     LAMBDA
@@ -1707,10 +1707,13 @@ view
         FAILWITH;   
       }
       {}; 
-    DUP 3;      
-    DUP 6;      
+    PUSH nat 1; 
+    DUP 14;     
+    GET 5;      
+    ADD;        
+    DUP 4;      
+    DUP 7;      
     GET 3;      
-    LEVEL;      
     DUP 15;     
     CAR;        
     PAIR 5;     

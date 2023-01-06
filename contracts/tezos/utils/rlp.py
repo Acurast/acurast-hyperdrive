@@ -27,8 +27,7 @@ class Encoder:
             with sp.if_(length < 256**8):
                 encoded_length = sp.compute(bytes_of_nat(offset + length))
                 sp.result(
-                    bytes_of_nat8(sp.len(encoded_length) + 55 + length)
-                    + encoded_length
+                    bytes_of_nat8(sp.len(encoded_length) + 55 + length) + encoded_length
                 )
             with sp.else_():
                 sp.failwith("INVALID_LENGTH")

@@ -19,9 +19,9 @@ def update_max_state_size(payload):
 @sp.add_test(name="IBCF")
 def test():
     admin = sp.test_account("admin")
-    alice = sp.record(address = sp.address("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"))
-    bob = sp.record(address = sp.address("tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv"))
-    claus = sp.record(address = sp.address("tz1fi3AzSELiXmvcrLKrLBUpYmq1vQGMxv9p"))
+    alice = sp.record(address=sp.address("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"))
+    bob = sp.record(address=sp.address("tz1KeYsjjSCLEELMuiq1oXzVZmuJrZ15W4mv"))
+    claus = sp.record(address=sp.address("tz1fi3AzSELiXmvcrLKrLBUpYmq1vQGMxv9p"))
 
     encoded_alice_address = ENCODE(alice.address)
     encoded_claus_address = ENCODE(claus.address)
