@@ -16,30 +16,42 @@ stages:
   - compile
   - test
 
-.before_docker_build:
-  image: google/cloud-sdk
-  before_script:
-    - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
-    - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
-    - gcloud config set account $GCLOUD_ACCOUNT_DEV
-    - gcloud config set project $GCLOUD_PROJECT_DEV
-    - gcloud config set compute/zone $GCLOUD_ZONE_DEV
-    - gcloud container clusters get-credentials papers-cluster-development
-    - gcloud auth configure-docker
-  tags:
-    - docker
+# .before_docker_build:
+#   image: google/cloud-sdk
+#   before_script:
+#     - echo $GCLOUD_GOOGLE_KEY_DEV > key.json
+#     - gcloud auth activate-service-account $GCLOUD_ACCOUNT_DEV --key-file key.json
+#     - gcloud config set account $GCLOUD_ACCOUNT_DEV
+#     - gcloud config set project $GCLOUD_PROJECT_DEV
+#     - gcloud config set compute/zone $GCLOUD_ZONE_DEV
+#     - gcloud container clusters get-credentials papers-cluster-development
+#     - gcloud auth configure-docker
+#   tags:
+#     - docker
 
-docker_build:
-  extends: .before_docker_build
-  stage: setup
-  script:
-    - docker build -t $GOOGLE_TAG_LATEST .
-    - docker push $GOOGLE_TAG_LATEST
+# docker_build:
+#   extends: .before_docker_build
+#   stage: setup
+#   script:
+#     - docker build -t $GOOGLE_TAG_LATEST .
+#     - docker push $GOOGLE_TAG_LATEST
+
+# .setup:
+#   image: $GOOGLE_TAG_LATEST
+#   before_script:
+#     - cp -r /_build .
+#     - make
+#   when: always
+#   tags:
+#     - docker
 
 .setup:
-  image: $GOOGLE_TAG_LATEST
+  image: node:latest
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
   before_script:
-    - cp -r /_build .
+    - apt-get update
+    - apt-get install -y --no-install-recommends python3-dev python3-pip python3-setuptools build-essential libsodium-dev libsecp256k1-dev libgmp3-dev git curl
     - make
   when: always
   tags:
