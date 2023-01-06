@@ -165,7 +165,7 @@ def test():
             sp.record(
                 proof=proof.proof,
                 state=sp.record(
-                    owner=sp.pack(bridge.address),
+                    owner=bridge.address,
                     key=proof.key,
                     value=proof.value,
                 ),

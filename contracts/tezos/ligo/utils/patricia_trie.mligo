@@ -150,7 +150,7 @@ let rec insert_at_edge (tree, edge, key, value : tree * edge * edge_label * byte
         if prefix.length >= edge.label.length
         then
             // Partial match, just follow the path
-            let () = assert_with_error (suffix.length > 1n) "Bad key" in
+            let () = assert_with_error (suffix.length > 1n) "BAD_KEY" in
             match Map.find_opt edge.node tree.nodes with
             Some node ->
                 let node_children = Option.unopt (Map.find_opt head node) in

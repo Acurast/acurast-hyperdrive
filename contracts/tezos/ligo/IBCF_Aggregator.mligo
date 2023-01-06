@@ -105,7 +105,7 @@ let insert (key, value, store, finalize_snapshot, insert_at_edge : bytes * bytes
   let () = assert_with_error ((Bytes.length value) <= store.config.max_state_size) Error.state_too_large in
 
   // Set new state
-  let value_hash = PatriciaTrie.hash_function value in
+  let value_hash = PatriciaTrie.hash_state(Tezos.get_sender(), key, value) in
   let store = {
     store with merkle_tree = {
       store.merkle_tree with states = Map.update (value_hash : bytes) (Some value) store.merkle_tree.states;
@@ -217,7 +217,7 @@ type get_proof_result = [@layout:comb] {
 
 type verify_proof_argument = [@layout:comb] {
   state_root: bytes;
-  owner: bytes;
+  owner: address;
   key: bytes;
   value: bytes;
   proof: path_node list;
@@ -232,6 +232,6 @@ type verify_proof_argument = [@layout:comb] {
     | Right (h) ->
       PatriciaTrie.hash_function (Bytes.concat acc h)
   in
-  let value_hash = PatriciaTrie.hash_function(param.value) in
+  let value_hash = PatriciaTrie.hash_state(param.owner, param.key, param.value) in
   let derived_hash = List.fold_left derive_hash value_hash param.proof in
   derived_hash = param.state_root

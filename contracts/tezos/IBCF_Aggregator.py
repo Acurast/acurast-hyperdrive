@@ -5,26 +5,16 @@
 
 import smartpy as sp
 
-from contracts.tezos.utils.misc import (
+from contracts.tezos.utils.patricia_trie import (
     chop_first_bit,
     split_common_prefix,
     remove_prefix,
+    HASH_FUNCTION,
+    HASH_LENGTH,
+    NULL_HASH,
+    EMPTY_TREE,
 )
 from contracts.tezos.utils.nat import Nat
-
-HASH_FUNCTION = sp.keccak
-HASH_LENGTH = 256
-NULL_HASH = sp.bytes("0x")
-
-EMPTY_TREE = sp.record(
-    root=NULL_HASH,
-    root_edge=sp.record(
-        node=NULL_HASH,
-        key=sp.record(data=0, length=0),
-    ),
-    nodes=sp.map(),
-    states=sp.map(),
-)
 
 
 def ENCODE(d):
@@ -44,15 +34,15 @@ class Error:
 class Inlined:
     @staticmethod
     def hash_state(owner, key, value):
-        return sp.compute(HASH_FUNCTION(sp.concat([owner, key, value])))
+        return sp.compute(HASH_FUNCTION(sp.concat([ENCODE(owner), key, value])))
 
     @staticmethod
     def hash_key(owner, key):
-        return sp.compute(HASH_FUNCTION(sp.concat([owner, key])))
+        return sp.compute(HASH_FUNCTION(sp.concat([ENCODE(owner), key])))
 
     @staticmethod
     def hash_edge(edge):
-        # return HASH_FUNCTION(edge.node + sp.pack(edge.key))
+        # return HASH_FUNCTION(edge.node + sp.pack(edge.label))
         return edge.node
 
     @staticmethod
@@ -86,13 +76,8 @@ class Inlined:
 
 class Type:
     KeyMeta = sp.TRecord(data=sp.TNat, length=sp.TNat).right_comb()
-    Edge = sp.TRecord(node=sp.TBytes, key=KeyMeta).right_comb()
+    Edge = sp.TRecord(node=sp.TBytes, label=KeyMeta).right_comb()
     Node = sp.TRecord(children=sp.TMap(sp.TInt, Edge)).right_comb()
-    State = sp.TRecord(
-        owner=sp.TBytes,
-        key=sp.TBytes,
-        value=sp.TBytes,
-    ).right_comb()
     Tree = sp.TRecord(
         root=sp.TBytes,
         root_edge=Edge,
@@ -120,7 +105,12 @@ class Type:
         proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
     ).right_comb()
     Verify_proof_argument = sp.TRecord(
-        proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)), state=State
+        proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
+        state=sp.TRecord(
+            owner=sp.TAddress,
+            key=sp.TBytes,
+            value=sp.TBytes,
+        ).right_comb(),
     ).right_comb()
 
 
@@ -168,8 +158,8 @@ class IBCF_Aggregator(sp.Contract):
             Error.STATE_TOO_LARGE,
         )
 
-        key_hash = sp.compute(Inlined.hash_key(ENCODE(sp.sender), param.key))
-        key = sp.compute(
+        key_hash = sp.compute(Inlined.hash_key(sp.sender, param.key))
+        label = sp.compute(
             sp.record(
                 data=nat_of_bytes_lambda(key_hash),
                 length=HASH_LENGTH,
@@ -177,20 +167,29 @@ class IBCF_Aggregator(sp.Contract):
         )
 
         # Set new state
-        state_hash = sp.compute(
-            Inlined.hash_state(ENCODE(sp.sender), param.key, param.value)
-        )
+        state_hash = sp.compute(Inlined.hash_state(sp.sender, param.key, param.value))
         self.data.merkle_tree.states[state_hash] = param.value
 
         with sp.if_(self.data.merkle_tree.root == NULL_HASH):
             # The tree is empty
-            edge = sp.compute(sp.record(key=key, node=state_hash))
+            edge = sp.compute(sp.record(label=label, node=state_hash))
             self.data.merkle_tree.root = Inlined.hash_edge(edge)
             self.data.merkle_tree.root_edge = edge
         with sp.else_():
-            self.data.merkle_tree = self.insert_at_edge(
-                sp.record(tree=self.data.merkle_tree, key=key, value=state_hash)
+            tree, new_root_edge = sp.match_pair(
+                self.insert_at_edge(
+                    sp.record(
+                        tree=self.data.merkle_tree,
+                        edge=self.data.merkle_tree.root_edge,
+                        key=label,
+                        value=state_hash,
+                    )
+                )
             )
+
+            self.data.merkle_tree = tree
+            self.data.merkle_tree.root = Inlined.hash_edge(new_root_edge)
+            self.data.merkle_tree.root_edge = new_root_edge
 
     @sp.entry_point(parameter_type=Type.Configure_argument)
     def configure(self, actions):
@@ -230,9 +229,9 @@ class IBCF_Aggregator(sp.Contract):
         split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
         nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
 
-        key_hash = sp.compute(Inlined.hash_key(ENCODE(arg.owner), arg.key))
-        key = sp.local(
-            "key",
+        key_hash = sp.compute(Inlined.hash_key(arg.owner, arg.key))
+        label = sp.local(
+            "label",
             sp.record(
                 data=nat_of_bytes_lambda(key_hash),
                 length=HASH_LENGTH,
@@ -246,12 +245,12 @@ class IBCF_Aggregator(sp.Contract):
         continue_loop = sp.local("continue_loop", True)
         with sp.while_(continue_loop.value):
             (prefix, suffix) = sp.match_record(
-                split_common_prefix_lambda((key.value, root_edge.value.key)),
+                split_common_prefix_lambda((label.value, root_edge.value.label)),
                 "prefix",
                 "suffix",
             )
             sp.verify(
-                prefix.length == root_edge.value.key.length, Error.PROOF_NOT_FOUND
+                prefix.length == root_edge.value.label.length, Error.PROOF_NOT_FOUND
             )
 
             with sp.if_(suffix.length == 0):
@@ -294,7 +293,7 @@ class IBCF_Aggregator(sp.Contract):
 
                 blinded_path.value.push(hash.value)
                 root_edge.value = tree.value.nodes[root_edge.value.node].children[head]
-                key.value = tail
+                label.value = tail
 
         with sp.set_result_type(Type.Get_proof_result):
             sp.result(
@@ -359,149 +358,86 @@ class IBCF_Aggregator(sp.Contract):
             (self.data.merkle_tree.root == derived_hash.value), Error.PROOF_INVALID
         )
 
-    @sp.private_lambda(with_storage="read-write", with_operations=False, wrap_call=True)
-    def insert_at_edge(self, arg):
-        tree = sp.local("tree", arg.tree)
-        with sp.set_result_type(Type.Tree):
-            # Michelson does not have recursive calls
-            r_size = sp.local("r_size", sp.int(0))
-            r_stack = sp.local("r_stack", sp.map(tkey=sp.TInt, tvalue=Type.Edge))
-            c_size = sp.local("c_size", sp.int(1))
-            c_stack = sp.local(
-                "c_stack",
-                sp.map(
-                    {
-                        1: sp.record(
-                            edge=tree.value.root_edge,
-                            key=arg.key,
-                            value=arg.value,
-                            prefix=sp.none,
-                            node=sp.none,
-                            head=sp.none,
-                            edge_node=sp.none,
-                        )
-                    },
-                    tkey=sp.TInt,
-                    tvalue=sp.TRecord(
-                        edge=Type.Edge,
-                        key=Type.KeyMeta,
-                        value=sp.TBytes,
-                        prefix=sp.TOption(Type.KeyMeta),
-                        node=sp.TOption(Type.Node),
-                        head=sp.TOption(sp.TInt),
-                        edge_node=sp.TOption(sp.TBytes),
-                    ),
-                ),
-            )
-            first = sp.local("first", True)
+    @sp.private_lambda(
+        with_storage=None, with_operations=False, wrap_call=True, recursive=True
+    )
+    def insert_at_edge(self, arg, rec_call):
+        (merkle_tree, edge, key, value) = sp.match_record(
+            arg,
+            "tree",
+            "edge",
+            "key",
+            "value",
+        )
 
-            chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
-            remove_prefix_lambda = sp.compute(sp.build_lambda(remove_prefix))
-            split_common_prefix_lambda = sp.compute(
-                sp.build_lambda(split_common_prefix)
-            )
+        tree = sp.local("tree", merkle_tree)
 
-            with sp.while_(c_size.value > 0):
-                (edge, key, value, node, head, edge_node, prefix) = sp.match_record(
-                    c_stack.value[c_size.value],
-                    "edge",
-                    "key",
-                    "value",
-                    "node",
-                    "head",
-                    "edge_node",
-                    "prefix",
-                )
+        chop_first_bit_lambda = sp.compute(sp.build_lambda(chop_first_bit))
+        remove_prefix_lambda = sp.compute(sp.build_lambda(remove_prefix))
+        split_common_prefix_lambda = sp.compute(sp.build_lambda(split_common_prefix))
 
-                with sp.if_(first.value):
-                    first.value = False
-                    c_size.value = 0
-                    c_stack.value = {}
+        # The key length must be bigger or equal to the edge lable length.
+        sp.verify(key.length >= edge.label.length, "KEY_LENGTH_MISMATCH")
 
-                with sp.if_((r_size.value > 0) & (c_size.value > 0)):
-                    del c_stack.value[c_size.value]
-                    c_size.value -= 1
+        (prefix, suffix) = sp.match_record(
+            split_common_prefix_lambda((key, edge.label)),
+            "prefix",
+            "suffix",
+        )
 
-                    n = sp.local("n", node.open_some())
-                    n.value.children[head.open_some()] = r_stack.value[r_size.value]
+        result = sp.bind_block()
+        with result:
+            with sp.if_(suffix.length == 0):
+                # Full match with the key, update operation
+                sp.result((tree.value, value))
+            with sp.else_():
+                (head, tail) = sp.match_pair(chop_first_bit_lambda(suffix))
 
-                    new_node_hash = Inlined.replace_node(
-                        tree, edge_node.open_some(), n.value
+                with sp.if_(prefix.length >= edge.label.length):
+                    # Partial match, just follow the path
+                    sp.verify(suffix.length > 1, "BAD_KEY")
+
+                    node = sp.local("node", tree.value.nodes[edge.node])
+
+                    arg = sp.record(
+                        tree=tree.value,
+                        edge=node.value.children[head],
+                        key=tail,
+                        value=value,
                     )
 
-                    r_stack.value[r_size.value] = sp.compute(
-                        sp.record(node=new_node_hash, key=prefix.open_some())
-                    )
+                    (new_tree, new_edge) = sp.match_pair(rec_call(arg))
+                    tree.value = new_tree
+
+                    node.value.children[head] = new_edge
+                    new_node_hash = Inlined.replace_node(tree, edge.node, node.value)
+
+                    sp.result((tree.value, new_node_hash))
                 with sp.else_():
-                    sp.verify(key.length >= edge.key.length, "KEY_LENGTH_MISMATCH")
-                    (prefix, suffix) = sp.match_record(
-                        split_common_prefix_lambda((key, edge.key)),
-                        "prefix",
-                        "suffix",
+                    # Mismatch, so let us create a new branch node.
+                    branch_node = sp.compute(
+                        sp.record(
+                            children={
+                                head: sp.record(node=value, label=tail),
+                                (1 - head): sp.record(
+                                    node=edge.node,
+                                    label=remove_prefix_lambda(
+                                        (edge.label, prefix.length + 1)
+                                    ),
+                                ),
+                            }
+                        )
                     )
 
-                    new_node_hash = sp.bind_block()
-                    with new_node_hash:
-                        with sp.if_(suffix.length == 0):
-                            # Full match with the key, update operation
-                            r_size.value += 1
-                            r_stack.value[r_size.value] = sp.record(
-                                node=value, key=prefix
-                            )
-                        with sp.else_():
-                            with sp.if_(prefix.length < edge.key.length):
-                                # Mismatch, so lets create a new branch node.
-                                (head, tail) = sp.match_pair(
-                                    chop_first_bit_lambda(suffix)
-                                )
-                                branch_node = sp.local(
-                                    "node",
-                                    sp.record(
-                                        children={
-                                            head: sp.record(node=value, key=tail),
-                                            (1 - head): sp.record(
-                                                node=edge.node,
-                                                key=remove_prefix_lambda(
-                                                    (edge.key, prefix.length + 1)
-                                                ),
-                                            ),
-                                        }
-                                    ),
-                                )
+                    new_node_hash = Inlined.insert_node(tree, branch_node)
 
-                                r_size.value += 1
-                                r_stack.value[r_size.value] = sp.compute(
-                                    sp.record(
-                                        node=Inlined.insert_node(
-                                            tree, branch_node.value
-                                        ),
-                                        key=prefix,
-                                    )
-                                )
+                    sp.result((tree.value, new_node_hash))
 
-                            with sp.else_():
-                                # Partial match, lets just follow the path
-                                sp.verify(suffix.length > 1, "BAD_SUFFIX")
+        (new_tree, new_node_hash) = sp.match_pair(result.value)
 
-                                (head, tail) = sp.match_pair(
-                                    chop_first_bit_lambda(suffix)
-                                )
-                                node = sp.compute(tree.value.nodes[edge.node])
+        new_edge = sp.record(
+            node=new_node_hash,
+            label=prefix,
+        )
 
-                                c_size.value += 1
-                                c_stack.value[c_size.value] = sp.record(
-                                    edge=node.children[head],
-                                    key=tail,
-                                    value=value,
-                                    prefix=sp.some(prefix),
-                                    node=sp.some(node),
-                                    head=sp.some(head),
-                                    edge_node=sp.some(edge.node),
-                                )
-
-            # Update root node
-            edge = sp.compute(r_stack.value[r_size.value])
-            tree.value.root = Inlined.hash_edge(edge)
-            tree.value.root_edge = edge
-
-            sp.result(tree.value)
+        sp.result((new_tree, new_edge))

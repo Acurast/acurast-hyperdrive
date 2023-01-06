@@ -27,7 +27,7 @@ let test =
 
     let contr = Test.to_contract taddr in
     let () = Test.set_source alice in
-    let _result = Test.transfer_to_contract_exn contr (Insert (0x636f756e746572, 0x0000000000000000000000000000000000000000000000000000000000000000)) 0tez in
+    let _ = Test.transfer_to_contract_exn contr (Insert (0x636f756e746572, 0x0000000000000000000000000000000000000000000000000000000000000000)) 0tez in
     let expected_storage: IBCF_Aggregator.storage = {
         config = {
             administrator = admin;
@@ -39,22 +39,22 @@ let test =
         snapshot_start_level = 2n;
         merkle_tree = {
             nodes = Map.empty;
-            root = 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563;
+            root = 0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa;
             root_edge = {
                 label = {
                     data = 9735896544346729033258892448620499820287387749512818771246640093787233631499n ;
                     length = 256n
                 };
-                node = 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563;
+                node = 0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa;
             };
             states = Map.literal [
-                (0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563, 0x0000000000000000000000000000000000000000000000000000000000000000);
+                (0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa, 0x0000000000000000000000000000000000000000000000000000000000000000);
             ]
         };
     } in
     let () = assert (Test.get_storage taddr = expected_storage) in
     let () = Test.set_source bob in
-    let _result = Test.transfer_to_contract_exn contr (Insert (0x636f756e746573, 0x0101010101010101010101010101010101010101010101010101010101010101)) 0tez in
+    let _ = Test.transfer_to_contract_exn contr (Insert (0x636f756e746573, 0x0101010101010101010101010101010101010101010101010101010101010101)) 0tez in
         let expected_storage: IBCF_Aggregator.storage = {
         config = {
             administrator = admin;
@@ -67,30 +67,30 @@ let test =
         merkle_tree = {
             nodes = Map.literal [
                 (
-                    0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4,
+                    0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f,
                     Map.literal [
-                        (0, { label = { data = 2498890967014466819285705885577505579458013707910283518780541093292663029003n; length = 251n; }; node = 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563; }) ;
-                        (1, { label = { data = 259906525983640990778894440752872650209467999544635471875703360995182209290n; length = 251n; }; node = 0xcebc8882fecbec7fb80d2cf4b312bec018884c2d66667c67a90508214bd8bafc; }) ;
+                        (0, { label = { data = 2498890967014466819285705885577505579458013707910283518780541093292663029003n; length = 251n; }; node = 0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa; }) ;
+                        (1, { label = { data = 259906525983640990778894440752872650209467999544635471875703360995182209290n; length = 251n; }; node = 0x532fe658e43559b5505a8485d26bf10a496fa3d884552cbccb69e84d83cc1896; }) ;
                     ]
                 );
             ];
-            root = 0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4;
+            root = 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f;
             root_edge = {
                 label = {
                     data = 1n ;
                     length = 4n ;
                 };
-                node = 0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4;
+                node = 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f;
             };
             states = Map.literal [
-                (0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563, 0x0000000000000000000000000000000000000000000000000000000000000000);
-                (0xcebc8882fecbec7fb80d2cf4b312bec018884c2d66667c67a90508214bd8bafc, 0x0101010101010101010101010101010101010101010101010101010101010101);
+                (0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa, 0x0000000000000000000000000000000000000000000000000000000000000000);
+                (0x532fe658e43559b5505a8485d26bf10a496fa3d884552cbccb69e84d83cc1896, 0x0101010101010101010101010101010101010101010101010101010101010101);
             ]
         };
     } in
     let () = assert (Test.get_storage taddr = expected_storage) in
     let () = Test.set_source claus in
-    let _result = Test.transfer_to_contract_exn contr (Insert (0x636f756e746574, 0x0202020202020202020202020202020202020202020202020202020202020202)) 0tez in
+    let _ = Test.transfer_to_contract_exn contr (Insert (0x636f756e746574, 0x0202020202020202020202020202020202020202020202020202020202020202)) 0tez in
     let expected_storage: IBCF_Aggregator.storage = {
         config = {
             administrator = admin;
@@ -103,32 +103,32 @@ let test =
         merkle_tree = {
             nodes = Map.literal [
                 (
-                    0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4,
+                    0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f,
                     Map.literal [
-                        (0, { label = { data = 2498890967014466819285705885577505579458013707910283518780541093292663029003n; length = 251n; }; node = 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563; }) ;
-                        (1, { label = { data = 259906525983640990778894440752872650209467999544635471875703360995182209290n; length = 251n; }; node = 0xcebc8882fecbec7fb80d2cf4b312bec018884c2d66667c67a90508214bd8bafc; }) ;
+                        (0, { label = { data = 2498890967014466819285705885577505579458013707910283518780541093292663029003n; length = 251n; }; node = 0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa; }) ;
+                        (1, { label = { data = 259906525983640990778894440752872650209467999544635471875703360995182209290n; length = 251n; }; node = 0x532fe658e43559b5505a8485d26bf10a496fa3d884552cbccb69e84d83cc1896; }) ;
                     ]
                 );
                 (
-                    0x5c2681f0f2af2e576d21e5b85156e2ad036ad7c9b37f2ba35fe8cdfd5dca1432,
+                    0x3ca1cde89d2ea298ece17ce0957f79080fa5f4d6365f4b7c5f6bc4b82943cb60,
                     Map.literal [
-                        (0, { label = { data = 1n; length = 2n; }; node = 0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4; }) ;
-                        (1, { label = { data = 19325644539396737862298362442106058253679263789628498884142745090485904706773n; length = 254n; }; node = 0xee4a079f5b14a24465181d45af32a8053c2d446446d7019359e210b82e53b8ba; }) ;
+                        (0, { label = { data = 1n; length = 2n; }; node = 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f; }) ;
+                        (1, { label = { data = 19325644539396737862298362442106058253679263789628498884142745090485904706773n; length = 254n; }; node = 0x39da3d8e0e8d4a9b7ed1a7be853fdfda2984502f51bc32d8c9d7f89c6d67113c; }) ;
                     ]
                 );
             ];
-            root = 0x5c2681f0f2af2e576d21e5b85156e2ad036ad7c9b37f2ba35fe8cdfd5dca1432;
+            root = 0x3ca1cde89d2ea298ece17ce0957f79080fa5f4d6365f4b7c5f6bc4b82943cb60;
             root_edge = {
                 label = {
                     data = 0n ;
                     length = 1n ;
                 };
-                node = 0x5c2681f0f2af2e576d21e5b85156e2ad036ad7c9b37f2ba35fe8cdfd5dca1432;
+                node = 0x3ca1cde89d2ea298ece17ce0957f79080fa5f4d6365f4b7c5f6bc4b82943cb60;
             };
             states = Map.literal [
-                (0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563, 0x0000000000000000000000000000000000000000000000000000000000000000);
-                (0xcebc8882fecbec7fb80d2cf4b312bec018884c2d66667c67a90508214bd8bafc, 0x0101010101010101010101010101010101010101010101010101010101010101);
-                (0xee4a079f5b14a24465181d45af32a8053c2d446446d7019359e210b82e53b8ba, 0x0202020202020202020202020202020202020202020202020202020202020202)
+                (0xe4c050b87ef41d180cae546ba2977ae5089db7a04a884c8d44eee1e7833efbfa, 0x0000000000000000000000000000000000000000000000000000000000000000);
+                (0x532fe658e43559b5505a8485d26bf10a496fa3d884552cbccb69e84d83cc1896, 0x0101010101010101010101010101010101010101010101010101010101010101);
+                (0x39da3d8e0e8d4a9b7ed1a7be853fdfda2984502f51bc32d8c9d7f89c6d67113c, 0x0202020202020202020202020202020202020202020202020202020202020202);
             ]
         };
     } in
@@ -139,23 +139,23 @@ let test =
     let result = Test.run IBCF_Aggregator.get_proof((claus, key), store) in
     let expected_result : IBCF_Aggregator.get_proof_result = {
         snapshot = 1n;
-        merkle_root = 0x5c2681f0f2af2e576d21e5b85156e2ad036ad7c9b37f2ba35fe8cdfd5dca1432;
+        merkle_root = 0x3ca1cde89d2ea298ece17ce0957f79080fa5f4d6365f4b7c5f6bc4b82943cb60;
         key = 0x636f756e746574;
         value = 0x0202020202020202020202020202020202020202020202020202020202020202;
         proof =  [
-            (Left 0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4)
+            (Left 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f)
         ];
     } in
     let expected_result = Test.eval expected_result in
     let () = assert (result = expected_result) in
 
     let arg: IBCF_Aggregator.verify_proof_argument = {
-        state_root = 0x5c2681f0f2af2e576d21e5b85156e2ad036ad7c9b37f2ba35fe8cdfd5dca1432;
-        owner = 0x;
+        state_root = 0x3ca1cde89d2ea298ece17ce0957f79080fa5f4d6365f4b7c5f6bc4b82943cb60;
+        owner = claus;
         key = 0x636f756e746574;
         value = 0x0202020202020202020202020202020202020202020202020202020202020202;
         proof =  [
-            (Left 0x2b639e0b5097f601aeeec60e2063037fbc5980a82967535d9fb8e08520e233e4)
+            (Left 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f)
         ];
     } in
     let result = Test.run IBCF_Aggregator.verify_proof(arg, Test.get_storage taddr) in
