@@ -120,6 +120,263 @@ class Lambdas:
         with sp.else_():
             sp.result(sp.some(state_root.value))
 
+    @staticmethod
+    def nibbles_of_bytes(arg):
+        """
+        Convert bytes to nibbels (e.g. 0xff => 0x0f0f)
+        """
+        (_bytes, skip_nibbles) = sp.match_record(
+            sp.set_type_expr(arg, sp.TRecord(bytes=sp.TBytes, skip=sp.TNat)),
+            "bytes",
+            "skip",
+        )
+
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
+
+        bytes_length = sp.compute(sp.len(_bytes))
+        sp.verify(bytes_length > 0, "Empty bytes array")
+
+        nibbles_length = sp.compute(bytes_length * 2)
+        sp.verify(nibbles_length >= skip_nibbles, "Skip nibbles amount too large")
+
+        nibbles = sp.local("nibbles", sp.bytes("0x"))
+
+        with sp.for_("i", sp.range(skip_nibbles, nibbles_length, 1)) as i:
+            byte = sp.compute(
+                nat_of_bytes_lambda(sp.slice(_bytes, i // 2, 1).open_some())
+            )
+            bit_pos = sp.compute(sp.map({0: 4, 1: 0}))
+            nibbles.value += sp.slice(
+                sp.pack((byte >> bit_pos[i % 2]) & 15), 2, 1
+            ).open_some()
+
+        sp.result(nibbles.value)
+
+    @staticmethod
+    def shared_prefix_length(arg):
+        (path_offset, full_path, path) = sp.match_record(
+            sp.set_type_expr(
+                arg,
+                sp.TRecord(path_offset=sp.TNat, full_path=sp.TBytes, path=sp.TBytes),
+            ),
+            "path_offset",
+            "full_path",
+            "path",
+        )
+        i = sp.local("i", 0)
+        continue_loop = sp.local("continue", True)
+        xs_length = sp.compute(sp.len(full_path))
+        ys_length = sp.compute(sp.len(path))
+        with sp.while_(
+            continue_loop.value
+            & (i.value + path_offset < xs_length)
+            & (i.value < ys_length)
+        ):
+            p1 = sp.slice(full_path, i.value + path_offset, 1).open_some()
+            p2 = sp.slice(path, i.value, 1).open_some()
+            with sp.if_(p1 != p2):
+                continue_loop.value = False
+            with sp.else_():
+                i.value += 1
+
+        sp.result(i.value)
+
+    @staticmethod
+    def merkle_patricia_compact_decode(_bytes):
+        sp.verify(sp.len(_bytes) > 0, "Empty bytes array")
+
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
+        nibbles_of_bytes_lambda = sp.compute(sp.build_lambda(Lambdas.nibbles_of_bytes))
+
+        byte0 = sp.compute(nat_of_bytes_lambda(sp.slice(_bytes, 0, 1).open_some()))
+        first_nibble = sp.compute(byte0 >> 4)
+        nibbles_to_skip = sp.local("nibbles_to_skip", sp.nat(0))
+
+        with sp.if_(first_nibble == 0):
+            nibbles_to_skip.value = 2
+        with sp.else_():
+            with sp.if_(first_nibble == 1):
+                nibbles_to_skip.value = 1
+            with sp.else_():
+                with sp.if_(first_nibble == 2):
+                    nibbles_to_skip.value = 2
+                with sp.else_():
+                    with sp.if_(first_nibble == 3):
+                        nibbles_to_skip.value = 1
+                    with sp.else_():
+                        # Not supposed to happen!
+                        sp.failwith(("UNEXPECTED", first_nibble, _bytes))
+
+        sp.result(nibbles_of_bytes_lambda(sp.record(bytes=_bytes, skip=nibbles_to_skip.value)))
+
+    @staticmethod
+    def extract_nibble(arg):
+        """
+        Nibble is extracted as the least significant nibble in the returned byte
+        """
+        (path, position) = sp.match_record(
+            sp.set_type_expr(arg, sp.TRecord(path=sp.TBytes, position=sp.TNat)),
+            "path",
+            "position",
+        )
+
+        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
+
+        sp.verify(position < 64, "Invalid nibble position")
+
+        byte = sp.local(
+            "byte",
+            nat_of_bytes_lambda(
+                sp.compute(sp.slice(path, position / 2, 1).open_some())
+            ),
+        )
+        with sp.if_(position % 2 == 0):
+            sp.result(byte.value >> 4)
+        with sp.else_():
+            sp.result(byte.value & 0xF)
+
+    @staticmethod
+    def verify(arg):
+        (rlp, proof_rlp, state_root, path32) = sp.match_record(
+            sp.set_type_expr(
+                arg,
+                Type.Verify_argument,
+            ),
+            "rlp",
+            "proof_rlp",
+            "state_root",
+            "path",
+        )
+
+        nibbles_of_bytes_lambda = sp.compute(sp.build_lambda(Lambdas.nibbles_of_bytes))
+        shared_prefix_length_lambda = sp.compute(sp.build_lambda(Lambdas.shared_prefix_length))
+        merkle_patricia_compact_decode_lambda = sp.compute(sp.build_lambda(Lambdas.merkle_patricia_compact_decode))
+        extract_nibble_lambda = sp.compute(sp.build_lambda(Lambdas.extract_nibble))
+
+        proof_nodes = sp.compute(rlp.to_list(proof_rlp))
+
+        proof_nodes_length = sp.compute(sp.len(proof_nodes))
+        path = sp.compute(nibbles_of_bytes_lambda(sp.record(bytes=path32, skip=sp.nat(0))))
+        full_path_length = sp.compute(sp.len(path))
+        path_offset = sp.local("path_offset", 0)
+
+        with sp.if_(proof_nodes_length == 0):
+            # Root hash of empty tx trie
+            sp.verify(state_root == EMPTY_TRIE_ROOT_HASH, "Bad empty proof")
+            sp.result(sp.bytes("0x"))
+        with sp.else_():
+            next_hash = sp.local("next_hash", sp.bytes("0x"))
+
+            continue_loop = sp.local("continue_loop", True)
+            result = sp.local("result0", sp.bytes("0x"))
+            with sp.for_(
+                "proof_node_idx", sp.range(0, proof_nodes_length)
+            ) as proof_node_idx:
+                proof_node = sp.compute(proof_nodes[proof_node_idx])
+                with sp.if_(continue_loop.value):
+
+                    with sp.if_(next_hash.value == sp.bytes("0x")):
+                        sp.verify(
+                            state_root == HASH_FUNCTION(proof_node),
+                            "Bad first proof part",
+                        )
+                    with sp.else_():
+                        sp.verify(
+                            next_hash.value == HASH_FUNCTION(proof_node), "Bad hash"
+                        )
+
+                    nodes = sp.compute(rlp.to_list(proof_node))
+                    nodes_length = sp.compute(sp.len(nodes))
+                    # Extension or Leaf node
+                    with sp.if_(nodes_length == 2):
+                        node_path = sp.compute(
+                            merkle_patricia_compact_decode_lambda(
+                                rlp.remove_offset(nodes[0])
+                            )
+                        )
+                        path_offset.value += sp.compute(
+                            shared_prefix_length_lambda(
+                                sp.record(
+                                    path_offset=path_offset.value,
+                                    full_path=path,
+                                    path=node_path,
+                                )
+                            )
+                        )
+                        # last proof item
+                        with sp.if_(proof_node_idx + 1 == proof_nodes_length):
+                            sp.verify(
+                                path_offset.value == full_path_length,
+                                "Unexpected end of proof (leaf)",
+                            )
+                            result.value = rlp.remove_offset(
+                                nodes[1]
+                            )  # Data is the second item in a leaf node
+                            continue_loop.value = False
+                        with sp.else_():
+                            # not last proof item
+                            children = sp.compute(nodes[1])
+                            with sp.if_(rlp.is_list(children)):
+                                next_hash.value = HASH_FUNCTION(children)
+                            with sp.else_():
+                                next_hash.value = sp.compute(
+                                    get_next_hash(rlp.remove_offset(children))
+                                )
+
+                    with sp.else_():
+                        # Must be a branch node at this point
+                        sp.verify(nodes_length == 17, "Invalid node length")
+
+                        with sp.if_(proof_node_idx + 1 == proof_nodes_length):
+                            # Proof ends in a branch node, exclusion proof in most cases
+                            with sp.if_(path_offset.value + 1 == full_path_length):
+                                result.value = rlp.remove_offset(nodes[16])
+                                continue_loop.value = False
+                            with sp.else_():
+                                node_index = sp.compute(
+                                    extract_nibble_lambda(
+                                        sp.record(
+                                            position=path_offset.value, path=path32
+                                        )
+                                    )
+                                )
+
+                                children = nodes[node_index]
+
+                                # Ensure that the next path item is empty, end of exclusion proof
+                                sp.verify(
+                                    sp.len(rlp.remove_offset(nodes[node_index])) == 0,
+                                    "Invalid exclusion proof",
+                                )
+                                result.value = sp.bytes("0x")
+                                continue_loop.value = False
+
+                        with sp.else_():
+                            sp.verify(
+                                path_offset.value < sp.len(path),
+                                "Continuing branch has depleted path",
+                            )
+
+                            node_index = sp.compute(
+                                extract_nibble_lambda(
+                                    sp.record(position=path_offset.value, path=path32)
+                                )
+                            )
+
+                            children = sp.compute(nodes[node_index])
+
+                            # advance by one
+                            path_offset.value += 1
+
+                            # not last level
+                            with sp.if_(rlp.is_list(children)):
+                                next_hash.value = HASH_FUNCTION(children)
+                            with sp.else_():
+                                next_hash.value = sp.compute(
+                                    get_next_hash(rlp.remove_offset(children))
+                                )
+
+            sp.result(result.value)
 
 class RLP_utils:
     @staticmethod
@@ -235,163 +492,6 @@ class IBCF_Eth_Validator(sp.Contract):
                     self.data.config.snapshot_interval = payload
 
     @sp.onchain_view()
-    def verify(self, arg):
-        (rlp, proof_rlp, state_root, path32) = sp.match_record(
-            sp.set_type_expr(
-                arg,
-                Type.Verify_argument,
-            ),
-            "rlp",
-            "proof_rlp",
-            "state_root",
-            "path",
-        )
-
-        proof_nodes = sp.compute(rlp.to_list(proof_rlp))
-
-        proof_nodes_length = sp.compute(sp.len(proof_nodes))
-        path = sp.compute(
-            sp.view(
-                "nibbles_of_bytes",
-                sp.self_address,
-                sp.record(bytes=path32, skip=sp.nat(0)),
-                t=sp.TBytes,
-            ).open_some("Invalid view")
-        )
-        full_path_length = sp.compute(sp.len(path))
-        path_offset = sp.local("path_offset", 0)
-
-        with sp.if_(proof_nodes_length == 0):
-            # Root hash of empty tx trie
-            sp.verify(state_root == EMPTY_TRIE_ROOT_HASH, "Bad empty proof")
-            sp.result(sp.bytes("0x"))
-        with sp.else_():
-            next_hash = sp.local("next_hash", sp.bytes("0x"))
-
-            continue_loop = sp.local("continue_loop", True)
-            result = sp.local("result0", sp.bytes("0x"))
-            with sp.for_(
-                "proof_node_idx", sp.range(0, proof_nodes_length)
-            ) as proof_node_idx:
-                proof_node = sp.compute(proof_nodes[proof_node_idx])
-                with sp.if_(continue_loop.value):
-
-                    with sp.if_(next_hash.value == sp.bytes("0x")):
-                        sp.verify(
-                            state_root == HASH_FUNCTION(proof_node),
-                            "Bad first proof part",
-                        )
-                    with sp.else_():
-                        sp.verify(
-                            next_hash.value == HASH_FUNCTION(proof_node), "Bad hash"
-                        )
-
-                    nodes = sp.compute(rlp.to_list(proof_node))
-                    nodes_length = sp.compute(sp.len(nodes))
-                    # Extension or Leaf node
-                    with sp.if_(nodes_length == 2):
-                        node_path = sp.compute(
-                            sp.view(
-                                "merkle_patricia_compact_decode",
-                                sp.self_address,
-                                rlp.remove_offset(nodes[0]),
-                                t=sp.TBytes,
-                            ).open_some("Invalid view")
-                        )
-                        path_offset.value += sp.compute(
-                            sp.view(
-                                "shared_prefix_length",
-                                sp.self_address,
-                                sp.record(
-                                    path_offset=path_offset.value,
-                                    full_path=path,
-                                    path=node_path,
-                                ),
-                                t=sp.TNat,
-                            ).open_some("Invalid view")
-                        )
-                        # last proof item
-                        with sp.if_(proof_node_idx + 1 == proof_nodes_length):
-                            sp.verify(
-                                path_offset.value == full_path_length,
-                                "Unexpected end of proof (leaf)",
-                            )
-                            result.value = rlp.remove_offset(
-                                nodes[1]
-                            )  # Data is the second item in a leaf node
-                            continue_loop.value = False
-                        with sp.else_():
-                            # not last proof item
-                            children = sp.compute(nodes[1])
-                            with sp.if_(rlp.is_list(children)):
-                                next_hash.value = HASH_FUNCTION(children)
-                            with sp.else_():
-                                next_hash.value = sp.compute(
-                                    get_next_hash(rlp.remove_offset(children))
-                                )
-
-                    with sp.else_():
-                        # Must be a branch node at this point
-                        sp.verify(nodes_length == 17, "Invalid node length")
-
-                        with sp.if_(proof_node_idx + 1 == proof_nodes_length):
-                            # Proof ends in a branch node, exclusion proof in most cases
-                            with sp.if_(path_offset.value + 1 == full_path_length):
-                                result.value = rlp.remove_offset(nodes[16])
-                                continue_loop.value = False
-                            with sp.else_():
-                                node_index = sp.compute(
-                                    sp.view(
-                                        "extract_nibble",
-                                        sp.self_address,
-                                        sp.record(
-                                            position=path_offset.value, path=path32
-                                        ),
-                                        t=sp.TNat,
-                                    ).open_some("Invalid view")
-                                )
-
-                                children = nodes[node_index]
-
-                                # Ensure that the next path item is empty, end of exclusion proof
-                                sp.verify(
-                                    sp.len(rlp.remove_offset(nodes[node_index])) == 0,
-                                    "Invalid exclusion proof",
-                                )
-                                result.value = sp.bytes("0x")
-                                continue_loop.value = False
-
-                        with sp.else_():
-                            sp.verify(
-                                path_offset.value < sp.len(path),
-                                "Continuing branch has depleted path",
-                            )
-
-                            node_index = sp.compute(
-                                sp.view(
-                                    "extract_nibble",
-                                    sp.self_address,
-                                    sp.record(position=path_offset.value, path=path32),
-                                    t=sp.TNat,
-                                ).open_some("Invalid view")
-                            )
-
-                            children = sp.compute(nodes[node_index])
-
-                            # advance by one
-                            path_offset.value += 1
-
-                            # not last level
-                            with sp.if_(rlp.is_list(children)):
-                                next_hash.value = HASH_FUNCTION(children)
-                            with sp.else_():
-                                next_hash.value = sp.compute(
-                                    get_next_hash(rlp.remove_offset(children))
-                                )
-
-            sp.result(result.value)
-
-    @sp.onchain_view()
     def validate_storage_proof(self, arg):
         (
             account,
@@ -410,6 +510,8 @@ class IBCF_Eth_Validator(sp.Contract):
             "storage_slot",
             "storage_proof_rlp",
         )
+
+        verify_lambda = sp.compute(sp.build_lambda(Lambdas.verify))
 
         block_state_roots = sp.compute(
             self.data.state_root.get(
@@ -439,9 +541,7 @@ class IBCF_Eth_Validator(sp.Contract):
         account_state_root = sp.compute(
             rlp.remove_offset(
                 rlp.to_list(
-                    sp.view(
-                        "verify",
-                        sp.self_address,
+                    verify_lambda(
                         sp.set_type_expr(
                             sp.record(
                                 path=account_state_path,
@@ -450,9 +550,8 @@ class IBCF_Eth_Validator(sp.Contract):
                                 state_root=state_root,
                             ),
                             Type.Verify_argument,
-                        ),
-                        t=sp.TBytes,
-                    ).open_some(sp.unit)
+                        )
+                    )
                 )[ACCOUNT_STATE_ROOT_INDEX]
             )
         )
@@ -461,9 +560,7 @@ class IBCF_Eth_Validator(sp.Contract):
         storage_state_path = HASH_FUNCTION(storage_slot)
 
         sp.result(
-            sp.view(
-                "verify",
-                sp.self_address,
+            verify_lambda(
                 sp.set_type_expr(
                     sp.record(
                         rlp=rlp,
@@ -472,132 +569,9 @@ class IBCF_Eth_Validator(sp.Contract):
                         path=storage_state_path,
                     ),
                     Type.Verify_argument,
-                ),
-                t=sp.TBytes,
-            ).open_some(sp.unit)
-        )
-
-    @sp.onchain_view()
-    def merkle_patricia_compact_decode(self, _bytes):
-        sp.verify(sp.len(_bytes) > 0, "Empty bytes array")
-
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
-
-        byte0 = sp.compute(nat_of_bytes_lambda(sp.slice(_bytes, 0, 1).open_some()))
-        first_nibble = sp.compute(byte0 >> 4)
-        nibbles_to_skip = sp.local("nibbles_to_skip", sp.nat(0))
-
-        with sp.if_(first_nibble == 0):
-            nibbles_to_skip.value = 2
-        with sp.else_():
-            with sp.if_(first_nibble == 1):
-                nibbles_to_skip.value = 1
-            with sp.else_():
-                with sp.if_(first_nibble == 2):
-                    nibbles_to_skip.value = 2
-                with sp.else_():
-                    with sp.if_(first_nibble == 3):
-                        nibbles_to_skip.value = 1
-                    with sp.else_():
-                        # Not supposed to happen!
-                        sp.failwith(("UNEXPECTED", first_nibble, _bytes))
-
-        sp.result(
-            sp.view(
-                "nibbles_of_bytes",
-                sp.self_address,
-                sp.record(bytes=_bytes, skip=nibbles_to_skip.value),
-                t=sp.TBytes,
-            ).open_some("Invalid view")
-        )
-
-    @sp.onchain_view()
-    def nibbles_of_bytes(self, arg):
-        """
-        Convert bytes to nibbels (e.g. 0xff => 0x0f0f)
-        """
-        (_bytes, skip_nibbles) = sp.match_record(
-            sp.set_type_expr(arg, sp.TRecord(bytes=sp.TBytes, skip=sp.TNat)),
-            "bytes",
-            "skip",
-        )
-
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
-
-        bytes_length = sp.compute(sp.len(_bytes))
-        sp.verify(bytes_length > 0, "Empty bytes array")
-
-        nibbles_length = sp.compute(bytes_length * 2)
-        sp.verify(nibbles_length >= skip_nibbles, "Skip nibbles amount too large")
-
-        nibbles = sp.local("nibbles", sp.bytes("0x"))
-
-        with sp.for_("i", sp.range(skip_nibbles, nibbles_length, 1)) as i:
-            byte = sp.compute(
-                nat_of_bytes_lambda(sp.slice(_bytes, i // 2, 1).open_some())
+                )
             )
-            bit_pos = sp.compute(sp.map({0: 4, 1: 0}))
-            nibbles.value += sp.slice(
-                sp.pack((byte >> bit_pos[i % 2]) & 15), 2, 1
-            ).open_some()
-
-        sp.result(nibbles.value)
-
-    @sp.onchain_view()
-    def shared_prefix_length(self, arg):
-        (path_offset, full_path, path) = sp.match_record(
-            sp.set_type_expr(
-                arg,
-                sp.TRecord(path_offset=sp.TNat, full_path=sp.TBytes, path=sp.TBytes),
-            ),
-            "path_offset",
-            "full_path",
-            "path",
         )
-        i = sp.local("i", 0)
-        continue_loop = sp.local("continue", True)
-        xs_length = sp.compute(sp.len(full_path))
-        ys_length = sp.compute(sp.len(path))
-        with sp.while_(
-            continue_loop.value
-            & (i.value + path_offset < xs_length)
-            & (i.value < ys_length)
-        ):
-            p1 = sp.slice(full_path, i.value + path_offset, 1).open_some()
-            p2 = sp.slice(path, i.value, 1).open_some()
-            with sp.if_(p1 != p2):
-                continue_loop.value = False
-            with sp.else_():
-                i.value += 1
-
-        sp.result(i.value)
-
-    @sp.onchain_view()
-    def extract_nibble(self, arg):
-        """
-        Nibble is extracted as the least significant nibble in the returned byte
-        """
-        (path, position) = sp.match_record(
-            sp.set_type_expr(arg, sp.TRecord(path=sp.TBytes, position=sp.TNat)),
-            "path",
-            "position",
-        )
-
-        nat_of_bytes_lambda = sp.compute(sp.build_lambda(Nat.of_bytes))
-
-        sp.verify(position < 64, "Invalid nibble position")
-
-        byte = sp.local(
-            "byte",
-            nat_of_bytes_lambda(
-                sp.compute(sp.slice(path, position / 2, 1).open_some())
-            ),
-        )
-        with sp.if_(position % 2 == 0):
-            sp.result(byte.value >> 4)
-        with sp.else_():
-            sp.result(byte.value & 0xF)
-
 
 def get_next_hash(node):
     sp.verify(sp.len(node) == 32, "Invalid node")

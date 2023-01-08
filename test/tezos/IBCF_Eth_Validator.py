@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.IBCF_Eth_Validator import IBCF_Eth_Validator, Error, RLP_utils
+from contracts.tezos.IBCF_Eth_Validator import IBCF_Eth_Validator, Error, RLP_utils, Lambdas
 from contracts.tezos.utils.rlp import Decoder
 from contracts.tezos.utils.nat import Nat
 from contracts.tezos.utils.bytes import Bytes
@@ -64,8 +64,9 @@ def test():
     scenario += ibcf
 
     # Validate helper views
+    nibbles_of_bytes_lambda = scenario.compute(sp.build_lambda(Lambdas.nibbles_of_bytes))
     scenario.verify(
-        ibcf.nibbles_of_bytes(
+        nibbles_of_bytes_lambda(
             sp.record(
                 bytes=sp.bytes("0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0"), skip=2
             )
@@ -74,8 +75,9 @@ def test():
             "0x060f010a0b0f00070d0b0d0b070f0206020d000a07010006070d0a0d0c0402010f0e030d0f00"
         )
     )
+    extract_nibble_lambda = scenario.compute(sp.build_lambda(Lambdas.extract_nibble))
     scenario.verify(
-        ibcf.extract_nibble(
+        extract_nibble_lambda(
             sp.record(
                 path=sp.bytes(
                     "0x6c2c8896c2375ca53a40019b1c64f2fb4cfbee5ff546cde64bf4bee12a4c0088"
