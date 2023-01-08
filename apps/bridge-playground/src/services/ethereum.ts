@@ -1,5 +1,7 @@
-import Web3 from 'web3';
+import { ethers, Contract } from 'ethers';
 
-const Ethereum: Web3 = new Web3(Web3.givenProvider);
+const Ethereum = new ethers.providers.Web3Provider((window as any).ethereum);
+
+export { Contract };
 
 export default Ethereum;

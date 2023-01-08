@@ -1,4 +1,3 @@
-import type { Eth } from 'web3-eth';
 import Web3 from 'web3';
 import RLP from 'rlp';
 

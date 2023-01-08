@@ -9,7 +9,7 @@ const NavigationBar = () => {
             <Toolbar>
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography>
-                    Inter Blockchain Communication Protocol <span style={{ color: 'red' }}>Proof of Concept</span>
+                    Inter Blockchain Communication Protocol <span style={{ color: 'red' }}>Bridge blueprint</span>
                 </Typography>
                 <Box sx={{ flexGrow: 1 }} />
                 <Divider flexItem orientation="vertical" sx={{ margin: 1 }} />

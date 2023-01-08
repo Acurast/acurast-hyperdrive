@@ -1,12 +1,13 @@
 import React from 'react';
-import { Card, Grid, Typography, CardContent, DialogActions, TextField, Divider } from '@mui/material';
+import { Card, Grid, Typography, CardContent, DialogActions, TextField, Divider, CardActions } from '@mui/material';
 
 import abi from './abi';
-import EthereumSDK from 'src/services/ethereum';
+import EthereumSDK, { Contract } from 'src/services/ethereum';
 import Button from 'src/components/base/Button';
 import Dialog from '../base/Dialog';
 import { AssetInfo } from 'src/context/AppContext';
 import Constants from 'src/constants';
+import Logger from 'src/services/logger';
 
 interface OwnProps {
     asset: AssetInfo;
@@ -18,9 +19,10 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
     const [modalOpen, setModalOpen] = React.useState<string>();
     const [target, setTarget] = React.useState<string>();
     const [amount, setAmount] = React.useState<string>();
+    const [confirming, setConfirming] = React.useState(false);
 
-    const performAction = React.useCallback(() => {
-        const contract = new EthereumSDK.eth.Contract(abi.asset, asset.address);
+    const performAction = React.useCallback(async () => {
+        const contract = new Contract(asset.address, abi.asset, EthereumSDK.getSigner());
 
         if (!modalOpen) {
             return setError(new Error('Invalid action!'));
@@ -31,18 +33,17 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
         if (!amount || amount == '0') {
             return setError(new Error('Invalid amount!'));
         }
-
-        EthereumSDK.eth
-            .getAccounts()
-            .then(async (accounts) => {
-                return contract.methods[modalOpen](target, amount)
-                    .send({ from: accounts[0] })
-                    .on('transactionHash', function (hash: string) {
-                        setOperationHash(hash);
-                    });
-            })
-            .then(console.log)
-            .catch(setError);
+        try {
+            const result = await contract[modalOpen](target, amount);
+            setConfirming(true);
+            setOperationHash(result.hash);
+            await result.wait(1);
+        } catch (e: any) {
+            Logger.error(e);
+            return setError(e);
+        } finally {
+            setConfirming(false);
+        }
     }, [asset.address, modalOpen, target, amount]);
 
     const handleTarget = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -80,7 +81,7 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                                 </Grid>
                                 <Grid item>
                                     <Button fullWidth size="small" onClick={() => setModalOpen('approve')}>
-                                        Approve
+                                        Add Allowance
                                     </Button>
                                 </Grid>
                                 <Grid item>
@@ -126,11 +127,19 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                 <TextField
                     error={!target}
                     placeholder="Address (0x...)"
+                    value={target || ''}
                     onChange={handleTarget}
                     fullWidth
                     margin="dense"
                 />
-                <TextField error={!amount} placeholder="Amount" onChange={handleAmount} fullWidth margin="dense" />
+                <TextField
+                    error={!amount}
+                    placeholder="Amount"
+                    value={amount || ''}
+                    onChange={handleAmount}
+                    fullWidth
+                    margin="dense"
+                />
             </Dialog>
 
             <Dialog title="Error" open={!!error} onClose={() => setError(undefined)}>
@@ -146,6 +155,15 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                     Etherscan
                 </a>
             </Dialog>
+            <CardActions>
+                <Grid container direction="row" justifyContent="center" alignItems="center">
+                    <Grid item>
+                        <Typography color="text.secondary" gutterBottom>
+                            {confirming ? 'Confirming...' : ''}
+                        </Typography>
+                    </Grid>
+                </Grid>
+            </CardActions>
         </>
     );
 };

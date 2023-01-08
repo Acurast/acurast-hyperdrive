@@ -7,16 +7,16 @@ import {
     Box,
     Typography,
 } from '@mui/material';
-import { Blueprint, Tezos } from '@ibcf/sdk';
+import { Ethereum, Tezos } from '@ibcf/sdk';
 
 import TableRow from 'src/components/base/TableRow';
 import Table from '../base/Table';
 
-const TRow: React.FC<Blueprint.Bridge.Wrap> = ({ address, amount, nonce }) => {
+const TRow: React.FC<Ethereum.Contracts.Bridge.Wrap> = ({ address, amount, nonce }) => {
     return (
         <TableRow>
             <TableCell component="th" scope="row">
-                <Typography variant="caption">{Tezos.Utils.unpackAddress(address)}</Typography>
+                <Typography variant="caption">{address}</Typography>
             </TableCell>
             <TableCell
                 component="th"
@@ -31,14 +31,14 @@ const TRow: React.FC<Blueprint.Bridge.Wrap> = ({ address, amount, nonce }) => {
                 <Typography variant="caption">{amount.toString()}</Typography>
             </TableCell>
             <TableCell component="th" scope="row">
-                <Typography variant="caption">{nonce}</Typography>
+                <Typography variant="caption">{nonce.toString()}</Typography>
             </TableCell>
         </TableRow>
     );
 };
 
 interface OwnProps {
-    wraps: Blueprint.Bridge.Wrap[];
+    wraps: Ethereum.Contracts.Bridge.Wrap[];
 }
 
 const TableTemplate =

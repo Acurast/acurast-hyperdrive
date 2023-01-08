@@ -19,7 +19,7 @@ const Tezos = () => {
     const [error, setError] = React.useState('');
     const [sending, setSending] = React.useState(false);
     const [proof, setProof] = React.useState<IbcfSdk.Tezos.Proof.TezosProof>();
-    const [pongProof, setPongProof] = React.useState<IbcfSdk.EthereumProof>();
+    const [pongProof, setPongProof] = React.useState<IbcfSdk.Ethereum.Proof.EthereumProof>();
     const [operationHash, setOperationHash] = React.useState('');
     const [confirmPongOpen, setConfirmPongOpen] = React.useState(false);
 

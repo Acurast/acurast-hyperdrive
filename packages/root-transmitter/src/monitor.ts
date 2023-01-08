@@ -177,7 +177,7 @@ function getEnv() {
         TEZOS_FINALIZE_SNAPSHOTS: process.env['TEZOS_FINALIZE_SNAPSHOTS'] == '1',
         TEZOS_AGGREGATOR_ADDRESS: process.env['TEZOS_AGGREGATOR_ADDRESS']!,
         TEZOS_VALIDATOR_ADDRESS: process.env['TEZOS_VALIDATOR_ADDRESS']!,
-        TEZOS_PRIVATE_KEY: process.env['TEZOS_PRIVATE_KEY2']!,
+        TEZOS_PRIVATE_KEY: process.env['TEZOS_PRIVATE_KEY']!,
         ETHEREUM_RPC: process.env['ETHEREUM_RPC']!,
         ETHEREUM_FINALITY: Number(process.env['ETHEREUM_FINALITY']!),
         ETHEREUM_PRIVATE_KEY: process.env['ETHEREUM_PRIVATE_KEY']!,

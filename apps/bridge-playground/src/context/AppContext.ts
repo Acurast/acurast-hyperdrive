@@ -1,15 +1,15 @@
 import { createContext } from 'react';
 import type { BigNumber } from 'bignumber.js';
 import { BigMapAbstraction } from '@taquito/taquito';
-import { Blueprint } from '@ibcf/sdk';
+import { Ethereum } from '@ibcf/sdk';
 
 export interface TezosBridgeStorage {
     asset: AssetInfo;
 }
 
 export interface TezosStateAggregatorStorage {
-    merkle_history_indexes: BigNumber[];
-    merkle_history: BigMapAbstraction;
+    snapshot_level: BigMapAbstraction;
+    merkle_tree: any;
     blocks: [BigNumber, string][];
 }
 
@@ -20,7 +20,7 @@ export interface AssetInfo {
 
 export interface EthereumStorage {
     asset: AssetInfo;
-    wraps: Blueprint.Bridge.Wrap[];
+    wraps: Ethereum.Contracts.Bridge.Wrap[];
 }
 
 export interface IAppContext {

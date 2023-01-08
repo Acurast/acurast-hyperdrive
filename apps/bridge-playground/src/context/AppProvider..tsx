@@ -5,9 +5,8 @@ import Tezos from 'src/services/tezos';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';
 import { BigMapAbstraction, ContractAbstraction, MichelsonMap } from '@taquito/taquito';
-import { Blueprint } from '@ibcf/sdk';
-import Ethereum from 'src/services/ethereum';
-import Web3 from 'web3';
+import * as IbcfSdk from '@ibcf/sdk';
+import EthereumEthers, { Contract } from 'src/services/ethereum';
 import BigNumber from 'bignumber.js';
 import WalletService from 'src/services/wallet';
 
@@ -40,30 +39,30 @@ async function fetchTezosValidatorStorage() {
     if (!validator_contract) {
         validator_contract = await Tezos.contract.at(Constants.tezos_validator);
     }
-    let ethereumBlockNumber = (await Ethereum.eth.getBlockNumber()) - 1;
-    const storage_root = (await validator_contract.storage<any>()).block_state_root as BigMapAbstraction;
+    // let ethereumBlockNumber = (await EthereumEthers.getBlockNumber()) - 1;
+    // const storage_root = (await validator_contract.storage<any>()).block_state_root as BigMapAbstraction;
 
-    const values = await storage_root.getMultipleValues<MichelsonMap<string, string>>(
-        [...new Array(5)].map(() => ethereumBlockNumber--),
-    );
+    // const values = await storage_root.getMultipleValues<MichelsonMap<string, string>>(
+    //     [...new Array(5)].map(() => ethereumBlockNumber--),
+    // );
 
     const block_submissions: [string, string][] = [];
-    for (const [key, value] of values.entries()) {
-        const submissions: Record<string, string[]> = {};
-        for (const [key, _value] of value?.entries() || []) {
-            if (submissions[_value]) {
-                submissions[_value].push(key);
-            } else {
-                submissions[_value] = [key];
-            }
-        }
-        if (Object.keys(submissions).length) {
-            block_submissions.push([
-                key as string,
-                Object.entries(submissions).reduce((p, c) => (!p || p[1].length < c[1].length ? c : p), ['', []])[0],
-            ]);
-        }
-    }
+    //for (const [key, value] of values.entries()) {
+    //    const submissions: Record<string, string[]> = {};
+    //    for (const [key, _value] of value?.entries() || []) {
+    //        if (submissions[_value]) {
+    //            submissions[_value].push(key);
+    //        } else {
+    //            submissions[_value] = [key];
+    //        }
+    //    }
+    //    if (Object.keys(submissions).length) {
+    //        block_submissions.push([
+    //            key as string,
+    //            Object.entries(submissions).reduce((p, c) => (!p || p[1].length < c[1].length ? c : p), ['', []])[0],
+    //        ]);
+    //    }
+    //}
     return block_submissions;
 }
 
@@ -72,26 +71,29 @@ async function fetchTezosStateAggregatorStorage() {
         state_contract = await Tezos.contract.at(Constants.tezos_state_aggregator);
     }
     const stateAggregator = await state_contract.storage<TezosStateAggregatorStorage>();
-    const values = await stateAggregator.merkle_history.getMultipleValues<{ root: string }>(
-        stateAggregator.merkle_history_indexes,
-    );
+    // const values = await stateAggregator.snapshot_level.getMultipleValues<{ root: string }>(
+    //     stateAggregator.merkle_history_indexes,
+    // );
 
-    const blocks: [BigNumber, string][] = [];
-    for (const [key, value] of values.entries()) {
-        if (value) {
-            blocks.push([key as BigNumber, value.root]);
-        }
-    }
+    // const blocks: [BigNumber, string][] = [];
+    // for (const [key, value] of values.entries()) {
+    //     if (value) {
+    //         blocks.push([key as BigNumber, value.root]);
+    //     }
+    // }
 
     return {
         ...stateAggregator,
-        blocks,
     };
 }
 
 async function fetchEthStorage(): Promise<EthereumStorage> {
-    const assetAddress = await Blueprint.Bridge.Ethereum.getAssetAddress(Ethereum.eth, Constants.ethereum_bridge);
-    const contract = new Ethereum.eth.Contract(
+    const assetAddress = await IbcfSdk.Ethereum.Contracts.Bridge.getAssetAddress(
+        EthereumEthers,
+        Constants.ethereum_bridge,
+    );
+    const contract = new Contract(
+        assetAddress,
         [
             {
                 inputs: [
@@ -113,16 +115,17 @@ async function fetchEthStorage(): Promise<EthereumStorage> {
                 type: 'function',
             },
         ],
-        assetAddress,
+        EthereumEthers,
     );
 
     // Get all wrap events
-    const wraps = await Blueprint.Bridge.Ethereum.getWraps(Ethereum.eth, Constants.ethereum_bridge);
+    const wraps = await IbcfSdk.Ethereum.Contracts.Bridge.getWraps(EthereumEthers, Constants.ethereum_bridge);
 
+    console.log(assetAddress);
     return {
         asset: {
             address: assetAddress,
-            balance: await contract.methods.balanceOf((await Ethereum.eth.requestAccounts())[0]).call(),
+            balance: (await contract.balanceOf((await EthereumEthers.listAccounts())[0])).toString(),
         },
         wraps,
     };

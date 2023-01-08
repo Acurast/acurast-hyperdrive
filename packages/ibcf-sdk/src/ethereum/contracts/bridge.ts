@@ -1,43 +1,45 @@
-import type { Eth } from 'web3-eth';
-import Web3 from 'web3';
+import { Provider } from '@ethersproject/abstract-provider';
+import { Signer } from '@ethersproject/abstract-signer';
+import { Contract } from '@ethersproject/contracts';
+import BigNumber from 'bignumber.js';
+import { unpackAddress } from '../../tezos/utils';
+import ABI from './abi/bridge.json';
 
-import ABI from './abi';
-import { Wrap } from '../common';
+export interface Wrap {
+    address: string;
+    amount: BigNumber;
+    nonce: BigNumber;
+}
 
 const STORAGE_SLOT = {
-    asset: '01'.padStart(64, '00'),
-    tezos_nonce: '03'.padStart(64, '00'),
-    registry: '05'.padStart(64, '00'),
+    asset: 1,
+    tezos_nonce: 3,
+    registry: 5,
 };
 
-export { ABI };
-
-export async function getAssetAddress(web3_eth: Eth, eth_bridge_address: string): Promise<string> {
+export async function getAssetAddress(provider: Provider, eth_bridge_address: string): Promise<string> {
     return (
         '0x' +
-        (await web3_eth.getStorageAt(eth_bridge_address, STORAGE_SLOT.asset))
+        (await provider.getStorageAt(eth_bridge_address, STORAGE_SLOT.asset))
             .slice(2 /* remove 0x */)
             .slice(24 /* Addresses are 20 bytes long and evm storage segments data in chunks of 32 bytes */)
     );
 }
 
 export async function getWraps(
-    web3_eth: Eth,
+    provider: Provider,
     eth_bridge_address: string,
     fromBlock = 0,
     toBlock: number | string = 'latest',
 ): Promise<Wrap[]> {
-    const contract = new web3_eth.Contract(ABI as any, eth_bridge_address);
+    const contract = new Contract(eth_bridge_address, ABI, provider);
     const wraps: Wrap[] = await contract
-        .getPastEvents('Wrap', {
-            fromBlock,
-            toBlock,
-        })
+        .queryFilter(contract.filters.Wrap(), fromBlock, toBlock)
         .then((events) =>
             events.map((event) => ({
-                address: event.returnValues[0],
-                amount: event.returnValues[1],
-                nonce: event.returnValues[2],
+                address: unpackAddress(event.args?.[0]),
+                amount: BigNumber(event.args?.[1].toString()),
+                nonce: BigNumber(event.args?.[2].toString()),
             })),
         )
         .catch((err) => {
@@ -52,10 +54,10 @@ export async function getWraps(
 //     return Web3.utils.sha3(tezos_address + STORAGE_SLOT.tezos_nonce);
 // }
 
-export function getWrapRegistryStorageKey(tezos_address: string, nonce: number) {
-    const hexNonce = Web3.utils.toHex(nonce).slice(2).padStart(64, '0');
-    return Web3.utils.sha3(tezos_address + hexNonce + STORAGE_SLOT.registry);
-}
+// export function getWrapRegistryStorageKey(tezos_address: string, nonce: number) {
+//     const hexNonce = Web3.utils.toHex(nonce).slice(2).padStart(64, '0');
+//     return Web3.utils.sha3(tezos_address + hexNonce + STORAGE_SLOT.registry);
+// }
 
 // async function getTezosNonce(web3_eth: Eth, eth_bridge_address: string, tezos_address: string) {
 //     const indexKey = getTezosNonceStorageKey(tezos_address);

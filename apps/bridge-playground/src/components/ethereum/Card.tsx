@@ -3,7 +3,7 @@ import { Card, Grid, Typography, CardContent, CardActions, Divider, TextField, D
 import * as IbcfSdk from '@ibcf/sdk';
 
 import abi from './abi';
-import EthereumSDK from 'src/services/ethereum';
+import EthereumSDK, { Contract } from 'src/services/ethereum';
 import Button from 'src/components/base/Button';
 import EthereumIcon from 'src/components/base/icons/ethereum';
 import useAppContext from 'src/hooks/useAppContext';
@@ -12,10 +12,11 @@ import Constants from 'src/constants';
 import Dialog from '../base/Dialog';
 import CodeBlock from '../base/CodeBlock';
 import AssetCard from './AssetCard';
+import Logger from 'src/services/logger';
 
 const Ethereum = () => {
     const { ethereum } = useAppContext();
-    const [proof, setProof] = React.useState<IbcfSdk.EthereumProof>();
+    const [proof, setProof] = React.useState<IbcfSdk.Ethereum.Proof.EthereumProof>();
     const [pingProof, setPingProof] = React.useState<IbcfSdk.Tezos.Proof.TezosProof>();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
@@ -23,9 +24,10 @@ const Ethereum = () => {
     const [wrapModalOpen, setWrapModalOpen] = React.useState(false);
     const [destination, setDestination] = React.useState<string>();
     const [amount, setAmount] = React.useState<string>();
+    const [confirming, setConfirming] = React.useState(false);
 
-    const wrap = React.useCallback(() => {
-        const contract = new EthereumSDK.eth.Contract(abi.bridge, Constants.ethereum_bridge);
+    const wrap = React.useCallback(async () => {
+        const contract = new Contract(Constants.ethereum_bridge, abi.bridge, EthereumSDK.getSigner());
         if (!destination || destination.length < 32) {
             return setError(new Error('Invalid destination!'));
         }
@@ -33,29 +35,28 @@ const Ethereum = () => {
             return setError(new Error('Invalid amount!'));
         }
 
-        const packed_destination = '0x' + IbcfSdk.Tezos.Utils.packAddress(destination);
-        EthereumSDK.eth
-            .getAccounts()
-            .then(async (accounts) => {
-                return contract.methods
-                    .wrap(packed_destination, amount)
-                    .send({ from: accounts[0] })
-                    .on('transactionHash', function (hash: string) {
-                        setOperationHash(hash);
-                    });
-            })
-            .then(console.log)
-            .catch(setError);
+        try {
+            const packed_destination = '0x' + IbcfSdk.Tezos.Utils.packAddress(destination);
+            const result = await contract.wrap(packed_destination, amount);
+            setConfirming(true);
+            setOperationHash(result.hash);
+            await result.wait(1);
+        } catch (e: any) {
+            Logger.error(e);
+            return setError(e);
+        } finally {
+            setConfirming(false);
+        }
     }, [destination, amount]);
 
-    const handlePingProof = React.useCallback((e: any) => {
-        try {
-            setPingProof(JSON.parse(e.target.value));
-        } catch (e) {
-            setPingProof(undefined);
-            // ignore
-        }
-    }, []);
+    // const handlePingProof = React.useCallback((e: any) => {
+    //     try {
+    //         setPingProof(JSON.parse(e.target.value));
+    //     } catch (e) {
+    //         setPingProof(undefined);
+    //         // ignore
+    //     }
+    // }, []);
 
     const handleDestination = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         setDestination(e.target.value);
@@ -65,29 +66,29 @@ const Ethereum = () => {
         setAmount(e.target.value);
     }, []);
 
-    const confirmPing = React.useCallback(async () => {
-        if (pingProof) {
-            const contract = new EthereumSDK.eth.Contract(abi.bridge, Constants.ethereum_bridge);
-            EthereumSDK.eth
-                .getAccounts()
-                .then(async (accounts) => {
-                    const method = contract.methods.confirm_ping(
-                        pingProof.level,
-                        pingProof.merkle_root,
-                        pingProof.key,
-                        pingProof.value,
-                        pingProof.proof,
-                        [accounts[0]],
-                        pingProof.signatures,
-                    );
-                    return method.send({ from: accounts[0] }).on('transactionHash', function (hash: string) {
-                        setOperationHash(hash);
-                    });
-                })
-                .then(console.log)
-                .catch(setError);
-        }
-    }, [pingProof]);
+    // const confirmPing = React.useCallback(async () => {
+    //     if (pingProof) {
+    //         const contract = new Contract(abi.bridge, Constants.ethereum_bridge);
+    //         EthereumSDK.eth
+    //             .getAccounts()
+    //             .then(async (accounts) => {
+    //                 const method = contract.methods.confirm_ping(
+    //                     pingProof.level,
+    //                     pingProof.merkle_root,
+    //                     pingProof.key,
+    //                     pingProof.value,
+    //                     pingProof.proof,
+    //                     [accounts[0]],
+    //                     pingProof.signatures,
+    //                 );
+    //                 return method.send({ from: accounts[0] }).on('transactionHash', function (hash: string) {
+    //                     setOperationHash(hash);
+    //                 });
+    //             })
+    //             .then(console.log)
+    //             .catch(setError);
+    //     }
+    // }, [pingProof]);
 
     return (
         <>
@@ -159,8 +160,17 @@ const Ethereum = () => {
                         </CardContent>
                     </Card>
                 </CardContent>
+                <CardActions>
+                    <Grid container direction="row" justifyContent="center" alignItems="center">
+                        <Grid item>
+                            <Typography color="text.secondary" gutterBottom>
+                                {confirming ? 'Confirming...' : ''}
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </CardActions>
             </Card>
-
+            {/*
             <Dialog
                 title="Confirm Ping (Insert proof below)"
                 open={confirmPingOpen}
@@ -170,7 +180,7 @@ const Ethereum = () => {
                 }}
                 actions={
                     <DialogActions>
-                        <Button fullWidth size="small" onClick={confirmPing}>
+                        <Button fullWidth size="small">
                             Confirm ping
                         </Button>
                     </DialogActions>
@@ -184,7 +194,7 @@ const Ethereum = () => {
                     sx={{ height: 300 }}
                     multiline
                 />
-            </Dialog>
+            </Dialog> */}
 
             <Dialog
                 title="Wrap token"
@@ -193,6 +203,7 @@ const Ethereum = () => {
                     setWrapModalOpen(false);
                     setDestination(undefined);
                     setAmount(undefined);
+                    console.log(destination);
                 }}
                 actions={
                     <DialogActions>
@@ -203,13 +214,14 @@ const Ethereum = () => {
                 }
             >
                 <TextField
-                    error={!pingProof}
-                    placeholder="Destination (0x...)"
+                    error={!destination}
+                    placeholder="Destination (tz...)"
+                    value={destination || ''}
                     onChange={handleDestination}
                     fullWidth
                     margin="dense"
                 />
-                <TextField error={!pingProof} placeholder="Amount" onChange={handleAmount} fullWidth margin="dense" />
+                <TextField value={amount || 0} placeholder="Amount" onChange={handleAmount} fullWidth margin="dense" />
             </Dialog>
 
             <Dialog title="Error" open={!!error} onClose={() => setError(undefined)}>
