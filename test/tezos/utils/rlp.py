@@ -16,7 +16,10 @@ def test_encoder():
         sp.build_lambda(Encoder.with_length_prefix)(sp.bytes("0xffff"))
         == sp.bytes("0x82ffff")
     )
-    scenario.verify(sp.build_lambda(Encoder.encode_nat)(0) == sp.bytes("0x80"))
+    scenario.verify(sp.build_lambda(Encoder.encode_nat)(0) == sp.bytes("0x00"))
+    scenario.show(sp.build_lambda(Encoder.encode_nat)(0))
+    scenario.verify(sp.build_lambda(Encoder.encode_nat)(127) == sp.bytes("0x7f"))
+    scenario.verify(sp.build_lambda(Encoder.encode_nat)(128) == sp.bytes("0x8180"))
     scenario.verify(
         sp.build_lambda(Encoder.encode_nat)(999999999999999)
         == sp.bytes("0x87038d7ea4c67fff")
@@ -45,7 +48,10 @@ def test_decoder():
         sp.build_lambda(Decoder.without_length_prefix)(sp.bytes("0x82ffff"))
         == sp.bytes("0xffff")
     )
+    scenario.verify(sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x00")) == 0)
     scenario.verify(sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x80")) == 0)
+    scenario.verify(sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x7f")) == 127)
+    scenario.verify(sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x8180")) == 128)
     scenario.verify(
         sp.build_lambda(Decoder.decode_nat)(sp.bytes("0x87038d7ea4c67fff"))
         == 999999999999999

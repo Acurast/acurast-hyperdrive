@@ -38,25 +38,28 @@ class Bytes:
 
     @staticmethod
     def of_nat(n):
-        value = sp.local(generate_var("value"), sp.set_type_expr(n, sp.TNat))
-        left_nibble = sp.local(generate_var("left_nibble"), sp.none)
-        bytes = sp.local(generate_var("bytes"), [])
-        with sp.while_(value.value != 0):
-            (quotient, remainder) = sp.match_pair(sp.ediv(value.value, 16).open_some())
-            value.value = quotient
+        with sp.if_(n == 0):
+            sp.result(sp.bytes("0x00"))
+        with sp.else_():
+            value = sp.local(generate_var("value"), sp.set_type_expr(n, sp.TNat))
+            left_nibble = sp.local(generate_var("left_nibble"), sp.none)
+            bytes = sp.local(generate_var("bytes"), [])
+            with sp.while_(value.value != 0):
+                (quotient, remainder) = sp.match_pair(sp.ediv(value.value, 16).open_some())
+                value.value = quotient
+                with left_nibble.value.match_cases() as arg:
+                    with arg.match("Some") as v:
+                        left_nibble.value = sp.none
+                        bytes.value.push(Bytes.of_nat8((remainder << 4) | v))
+                    with arg.match("None"):
+                        left_nibble.value = sp.some(remainder)
+
             with left_nibble.value.match_cases() as arg:
                 with arg.match("Some") as v:
                     left_nibble.value = sp.none
-                    bytes.value.push(Bytes.of_nat8((remainder << 4) | v))
-                with arg.match("None"):
-                    left_nibble.value = sp.some(remainder)
+                    bytes.value.push(Bytes.of_nat8((0 << 4) | v))
 
-        with left_nibble.value.match_cases() as arg:
-            with arg.match("Some") as v:
-                left_nibble.value = sp.none
-                bytes.value.push(Bytes.of_nat8((0 << 4) | v))
-
-        sp.result(sp.concat(bytes.value))
+            sp.result(sp.concat(bytes.value))
 
 
 """

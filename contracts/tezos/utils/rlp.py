@@ -34,12 +34,12 @@ class Encoder:
 
     @staticmethod
     def encode_nat(n):
-        encode = sp.build_lambda(Encoder.with_length_prefix)
-        bytes_of_nat = sp.build_lambda(Bytes.of_nat)
-        with sp.if_(n == 0):
-            sp.result(sp.bytes("0x80"))
+        b = sp.compute(sp.build_lambda(Bytes.of_nat)(n))
+        with sp.if_(n < STRING_SHORT_START):
+            sp.result(b)
         with sp.else_():
-            sp.result(encode(bytes_of_nat(n)))
+            encode = sp.build_lambda(Encoder.with_length_prefix)
+            sp.result(encode(b))
 
     @staticmethod
     def encode_string(s):

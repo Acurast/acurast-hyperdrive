@@ -7,7 +7,13 @@ Compiling your contracts...
 ===========================
 > Compiling ./contracts/evm/IBCF_Validator.sol
 > Compiling ./contracts/evm/blueprints/IBCF_Bridge.sol
-> Artifacts written to /home/romarq/Documents/papers/tezos-sc/__SNAPSHOTS__/compilation/evm
+> Compiling ./contracts/evm/blueprints/MintableERC20.sol
+> Compiling ./contracts/evm/libs/RLPReader.sol
+> Compiling @openzeppelin/contracts/token/ERC20/ERC20.sol
+> Compiling @openzeppelin/contracts/token/ERC20/IERC20.sol
+> Compiling @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
+> Compiling @openzeppelin/contracts/utils/Context.sol
+> Artifacts written to /home/romarq/Documents/papers/ibcf/__SNAPSHOTS__/compilation/evm
 > Compiled successfully using:
    - solc: 0.8.17+commit.8df45f5f.Emscripten.clang
 
@@ -22,81 +28,90 @@ Starting migrations...
 0_all.js
 ========
 
-   Replacing 'IBCF_Validator'
+   Deploying 'IBCF_Validator'
    --------------------------
-   > transaction hash:    0x707cd43524aa201d6f0481eada0e94a7e35945dd211cb3aa35247f64bcc07611
+   > transaction hash:    0x586ee770ac5b3f2fd09df9103673326fc249a2513afeacc3c39e211e95f7429f
 - Blocks: 0            Seconds: 0
 - Blocks: 0            Seconds: 4
-- Blocks: 1            Seconds: 8
-   > Blocks: 1            Seconds: 8
-   > contract address:    0x7e626E304f92441f2538778066f76a7333CAC8a0
-   > block number:        8144517
-   > block timestamp:     1671184980
+- Blocks: 0            Seconds: 8
+   > Blocks: 0            Seconds: 8
+   > contract address:    0x09748Ff15A5F41816379211d2b6b283D5332054a
+   > block number:        8290440
+   > block timestamp:     1673397936
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             3.068012833203349965
+   > balance:             5.998893997046102353
    > gas used:            2109131 (0x202ecb)
-   > gas price:           5.959019956 gwei
+   > gas price:           2.50038058 gwei
    > value sent:          0 ETH
-   > total cost:          0.012568353718818236 ETH
+   > total cost:          0.00527363019307598 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 8144518)
-   > confirmation number: 2 (block: 8144519)
+   > confirmation number: 1 (block: 8290441)
+   > confirmation number: 2 (block: 8290442)
 
-   Replacing 'MintableERC20'
+   Deploying 'MintableERC20'
    -------------------------
-   > transaction hash:    0x5790c3929d07d2f91a33ca989d1629ef5fd89dd498005bfad27bd1628baf2311
+   > transaction hash:    0x1b1ef58cb384292f46806ade6db8bfe0dac8d303bac07ab4fcf8d9ffc94ebea2
+- Blocks: 0            Seconds: 0
+- Blocks: 0            Seconds: 4
+- Blocks: 0            Seconds: 8
+   > Blocks: 0            Seconds: 8
+   > contract address:    0xbea5d4828159FE971b6c19c0Dfa19139044fAB2A
+   > block number:        8290443
+   > block timestamp:     1673397972
+   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
+   > balance:             5.995604846769524763
+   > gas used:            1315481 (0x141299)
+   > gas price:           2.50034039 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00328915027657759 ETH
+
+   Pausing for 2 confirmations...
+
+   -------------------------------
+   > confirmation number: 1 (block: 8290444)
+   > confirmation number: 2 (block: 8290445)
+
+   Deploying 'IBCF_Bridge'
+   -----------------------
+   > transaction hash:    0xa8aed9a0843b5fc0cb5d1ace6ace8ea30de9bdfe483fe26bf254d6d39704edb4
 - Blocks: 0            Seconds: 0
 - Blocks: 0            Seconds: 4
 - Blocks: 1            Seconds: 8
-   > Blocks: 1            Seconds: 8
-   > contract address:    0xBAE1aA092d2035F0EaC4F35B26D4743E6F896Ee4
-   > block number:        8144520
-   > block timestamp:     1671185028
+- Blocks: 1            Seconds: 12
+- Blocks: 1            Seconds: 16
+- Blocks: 1            Seconds: 21
+- Blocks: 1            Seconds: 25
+- Blocks: 1            Seconds: 28
+- Blocks: 1            Seconds: 32
+- Blocks: 1            Seconds: 36
+- Blocks: 1            Seconds: 40
+- Blocks: 2            Seconds: 44
+   > Blocks: 2            Seconds: 44
+   > contract address:    0x10758d99D642428fd6A8B62A149aB2d1ade20C24
+   > block number:        8290448
+   > block timestamp:     1673398068
    > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             3.059929688314156062
-   > gas used:            1315481 (0x141299)
-   > gas price:           6.144630663 gwei
-   > value sent:          0 ETH
-   > total cost:          0.008083144889193903 ETH
-
-   Pausing for 2 confirmations...
-
-   -------------------------------
-   > confirmation number: 1 (block: 8144521)
-   > confirmation number: 2 (block: 8144522)
-
-   Replacing 'IBCF_Bridge'
-   -----------------------
-   > transaction hash:    0x4ed3d4ef19a6c7389bfc9ecb3c2887603a04ad6c0bba489d4a81d0f1c6b61417
-- Blocks: 0            Seconds: 0
-- Blocks: 0            Seconds: 4
-- Blocks: 1            Seconds: 9
-   > Blocks: 1            Seconds: 9
-   > contract address:    0xF8D0dcb8F3Af348586360971b3561B3b139a2929
-   > block number:        8144524
-   > block timestamp:     1671185076
-   > account:             0x836F1aBf07dbdb7F262D0A71067DADC421Fe3Df0
-   > balance:             3.051454411535643722
+   > balance:             5.991874929054899342
    > gas used:            1420581 (0x15ad25)
-   > gas price:           5.673879634 gwei
+   > gas price:           2.500253147 gwei
    > value sent:          0 ETH
-   > total cost:          0.008060205604347354 ETH
+   > total cost:          0.003551812115818407 ETH
 
    Pausing for 2 confirmations...
 
    -------------------------------
-   > confirmation number: 1 (block: 8144525)
-   > confirmation number: 2 (block: 8144526)
+   > confirmation number: 1 (block: 8290449)
+   > confirmation number: 2 (block: 8290450)
    > Saving artifacts
    -------------------------------------
-   > Total cost:     0.028711704212359493 ETH
+   > Total cost:     0.012114592585471977 ETH
 
 Summary
 =======
 > Total deployments:   3
-> Final cost:          0.028711704212359493 ETH
+> Final cost:          0.012114592585471977 ETH
 
 
