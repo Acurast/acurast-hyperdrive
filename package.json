@@ -20,18 +20,16 @@
     "compile": "truffle compile",
     "test": "truffle test --migrations_directory migrations_null",
     "deploy": "truffle deploy --network goerli --reset",
-    "build": "yarn workspaces foreach --verbose run build",
-    "lint:check": "yarn workspaces foreach --verbose run lint .",
-    "lint:fix": "yarn workspaces foreach --verbose run lint --fix .",
+    "build": "yarn workspaces foreach --topological --topological-dev --verbose run build",
+    "lint:check": "yarn workspaces foreach --topological --topological-dev --verbose run lint .",
+    "lint:fix": "yarn workspaces foreach --topological --topological-dev --verbose run lint --fix .",
     "prettier:check": "yarn workspaces foreach --verbose run prettier --check .",
     "prettier:fix": "yarn workspaces foreach --verbose run prettier --write .",
     "fmt": "yarn lint:fix && yarn prettier:fix"
   },
   "workspaces": [
-    "packages/ibcf-sdk",
-    "packages/root-transmitter",
-    "packages/bridge-transmitter",
-    "apps/bridge-playground"
+    "packages/**",
+    "apps/**"
   ],
   "packageManager": "yarn@3.3.0"
 }

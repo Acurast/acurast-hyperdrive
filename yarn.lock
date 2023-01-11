@@ -2992,7 +2992,7 @@ __metadata:
     "@craco/craco": 6.4.5
     "@emotion/react": 11.10.0
     "@emotion/styled": 11.10.0
-    "@ibcf/sdk": "*"
+    "@ibcf/sdk": "workspaces:*"
     "@js-temporal/polyfill": 0.4.3
     "@mui/icons-material": 5.8.4
     "@mui/material": 5.9.3
@@ -3073,7 +3073,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@ibcf/sdk@*, @ibcf/sdk@workspace:*, @ibcf/sdk@workspace:packages/ibcf-sdk":
+"@ibcf/sdk@workspace:*, @ibcf/sdk@workspace:packages/ibcf-sdk, @ibcf/sdk@workspaces:*":
   version: 0.0.0-use.local
   resolution: "@ibcf/sdk@workspace:packages/ibcf-sdk"
   dependencies:
