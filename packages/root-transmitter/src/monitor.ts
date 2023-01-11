@@ -10,10 +10,13 @@ interface MonitorContext {
     tezos_finalize_snapshots: boolean;
     tezos_sdk: TezosToolkit;
     tezos_state_address: string;
+    tezos_state: Tezos.Contracts.StateAggregator.Contract;
     tezos_validator_address: string;
+    tezos_validator: Tezos.Contracts.Validator.Contract;
     ethereum_signer: ethers.Wallet;
     ethereum_finality: number;
     evm_validator_address: string;
+    evm_validator: Ethereum.Contracts.Validator.Contract;
     processor_address: string;
 }
 
@@ -27,19 +30,13 @@ class Monitor {
         // Transmit new ethereum block states to Tezos
         await this.ethereumToTezos();
 
-        const state_aggregator_storage = await Tezos.Contracts.StateAggregator.getStorage(
-            this.context.tezos_sdk,
-            this.context.tezos_state_address,
-        );
+        const state_aggregator_storage = await this.context.tezos_state.getStorage();
         const tezosBlockLevel = (await this.context.tezos_sdk.rpc.getBlockHeader()).level;
 
         // Snapshot state if it can be done.
         await this.snapshotIfPossible(state_aggregator_storage, tezosBlockLevel);
 
-        const eth_current_snapshot = await Ethereum.Contracts.Validator.getCurrentSnapshot(
-            this.context.ethereum_signer.provider,
-            this.context.evm_validator_address,
-        );
+        const eth_current_snapshot = await this.context.evm_validator.getCurrentSnapshot();
 
         if (state_aggregator_storage.snapshot_counter.gte(eth_current_snapshot)) {
             // Make sure at least `this.context.tezos_finality` blocks have been confirmed
@@ -49,10 +46,7 @@ class Monitor {
             if (snapshot_level && tezosBlockLevel - snapshot_level > this.context.tezos_finality) {
                 // Get snapshot submissions
                 const eth_current_snapshot_submissions =
-                    await Ethereum.Contracts.Validator.getCurrentSnapshotSubmissions(
-                        this.context.ethereum_signer.provider,
-                        this.context.evm_validator_address,
-                    );
+                    await this.context.evm_validator.getCurrentSnapshotSubmissions();
 
                 Logger.debug(
                     '[ETHEREUM]',
@@ -63,15 +57,9 @@ class Monitor {
                 );
 
                 if (!eth_current_snapshot_submissions.includes(this.context.ethereum_signer.address)) {
-                    const storage_at_snapshot = await Tezos.Contracts.StateAggregator.getStorage(
-                        this.context.tezos_sdk,
-                        this.context.tezos_state_address,
-                        String(snapshot_level),
-                    );
+                    const storage_at_snapshot = await this.context.tezos_state.getStorage(String(snapshot_level));
 
-                    const result = await Ethereum.Contracts.Validator.submitStateRoot(
-                        this.context.ethereum_signer,
-                        this.context.evm_validator_address,
+                    const result = await this.context.evm_validator.submitStateRoot(
                         eth_current_snapshot,
                         '0x' + storage_at_snapshot.merkle_tree.root,
                     );
@@ -96,11 +84,13 @@ class Monitor {
      * Transmit Ethereum block states to Tezos
      */
     private async ethereumToTezos() {
-        const validator_storage = await Tezos.Contracts.Validator.getStorage(
-            this.context.tezos_sdk,
-            this.context.tezos_validator_address,
-        );
+        const validator_storage = await this.context.tezos_validator.getStorage();
+
+        const latest_block = await this.context.ethereum_signer.provider.getBlockNumber();
         const current_snapshot = validator_storage.current_snapshot.toNumber();
+        if (latest_block < current_snapshot) {
+            return;
+        }
 
         // Get endorsers
         const snapshot_submissions = await validator_storage.state_root.get<MichelsonMap<string, string>>(
@@ -126,12 +116,7 @@ class Monitor {
 
             this.tezos_operations.push(
                 (
-                    await Tezos.Contracts.Validator.submit_block_state_root(
-                        this.context.tezos_sdk,
-                        this.context.tezos_validator_address,
-                        current_snapshot,
-                        state_root,
-                    )
+                    await this.context.tezos_validator.submit_block_state_root(current_snapshot, state_root)
                 ).toTransferParams(),
             );
         }
@@ -147,14 +132,7 @@ class Monitor {
         ) {
             Logger.info('[TEZOS]', `Finalizing snapshot:`, storage.snapshot_counter.toNumber());
 
-            this.tezos_operations.push(
-                (
-                    await Tezos.Contracts.StateAggregator.snapshot(
-                        this.context.tezos_sdk,
-                        this.context.tezos_state_address,
-                    )
-                ).toTransferParams(),
-            );
+            this.tezos_operations.push((await this.context.tezos_state.snapshot()).toTransferParams());
         }
     }
 
@@ -185,8 +163,8 @@ function getEnv() {
     };
     // Validate environment variables
     Object.entries(env).forEach(([key, value]) => {
-        if (!value) {
-            console.log(`\nEnvironment variable ${key} is required!\n`);
+        if (value != 0 && !value) {
+            Logger.error(`\nEnvironment variable ${key} is required!\n`);
             process.exit(1);
         }
     });
@@ -209,17 +187,17 @@ export async function run_monitor() {
         ethereum_finality: env.ETHEREUM_FINALITY,
         ethereum_signer,
         tezos_state_address: env.TEZOS_AGGREGATOR_ADDRESS,
+        tezos_state: new Tezos.Contracts.StateAggregator.Contract(tezos_sdk, env.TEZOS_AGGREGATOR_ADDRESS),
         tezos_validator_address: env.TEZOS_VALIDATOR_ADDRESS,
+        tezos_validator: new Tezos.Contracts.Validator.Contract(tezos_sdk, env.TEZOS_VALIDATOR_ADDRESS),
         evm_validator_address: env.EVM_VALIDATOR_ADDRESS,
+        evm_validator: new Ethereum.Contracts.Validator.Contract(ethereum_signer, env.EVM_VALIDATOR_ADDRESS),
         processor_address: await tezos_sdk.signer.publicKeyHash(),
     };
 
     const monitor = new Monitor(context);
     // Start service
     while (1) {
-        // Sleep 5 seconds before each check
-        await new Promise((r) => setTimeout(r, 5000));
-
         try {
             await monitor.run();
         } catch (e) {

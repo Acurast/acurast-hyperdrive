@@ -5,7 +5,7 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import ThemeProvider from './context/ThemeProvider';
 import Router from './Routes';
-import AppProvider from './context/AppProvider.';
+import AppProvider from './context/AppProvider';
 
 const container = document.getElementById('root');
 if (!container) {

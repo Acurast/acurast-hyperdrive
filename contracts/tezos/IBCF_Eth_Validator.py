@@ -207,7 +207,9 @@ class Lambdas:
                         # Not supposed to happen!
                         sp.failwith(("UNEXPECTED", first_nibble, _bytes))
 
-        sp.result(nibbles_of_bytes_lambda(sp.record(bytes=_bytes, skip=nibbles_to_skip.value)))
+        sp.result(
+            nibbles_of_bytes_lambda(sp.record(bytes=_bytes, skip=nibbles_to_skip.value))
+        )
 
     @staticmethod
     def extract_nibble(arg):
@@ -249,14 +251,20 @@ class Lambdas:
         )
 
         nibbles_of_bytes_lambda = sp.compute(sp.build_lambda(Lambdas.nibbles_of_bytes))
-        shared_prefix_length_lambda = sp.compute(sp.build_lambda(Lambdas.shared_prefix_length))
-        merkle_patricia_compact_decode_lambda = sp.compute(sp.build_lambda(Lambdas.merkle_patricia_compact_decode))
+        shared_prefix_length_lambda = sp.compute(
+            sp.build_lambda(Lambdas.shared_prefix_length)
+        )
+        merkle_patricia_compact_decode_lambda = sp.compute(
+            sp.build_lambda(Lambdas.merkle_patricia_compact_decode)
+        )
         extract_nibble_lambda = sp.compute(sp.build_lambda(Lambdas.extract_nibble))
 
         proof_nodes = sp.compute(rlp.to_list(proof_rlp))
 
         proof_nodes_length = sp.compute(sp.len(proof_nodes))
-        path = sp.compute(nibbles_of_bytes_lambda(sp.record(bytes=path32, skip=sp.nat(0))))
+        path = sp.compute(
+            nibbles_of_bytes_lambda(sp.record(bytes=path32, skip=sp.nat(0)))
+        )
         full_path_length = sp.compute(sp.len(path))
         path_offset = sp.local("path_offset", 0)
 
@@ -377,6 +385,7 @@ class Lambdas:
                                 )
 
             sp.result(result.value)
+
 
 class RLP_utils:
     @staticmethod
@@ -572,6 +581,7 @@ class IBCF_Eth_Validator(sp.Contract):
                 )
             )
         )
+
 
 def get_next_hash(node):
     sp.verify(sp.len(node) == 32, "Invalid node")

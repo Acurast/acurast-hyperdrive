@@ -1,28 +1,35 @@
-import { TransactionResponse, Provider } from '@ethersproject/abstract-provider';
 import { Signer } from '@ethersproject/abstract-signer';
-import { Contract } from '@ethersproject/contracts';
+import { JsonRpcProvider, TransactionResponse } from '@ethersproject/providers';
+import { Contract as EthersContract } from '@ethersproject/contracts';
 import BigNumber from 'bignumber.js';
 import ABI from './abi/validator.json';
 
-export async function getCurrentSnapshot(provider: Provider, validator_address: string): Promise<BigNumber> {
-    const contract = new Contract(validator_address, ABI, provider);
+export class Contract {
+    private signer: Signer;
+    private provider: JsonRpcProvider;
+    private contractAddress: string;
 
-    return BigNumber((await contract.get_current_snapshot()).toString());
-}
+    constructor(signer: Signer, contractAddress: string) {
+        this.signer = signer;
+        this.provider = signer.provider! as JsonRpcProvider;
+        this.contractAddress = contractAddress;
+    }
 
-export async function getCurrentSnapshotSubmissions(provider: Provider, validator_address: string): Promise<string[]> {
-    const contract = new Contract(validator_address, ABI, provider);
+    async getCurrentSnapshot(): Promise<BigNumber> {
+        const contract = new EthersContract(this.contractAddress, ABI, this.provider);
 
-    return contract.get_current_snapshot_submissions();
-}
+        return BigNumber((await contract.get_current_snapshot()).toString());
+    }
 
-export async function submitStateRoot(
-    signer: Signer,
-    validator_address: string,
-    snapshot: BigNumber,
-    state_root: string,
-): Promise<TransactionResponse> {
-    const contract = new Contract(validator_address, ABI, signer);
+    async getCurrentSnapshotSubmissions(): Promise<string[]> {
+        const contract = new EthersContract(this.contractAddress, ABI, this.provider);
 
-    return contract.submit_state_root(snapshot.toString(), state_root);
+        return contract.get_current_snapshot_submissions();
+    }
+
+    async submitStateRoot(snapshot: BigNumber, state_root: string): Promise<TransactionResponse> {
+        const contract = new EthersContract(this.contractAddress, ABI, this.signer);
+
+        return contract.submit_state_root(snapshot.toString(), state_root);
+    }
 }

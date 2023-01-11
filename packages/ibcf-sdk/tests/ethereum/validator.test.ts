@@ -7,9 +7,13 @@ import * as IBCF from '../../src';
 import { Override } from '../utils';
 
 describe('Ethereum > Validator', () => {
+    const contractAddress = '0xfb185d5eC7cDf42F2F9cd3Dd303214911d5b2425';
     const host = 'http://mocked_rpc.localhost';
     const server = setupServer(...http_handlers(host, []));
     const provider = new ethers.providers.JsonRpcProvider(host);
+
+    const wallet = new ethers.Wallet('0x1111111111111111111111111111111111111111111111111111111111111111', provider);
+    const contract = new IBCF.Ethereum.Contracts.Validator.Contract(wallet, contractAddress);
 
     beforeAll(function () {
         server.listen();
@@ -30,10 +34,7 @@ describe('Ethereum > Validator', () => {
         ];
         server.resetHandlers(...http_handlers(host, overrides));
 
-        const current_snapshot = await IBCF.Ethereum.Contracts.Validator.getCurrentSnapshot(
-            provider,
-            '0x920375eCdbf2Cc0e00Cd6C424aE58cA986cfDa32',
-        );
+        const current_snapshot = await contract.getCurrentSnapshot();
 
         expect(current_snapshot.toNumber()).toEqual(1);
     });
@@ -49,10 +50,7 @@ describe('Ethereum > Validator', () => {
         ];
         server.resetHandlers(...http_handlers(host, overrides));
 
-        const current_snapshot_submissions = await IBCF.Ethereum.Contracts.Validator.getCurrentSnapshotSubmissions(
-            provider,
-            '0x920375eCdbf2Cc0e00Cd6C424aE58cA986cfDa32',
-        );
+        const current_snapshot_submissions = await contract.getCurrentSnapshotSubmissions();
 
         expect(current_snapshot_submissions).toEqual([]);
     });
@@ -74,17 +72,7 @@ describe('Ethereum > Validator', () => {
         ];
         server.resetHandlers(...http_handlers('http://mocked_rpc.localhost', overrides));
 
-        const wallet = new ethers.Wallet(
-            '0x1111111111111111111111111111111111111111111111111111111111111111',
-            provider,
-        );
-
-        const result = await IBCF.Ethereum.Contracts.Validator.submitStateRoot(
-            wallet,
-            '0xfb185d5eC7cDf42F2F9cd3Dd303214911d5b2425',
-            BigNumber(1),
-            '0x' + '00'.repeat(32),
-        );
+        const result = await contract.submitStateRoot(BigNumber(1), '0x' + '00'.repeat(32));
 
         expect(result.data).toEqual(
             '0x73b70ce900000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000',

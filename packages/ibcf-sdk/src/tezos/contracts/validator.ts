@@ -16,27 +16,22 @@ export interface ValidatorStorage {
     history: BigNumber[];
 }
 
-export async function getStorage(
-    tezos_sdk: TezosToolkit,
-    validator_address: string,
-    block = 'head',
-): Promise<ValidatorStorage> {
-    const script = await tezos_sdk.rpc.getScript(validator_address, { block });
-    const contractSchema = Schema.fromRPCResponse({ script: script });
+export class Contract {
+    constructor(private sdk: TezosToolkit, private contractAddress: string) {}
 
-    return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(tezos_sdk.contract));
-}
+    async getStorage(block = 'head'): Promise<ValidatorStorage> {
+        const script = await this.sdk.rpc.getScript(this.contractAddress, { block });
+        const contractSchema = Schema.fromRPCResponse({ script: script });
 
-/**
- * Submit the state root associated with a given ethereum block.
- */
-export async function submit_block_state_root(
-    tezos_sdk: TezosToolkit,
-    state_aggregator_address: string,
-    block_level: number,
-    state_root: string,
-): Promise<ContractMethod<ContractProvider>> {
-    const contract = await tezos_sdk.contract.at(state_aggregator_address);
+        return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(this.sdk.contract));
+    }
 
-    return contract.methods.submit_block_state_root(block_level, state_root);
+    /**
+     * Submit the state root associated with a given ethereum block.
+     */
+    async submit_block_state_root(block_level: number, state_root: string): Promise<ContractMethod<ContractProvider>> {
+        const contract = await this.sdk.contract.at(this.contractAddress);
+
+        return contract.methods.submit_block_state_root(block_level, state_root);
+    }
 }

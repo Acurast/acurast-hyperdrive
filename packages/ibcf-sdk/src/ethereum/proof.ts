@@ -52,8 +52,6 @@ export async function generateProof(
             ),
         ).toString('hex');
 
-    console.log(proof);
-
     return {
         //storage_slot: '0x' + proof.storageProof[0].key.slice(2).padStart(64, '0'),
         // state_root: block.stateRoot,

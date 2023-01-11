@@ -7,16 +7,16 @@ import {
     Box,
     Typography,
 } from '@mui/material';
-import { Blueprint, Tezos } from '@ibcf/sdk';
+import { Tezos } from '@ibcf/sdk';
 
 import TableRow from 'src/components/base/TableRow';
 import Table from '../base/Table';
 
-const TRow: React.FC<Blueprint.Bridge.Wrap> = ({ address, amount, nonce }) => {
+const TRow: React.FC<Tezos.Contracts.Bridge.Unwrap> = ({ destination, amount, nonce }) => {
     return (
         <TableRow>
             <TableCell component="th" scope="row">
-                <Typography variant="caption">{Tezos.Utils.unpackAddress(address)}</Typography>
+                <Typography variant="caption">{destination}</Typography>
             </TableCell>
             <TableCell
                 component="th"
@@ -31,14 +31,14 @@ const TRow: React.FC<Blueprint.Bridge.Wrap> = ({ address, amount, nonce }) => {
                 <Typography variant="caption">{amount.toString()}</Typography>
             </TableCell>
             <TableCell component="th" scope="row">
-                <Typography variant="caption">{nonce}</Typography>
+                <Typography variant="caption">{nonce.toString()}</Typography>
             </TableCell>
         </TableRow>
     );
 };
 
 interface OwnProps {
-    wraps: Blueprint.Bridge.Wrap[];
+    unwraps: Tezos.Contracts.Bridge.Unwrap[];
 }
 
 const TableTemplate =
@@ -60,8 +60,8 @@ const TableTemplate =
             />
         );
 
-const ValidatedBlocksTable: React.FC<OwnProps> = ({ wraps }) => {
-    if (!wraps.length) {
+const ValidatedBlocksTable: React.FC<OwnProps> = ({ unwraps }) => {
+    if (!unwraps.length) {
         return (
             <MuiTableRow>
                 <TableCell colSpan={6}>
@@ -77,8 +77,8 @@ const ValidatedBlocksTable: React.FC<OwnProps> = ({ wraps }) => {
 
     return (
         <>
-            {wraps.map((wrap, key) => (
-                <TRow key={key} {...wrap} />
+            {unwraps.map((unwrap, key) => (
+                <TRow key={key} {...unwrap} />
             ))}
         </>
     );

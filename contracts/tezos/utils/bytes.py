@@ -45,7 +45,9 @@ class Bytes:
             left_nibble = sp.local(generate_var("left_nibble"), sp.none)
             bytes = sp.local(generate_var("bytes"), [])
             with sp.while_(value.value != 0):
-                (quotient, remainder) = sp.match_pair(sp.ediv(value.value, 16).open_some())
+                (quotient, remainder) = sp.match_pair(
+                    sp.ediv(value.value, 16).open_some()
+                )
                 value.value = quotient
                 with left_nibble.value.match_cases() as arg:
                     with arg.match("Some") as v:

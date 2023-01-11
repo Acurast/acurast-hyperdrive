@@ -11,11 +11,12 @@ import contractEntrypointsResponse from './data/validator.entrypoints.json';
 import * as IBCF from '../../src';
 
 const signer_address = 'tz1YGTtd1hqGYTYKtcWSXYKSgCj5hvjaTPVd';
-const contract = 'KT1VYAacqwcXQ8W1fZ4pApx5JwR6Si4nn1sX';
+const contractAddress = 'KT1VYAacqwcXQ8W1fZ4pApx5JwR6Si4nn1sX';
 
 describe('Tezos > Validator', () => {
     const server = setupServer(...http_handlers('http://mocked_rpc.localhost'));
     const tezos_sdk = new TezosToolkit('http://mocked_rpc.localhost');
+    const contract = new IBCF.Tezos.Contracts.Validator.Contract(tezos_sdk, contractAddress);
 
     beforeAll(function () {
         server.listen();
@@ -26,19 +27,14 @@ describe('Tezos > Validator', () => {
     });
 
     it('getStorage', async () => {
-        const contractStorage = await IBCF.Tezos.Contracts.Validator.getStorage(tezos_sdk, contract);
+        const contractStorage = await contract.getStorage();
 
         expect(contractStorage.current_snapshot).toEqual(new BigNumber(1));
     });
 
     describe('Entrypoints', () => {
         it('submit_block_state_root', async () => {
-            const result = await IBCF.Tezos.Contracts.Validator.submit_block_state_root(
-                tezos_sdk,
-                contract,
-                1,
-                '0x0000',
-            );
+            const result = await contract.submit_block_state_root(1, '0x0000');
             expect(result.toTransferParams()).toEqual({
                 amount: 0,
                 fee: undefined,
@@ -95,15 +91,21 @@ function http_handlers(url: string) {
                 }),
             );
         }),
-        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contract}`, async (req, res, ctx) => {
+        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contractAddress}`, async (req, res, ctx) => {
             return res(ctx.json(contractResponse));
         }),
-        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contract}/entrypoints`, async (req, res, ctx) => {
-            return res(ctx.json(contractEntrypointsResponse));
-        }),
-        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contract}/script`, async (req, res, ctx) => {
-            return res(ctx.json(contractScriptResponse));
-        }),
+        rest.get(
+            `${url}/chains/main/blocks/head/context/contracts/${contractAddress}/entrypoints`,
+            async (req, res, ctx) => {
+                return res(ctx.json(contractEntrypointsResponse));
+            },
+        ),
+        rest.get(
+            `${url}/chains/main/blocks/head/context/contracts/${contractAddress}/script`,
+            async (req, res, ctx) => {
+                return res(ctx.json(contractScriptResponse));
+            },
+        ),
 
         rest.post(`${url}/injection/operation`, async (req, res, ctx) => {
             return res(ctx.text('opLyi4ZBGDf3pb4A8eLkyouiFqNVgQ8X59ZStMesgYsHrQSLMGQ'));

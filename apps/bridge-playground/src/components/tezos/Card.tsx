@@ -12,43 +12,81 @@ import CodeBlock from '../base/CodeBlock';
 import TextField from '../base/TextField';
 import useWalletContext from 'src/hooks/useWalletContext';
 import AssetCard from './AssetCard';
+import Logger from 'src/services/logger';
 
 const Tezos = () => {
     const { tezos } = useAppContext();
-    const { connectTezosWallet } = useWalletContext();
+    const { connectTezosWallet, pkh } = useWalletContext();
     const [error, setError] = React.useState('');
-    const [sending, setSending] = React.useState(false);
-    const [proof, setProof] = React.useState<IbcfSdk.Tezos.Proof.TezosProof>();
-    const [pongProof, setPongProof] = React.useState<IbcfSdk.Ethereum.Proof.EthereumProof>();
+    const [proof, setProof] = React.useState<IbcfSdk.Tezos.Contracts.StateAggregator.TezosProof>();
     const [operationHash, setOperationHash] = React.useState('');
-    const [confirmPongOpen, setConfirmPongOpen] = React.useState(false);
+    const [wrapModalOpen, setUnwrapModalOpen] = React.useState(false);
+    const [destination, setDestination] = React.useState<string>();
+    const [amount, setAmount] = React.useState<string>();
+    const [confirming, setConfirming] = React.useState(false);
 
-    const handlePongProof = React.useCallback((e: any) => {
-        try {
-            setPongProof(JSON.parse(e.target.value));
-        } catch (e) {
-            setPongProof(undefined);
-            // ignore
+    const unwrap = React.useCallback(async () => {
+        if (!destination || destination.length < 32) {
+            return setError('Invalid destination!');
         }
+        if (!amount || amount == '0') {
+            return setError('Invalid amount!');
+        }
+
+        try {
+            const bridge = new IbcfSdk.Tezos.Contracts.Bridge.Contract(TezosSdk, Constants.tezos_bridge);
+            const storage = await bridge.getStorage();
+            const asset = await TezosSdk.contract.at(storage.asset_address);
+
+            const add_operator = await asset.methods.update_operators([
+                {
+                    add_operator: {
+                        owner: pkh,
+                        operator: Constants.tezos_bridge,
+                        token_id: 0,
+                    },
+                },
+            ]);
+            const remove_operator = await asset.methods.update_operators([
+                {
+                    remove_operator: {
+                        owner: pkh,
+                        operator: Constants.tezos_bridge,
+                        token_id: 0,
+                    },
+                },
+            ]);
+
+            const unwrap = await bridge.unwrap({
+                destination,
+                amount,
+            });
+
+            const result = await TezosSdk.contract
+                .batch()
+                .withContractCall(add_operator)
+                .withContractCall(unwrap)
+                .withContractCall(remove_operator)
+                .send();
+
+            setConfirming(true);
+            setOperationHash(result.hash);
+            await result.confirmation(1);
+        } catch (e: any) {
+            Logger.error(e);
+            return setError(e.message);
+        } finally {
+            setConfirming(false);
+        }
+    }, [destination, amount]);
+
+    const handleDestination = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setDestination(e.target.value);
     }, []);
 
-    const confirmPong = React.useCallback(async () => {
-        setSending(true);
-        if (pongProof) {
-            try {
-                const contract = await TezosSdk.contract.at(Constants.tezos_bridge);
-                const operation = await contract.methods
-                    .confirm_pong(pongProof.account_proof_rlp, pongProof.block_number, pongProof.storage_proof_rlp)
-                    .send();
-                setOperationHash(operation.hash);
-            } catch (e: any) {
-                setError(e.message);
-            } finally {
-                setSending(false);
-            }
-        }
-        setSending(false);
-    }, [pongProof]);
+    const handleAmount = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setAmount(e.target.value);
+    }, []);
 
     return (
         <>
@@ -99,7 +137,7 @@ const Tezos = () => {
                                         spacing={2}
                                     >
                                         <Grid item>
-                                            <Button fullWidth size="small" onClick={() => setConfirmPongOpen(true)}>
+                                            <Button fullWidth size="small" onClick={() => setUnwrapModalOpen(true)}>
                                                 Unwrap
                                             </Button>
                                         </Grid>
@@ -119,7 +157,7 @@ const Tezos = () => {
                                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                                     <Grid container direction="row" justifyContent="center" alignItems="center">
                                         <Grid item>
-                                            <WrapsTable wraps={[]} />
+                                            <WrapsTable unwraps={tezos.bridgeStorage?.unwraps || []} />
                                         </Grid>
                                     </Grid>
                                 </CardContent>
@@ -131,7 +169,7 @@ const Tezos = () => {
                     <Grid container direction="row" justifyContent="center" alignItems="center">
                         <Grid item>
                             <Typography color="text.secondary" gutterBottom>
-                                {sending ? 'Sending...' : ''}
+                                {confirming ? 'Confirming...' : ''}
                             </Typography>
                         </Grid>
                     </Grid>
@@ -139,28 +177,30 @@ const Tezos = () => {
             </Card>
 
             <Dialog
-                title="Confirm Pong (Insert proof below)"
-                open={confirmPongOpen}
+                title="Unwrap token"
+                open={wrapModalOpen}
                 onClose={() => {
-                    setConfirmPongOpen(false);
-                    setPongProof(undefined);
+                    setUnwrapModalOpen(false);
+                    setDestination(undefined);
+                    setAmount(undefined);
                 }}
                 actions={
                     <DialogActions>
-                        <Button fullWidth size="small" onClick={confirmPong}>
-                            Confirm pong
+                        <Button fullWidth size="small" onClick={unwrap}>
+                            Unwrap
                         </Button>
                     </DialogActions>
                 }
             >
                 <TextField
-                    error={!pongProof}
-                    onChange={handlePongProof}
+                    error={!destination}
+                    placeholder="Destination (0x...)"
+                    value={destination || ''}
+                    onChange={handleDestination}
                     fullWidth
-                    rows={10}
-                    sx={{ height: 300 }}
-                    multiline
+                    margin="dense"
                 />
+                <TextField value={amount || 0} placeholder="Amount" onChange={handleAmount} fullWidth margin="dense" />
             </Dialog>
 
             <Dialog title="Error" open={!!error} onClose={() => setError('')}>

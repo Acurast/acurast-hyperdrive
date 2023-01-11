@@ -17,10 +17,8 @@ import Logger from 'src/services/logger';
 const Ethereum = () => {
     const { ethereum } = useAppContext();
     const [proof, setProof] = React.useState<IbcfSdk.Ethereum.Proof.EthereumProof>();
-    const [pingProof, setPingProof] = React.useState<IbcfSdk.Tezos.Proof.TezosProof>();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
-    const [confirmPingOpen, setConfirmPingOpen] = React.useState(false);
     const [wrapModalOpen, setWrapModalOpen] = React.useState(false);
     const [destination, setDestination] = React.useState<string>();
     const [amount, setAmount] = React.useState<string>();
@@ -49,15 +47,6 @@ const Ethereum = () => {
         }
     }, [destination, amount]);
 
-    // const handlePingProof = React.useCallback((e: any) => {
-    //     try {
-    //         setPingProof(JSON.parse(e.target.value));
-    //     } catch (e) {
-    //         setPingProof(undefined);
-    //         // ignore
-    //     }
-    // }, []);
-
     const handleDestination = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         setDestination(e.target.value);
     }, []);
@@ -65,30 +54,6 @@ const Ethereum = () => {
     const handleAmount = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         setAmount(e.target.value);
     }, []);
-
-    // const confirmPing = React.useCallback(async () => {
-    //     if (pingProof) {
-    //         const contract = new Contract(abi.bridge, Constants.ethereum_bridge);
-    //         EthereumSDK.eth
-    //             .getAccounts()
-    //             .then(async (accounts) => {
-    //                 const method = contract.methods.confirm_ping(
-    //                     pingProof.level,
-    //                     pingProof.merkle_root,
-    //                     pingProof.key,
-    //                     pingProof.value,
-    //                     pingProof.proof,
-    //                     [accounts[0]],
-    //                     pingProof.signatures,
-    //                 );
-    //                 return method.send({ from: accounts[0] }).on('transactionHash', function (hash: string) {
-    //                     setOperationHash(hash);
-    //                 });
-    //             })
-    //             .then(console.log)
-    //             .catch(setError);
-    //     }
-    // }, [pingProof]);
 
     return (
         <>
@@ -170,31 +135,6 @@ const Ethereum = () => {
                     </Grid>
                 </CardActions>
             </Card>
-            {/*
-            <Dialog
-                title="Confirm Ping (Insert proof below)"
-                open={confirmPingOpen}
-                onClose={() => {
-                    setConfirmPingOpen(false);
-                    setPingProof(undefined);
-                }}
-                actions={
-                    <DialogActions>
-                        <Button fullWidth size="small">
-                            Confirm ping
-                        </Button>
-                    </DialogActions>
-                }
-            >
-                <TextField
-                    error={!pingProof}
-                    onChange={handlePingProof}
-                    fullWidth
-                    rows={10}
-                    sx={{ height: 300 }}
-                    multiline
-                />
-            </Dialog> */}
 
             <Dialog
                 title="Wrap token"
@@ -203,7 +143,6 @@ const Ethereum = () => {
                     setWrapModalOpen(false);
                     setDestination(undefined);
                     setAmount(undefined);
-                    console.log(destination);
                 }}
                 actions={
                     <DialogActions>

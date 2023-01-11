@@ -1,10 +1,11 @@
 import { createContext } from 'react';
 import type { BigNumber } from 'bignumber.js';
 import { BigMapAbstraction } from '@taquito/taquito';
-import { Ethereum } from '@ibcf/sdk';
+import { Ethereum, Tezos } from '@ibcf/sdk';
 
 export interface TezosBridgeStorage {
     asset: AssetInfo;
+    unwraps: Tezos.Contracts.Bridge.Unwrap[];
 }
 
 export interface TezosStateAggregatorStorage {

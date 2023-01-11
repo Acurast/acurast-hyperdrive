@@ -12,11 +12,12 @@ import entrypoints from './data/state_aggregator.entrypoints.json';
 import * as IBCF from '../../src';
 
 const signer_address = 'tz1YGTtd1hqGYTYKtcWSXYKSgCj5hvjaTPVd';
-const contract = 'KT1PgvJ629MCN99k9EKYTaWZJXB9zd5bzvzd';
+const contractAddress = 'KT1JswcsH2RkuYPZwvYDpL5Mb63Xhc3pvndH';
 
 describe('Tezos > State Aggregator', () => {
     const server = setupServer(...http_handlers('http://mocked_rpc.localhost'));
     const tezos_sdk = new TezosToolkit('http://mocked_rpc.localhost');
+    const contract = new IBCF.Tezos.Contracts.StateAggregator.Contract(tezos_sdk, contractAddress);
 
     beforeAll(function () {
         server.listen();
@@ -27,7 +28,7 @@ describe('Tezos > State Aggregator', () => {
     });
 
     it('getStorage', async () => {
-        const contractStorage = await IBCF.Tezos.Contracts.StateAggregator.getStorage(tezos_sdk, contract);
+        const contractStorage = await contract.getStorage();
 
         expect(contractStorage.snapshot_counter).toEqual(new BigNumber(3));
         expect(contractStorage.merkle_tree.root).toEqual(
@@ -35,15 +36,23 @@ describe('Tezos > State Aggregator', () => {
         );
     });
 
+    describe('Views', () => {
+        it('get_proof', async () => {
+            const result = await contract.getProof('KT1HqtX5EGxjYkQHeT6vJwnT7wt42wxGPRba', '0x8101', '1804054');
+
+            expect(result).toEqual({
+                key: '0x8101',
+                merkle_root: '0x90a2e0d4299cc150e5deb92044e1c9ef69b1042f4ca6b1b9fc844a0e57e0125b',
+                proof: [],
+                snapshot: BigNumber(1),
+                value: '0xd794836f1abf07dbdb7f262d0a71067dadc421fe3df0810a',
+            });
+        });
+    });
+
     describe('Entrypoints', () => {
         it('snapshot', async () => {
-            tezos_sdk.setSignerProvider(
-                await InMemorySigner.fromSecretKey(
-                    'edskS8xUePnvXXp3XHjYkDBBKDRwigGF95uHtJzDakV74azm9y6KHvkw4gLjPUvenWiY7H9xRQN729ipPutLVLiHXHMYfaf9hS',
-                ),
-            );
-
-            const result = await IBCF.Tezos.Contracts.StateAggregator.snapshot(tezos_sdk, contract);
+            const result = await contract.snapshot();
             expect(result.toTransferParams()).toEqual({
                 amount: 0,
                 fee: undefined,
@@ -52,7 +61,7 @@ describe('Tezos > State Aggregator', () => {
                 parameter: { entrypoint: 'snapshot', value: { prim: 'Unit' } },
                 source: undefined,
                 storageLimit: undefined,
-                to: 'KT1PgvJ629MCN99k9EKYTaWZJXB9zd5bzvzd',
+                to: contractAddress,
             });
         });
     });
@@ -60,6 +69,30 @@ describe('Tezos > State Aggregator', () => {
 
 function http_handlers(url: string) {
     return [
+        rest.post(`${url}/chains/main/blocks/1804054/helpers/scripts/run_script_view`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        prim: 'Pair',
+                        args: [
+                            {
+                                bytes: '8101',
+                            },
+                            {
+                                bytes: '90a2e0d4299cc150e5deb92044e1c9ef69b1042f4ca6b1b9fc844a0e57e0125b',
+                            },
+                            [],
+                            {
+                                int: '1',
+                            },
+                            {
+                                bytes: 'd794836f1abf07dbdb7f262d0a71067dadc421fe3df0810a',
+                            },
+                        ],
+                    },
+                }),
+            );
+        }),
         rest.get(`${url}/chains/main/blocks/head/protocols`, async (req, res, ctx) => {
             return res(
                 ctx.json({
@@ -97,15 +130,21 @@ function http_handlers(url: string) {
                 }),
             );
         }),
-        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contract}`, async (req, res, ctx) => {
+        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contractAddress}`, async (req, res, ctx) => {
             return res(ctx.json(contractResponse));
         }),
-        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contract}/entrypoints`, async (req, res, ctx) => {
-            return res(ctx.json(entrypoints));
-        }),
-        rest.get(`${url}/chains/main/blocks/head/context/contracts/${contract}/script`, async (req, res, ctx) => {
-            return res(ctx.json(contractScriptResponse));
-        }),
+        rest.get(
+            `${url}/chains/main/blocks/head/context/contracts/${contractAddress}/entrypoints`,
+            async (req, res, ctx) => {
+                return res(ctx.json(entrypoints));
+            },
+        ),
+        rest.get(
+            `${url}/chains/main/blocks/head/context/contracts/${contractAddress}/script`,
+            async (req, res, ctx) => {
+                return res(ctx.json(contractScriptResponse));
+            },
+        ),
 
         rest.post(`${url}/injection/operation`, async (req, res, ctx) => {
             return res(ctx.text('opLyi4ZBGDf3pb4A8eLkyouiFqNVgQ8X59ZStMesgYsHrQSLMGQ'));

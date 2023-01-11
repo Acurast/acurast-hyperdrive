@@ -18,56 +18,80 @@ export interface StateAggregatorStorage {
     snapshot_start_level: BigNumber;
 }
 
-export async function getStorage(
-    tezos_sdk: TezosToolkit,
-    state_aggregator_address: string,
-    block = 'head',
-): Promise<StateAggregatorStorage> {
-    const script = await tezos_sdk.rpc.getScript(state_aggregator_address, { block });
-    const contractSchema = Schema.fromRPCResponse({ script: script });
-
-    return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(tezos_sdk.contract));
-}
-
 export interface TezosProof {
-    level: number;
+    snapshot: BigNumber;
     merkle_root: string;
     key: string;
     value: string;
     proof: [string, string][];
-    signatures: [string, string][];
 }
 
-export async function getProof(
-    tezos_sdk: TezosToolkit,
-    state_aggregator_address: string,
-    owner: string,
-    key: string,
-    blockLevel: string,
-): Promise<any> {
-    const storage = await tezos_sdk.rpc.runScriptView(
-        {
-            contract: state_aggregator_address,
-            input: { prim: 'Unit' },
-            view: 'get_proof',
-            chain_id: await tezos_sdk.rpc.getChainId(),
-        },
-        { block: blockLevel },
-    );
+export class Contract {
+    constructor(private sdk: TezosToolkit, private contractAddress: string) {}
 
-    console.log(storage);
+    async getStorage(block = 'head'): Promise<StateAggregatorStorage> {
+        const script = await this.sdk.rpc.getScript(this.contractAddress, { block });
+        const contractSchema = Schema.fromRPCResponse({ script: script });
 
-    return '';
-}
+        return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(this.sdk.contract));
+    }
 
-/**
- * Snapshot the current state and start a new one.
- */
-export async function snapshot(
-    tezos_sdk: TezosToolkit,
-    state_aggregator_address: string,
-): Promise<ContractMethod<ContractProvider>> {
-    const contract = await tezos_sdk.contract.at(state_aggregator_address);
+    // async generateProof(owner: string, key: string, blockLevel: number): Promise<TezosProof> {
+    //     const contract = await this.sdk.contract.at(this.contractAddress);
 
-    return contract.methods.snapshot();
+    //     const proof = await contract.contractViews
+    //         .get_proof({ key, owner, level: blockLevel })
+    //         .executeView({ viewCaller: owner });
+
+    //     console.log(proof.proof);
+    //     const blindedPath = proof.proof.reduce(() => {
+    //         // TODO
+    //     }, []);
+
+    //     return {
+    //         level: proof.level.toNumber(),
+    //         merkle_root: '0x' + proof.merkle_root,
+    //         key: '0x' + proof.key,
+    //         value: '0x' + proof.value,
+    //         proof: blindedPath,
+    //     };
+    // }
+
+    async getProof(owner: string, key: string, blockLevel: string): Promise<TezosProof> {
+        const result = await this.sdk.rpc.runScriptView(
+            {
+                contract: this.contractAddress,
+                input: {
+                    prim: 'Pair',
+                    args: [{ bytes: key.replace('0x', '') }, { string: owner }],
+                },
+                view: 'get_proof',
+                chain_id: await this.sdk.rpc.getChainId(),
+            },
+            { block: blockLevel },
+        );
+
+        const data: any = result.data;
+
+        const blindedPath = data.args[2].reduce(() => {
+            // TODO
+        }, []);
+
+        return {
+            key: '0x' + data.args[0].bytes,
+            merkle_root: '0x' + data.args[1].bytes,
+            proof: blindedPath,
+            snapshot: BigNumber(data.args[3].int),
+            value: '0x' + data.args[4].bytes,
+        };
+    }
+
+    /**
+     * Snapshot the current state and start a new one.
+     */
+    async snapshot(): Promise<ContractMethod<ContractProvider>> {
+        const contract = await this.sdk.contract.at(this.contractAddress);
+
+        return contract.methods.snapshot();
+    }
 }

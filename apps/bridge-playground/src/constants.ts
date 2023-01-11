@@ -1,10 +1,10 @@
 const Constants = {
     network: 'custom',
     rpc: 'https://tezos-ghostnet-node-1.diamond.papers.tech',
-    tezos_bridge: 'KT1MitsqTL7UGXXknHdfMeDKAokixz6ZxJg9',
-    tezos_validator: 'KT1JdMtV9PZtPiwtMqf6rJ7xCZPPnbXLnSgJ',
-    tezos_state_aggregator: 'KT1NBj2987QNeqCHvz6LkjptHAnTUgzrByiq',
-    ethereum_bridge: '0xF8D0dcb8F3Af348586360971b3561B3b139a2929',
+    tezos_bridge: 'KT1AfcN12T2d43XtJLbahmpDr13xda4Zedxx',
+    tezos_validator: 'KT1GbXVnzzvtMpx3vwEF25PbMeTfAscWZJ3Q',
+    tezos_state_aggregator: 'KT1Aqdz8opKsfADxmF2vf6NMoYwgamL5R4KT',
+    ethereum_bridge: '0x10758d99D642428fd6A8B62A149aB2d1ade20C24',
     etherscan: 'https://goerli.etherscan.io',
     tzkt: 'https://ghostnet.tzkt.io',
 };

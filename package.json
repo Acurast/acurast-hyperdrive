@@ -30,6 +30,7 @@
   "workspaces": [
     "packages/ibcf-sdk",
     "packages/root-transmitter",
+    "packages/bridge-transmitter",
     "apps/bridge-playground"
   ],
   "packageManager": "yarn@3.3.0"

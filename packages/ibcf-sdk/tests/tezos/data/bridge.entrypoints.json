@@ -1,0 +1,71 @@
+{
+    "entrypoints": {
+        "wrap": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "bytes",
+                    "annots": [
+                        "%account_proof_rlp"
+                    ]
+                },
+                {
+                    "prim": "pair",
+                    "args": [
+                        {
+                            "prim": "bytes",
+                            "annots": [
+                                "%amount_proof_rlp"
+                            ]
+                        },
+                        {
+                            "prim": "pair",
+                            "args": [
+                                {
+                                    "prim": "nat",
+                                    "annots": [
+                                        "%block_number"
+                                    ]
+                                },
+                                {
+                                    "prim": "pair",
+                                    "args": [
+                                        {
+                                            "prim": "bytes",
+                                            "annots": [
+                                                "%destination_proof_rlp"
+                                            ]
+                                        },
+                                        {
+                                            "prim": "bytes",
+                                            "annots": [
+                                                "%nonce"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "unwrap": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%amount"
+                    ]
+                },
+                {
+                    "prim": "bytes",
+                    "annots": [
+                        "%destination"
+                    ]
+                }
+            ]
+        }
+    }
+}
