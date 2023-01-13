@@ -17,6 +17,26 @@ const sidebars = {
     "introduction",
     {
       type: "category",
+      label: "Relay",
+      items: [
+        "relay-contracts/overview",
+        {
+          type: "category",
+          label: "Tezos Contracts",
+          items: ["relay-contracts/tezos/validator"],
+          collapsed: false,
+        },
+        {
+          type: "category",
+          label: "EVM Contracts",
+          items: ["relay-contracts/evm/validator"],
+          collapsed: false,
+        }
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
       label: "Examples",
       items: ["examples/bridge"],
       collapsed: false,

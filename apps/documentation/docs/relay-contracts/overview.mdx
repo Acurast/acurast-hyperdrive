@@ -1,0 +1,55 @@
+---
+title: Overview
+slug: /relay-contracts
+hide_title: true
+---
+
+import ThemedImage from "@theme/ThemedImage";
+import useBaseUrl from "@docusaurus/useBaseUrl";
+
+## Relaying Tezos to EVM
+
+The relaying process from Tezos to EVM involves interacting with two contracts (a [State Aggregator](/relay-contracts/tezos/state) and a [Validator](/relay-contracts/evm/validator)).
+
+<center>
+<ThemedImage
+  width="480px"
+  sources={{
+    light: useBaseUrl("/img/ibcf-relay-tezos-evm.svg"),
+    dark: useBaseUrl("/img/ibcf-relay-tezos-evm-dark.svg"),
+  }}
+/>
+</center>
+
+<div class="padding-vert--md"></div>
+
+The :ledger: [**State aggregation**](/tezos/state) contract acts as a database and proof generator for other contracts in the Tezos ecosystem.
+It produces a snapshot of a Merkle tree every `X` blocks, where the root node of the tree is used to validate all the proofs for the given snapshot.
+
+The origin contract address is included on every added state to authenticate the proofs on the EVM chain.
+
+The root node hash (or **state root**) of every snapshot is then transmitted to an EVM contract (:cop: [**Validator**](/relay-contracts/evm/validator)), which allows the contracts on the EVM environment to validate the proofs of :envelope: states added on Tezos at a given snapshot.
+
+## Relaying EVM to Tezos
+
+Relaying from an EVM chain to Tezos, requires the EVM chain to be [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) enabled and a ([Validator](/relay-contracts/tezos/validator)) contract capable of validating `EIP-1186` storage proofs.
+
+<center>
+<ThemedImage
+  width="480px"
+  sources={{
+    light: useBaseUrl("/img/ibcf-relay-evm-tezos.svg"),
+    dark: useBaseUrl("/img/ibcf-relay-evm-tezos-dark.svg"),
+  }}
+/>
+</center>
+
+<div class="padding-vert--md"></div>
+
+The relayer first asks the Tezos (:cop: [**Validator**](/relay-contracts/tezos/validator)) which snapshot/block level it is expecting, then queries the state root of that level and sends it to the validator.
+
+Applications can then leverage [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) for producing storage proofs of EVM contracts that get validated on Tezos.
+
+## Decentralization
+
+The relaying solution is not trustless. Applications building on top of it need to trust that at least 51% of the validators are not faulty.

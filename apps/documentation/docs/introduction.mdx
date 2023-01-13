@@ -20,13 +20,15 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 IBCF is a building block allowing for general bidirectional message passing between Tezos and Ethereum networks.
 
-It allows for smart contracts on each source chain to store states that are verifiable in a target chain. It provides a generic way for contracts to communicate between chains by means of validating Merkle proofs about states stored in the source chain.
+It allows smart contracts on a source chain to store ✉️ states that are verifiable on a target chain. It provides a generic way for contracts to communicate between chains by means of validating Merkle proofs about the ✉️ states stored in the source chain.
 
 # How does it work?
 
 As an initial step, a trusted set of validators is responsible for relaying the state root of snapshots between chains.
 It means that for two chains  (`A` and `B`), that chain `B` will know the state roots of snapshots contained in chain `A`, and
 chain `A` will also know the state roots contained in `B`.
+
+<div class="padding-vert--md"></div>
 
 <center>
 <ThemedImage
@@ -41,6 +43,8 @@ chain `A` will also know the state roots contained in `B`.
 <div class="padding-vert--md"></div>
 
 The state roots transmitted in the step above allow smart contracts in a target chain to validate arbitrary states previously stored in a source chain by calling a validatior smart contract with a proof-of-inclusion for that given state.
+
+<div class="padding-vert--md"></div>
 
 <center>
 <ThemedImage
