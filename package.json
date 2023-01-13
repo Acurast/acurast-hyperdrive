@@ -21,6 +21,7 @@
     "test": "truffle test --migrations_directory migrations_null",
     "deploy": "truffle deploy --network goerli --reset",
     "build": "yarn workspaces foreach --topological --topological-dev --verbose run build",
+    "doc": "yarn workspace documentation run start",
     "lint:check": "yarn workspaces foreach --topological --topological-dev --verbose run lint .",
     "lint:fix": "yarn workspaces foreach --topological --topological-dev --verbose run lint --fix .",
     "prettier:check": "yarn workspaces foreach --verbose run prettier --check .",
