@@ -3,3 +3,75 @@ title: State Aggregator
 slug: /relay-contracts/tezos/state
 hide_title: true
 ---
+
+## Methods
+
+### `insert`
+
+**Input type:**
+```
+(pair %insert
+    (bytes %key)
+    (bytes %value)
+)
+```
+
+**Description:** Contracts in a Tezos ecosystem can call this method to insert (*key*, *value*) entries into a Merkle tree.
+
+**Requires permissions?** No, anyone is allowed to call this method.
+
+<div class="padding-vert--md"></div>
+
+### `configure`
+
+**Input type:**
+```
+(list %configure
+    (or
+        (address %update_administrator)
+        (nat %update_max_state_size)
+        (nat %update_snapshot_duration)
+    )
+)
+```
+
+**Description:** This method modifies the contract configurations.
+
+**Requires permissions?** Yes, only the multisig administrator can call this method.
+
+<div class="padding-vert--md"></div>
+
+### `snapshot`
+
+**Input type:** `(unit %snapshot)`
+
+**Description:** This method finalizes the current ongoing snapshot if the following condition is met: `current_level > snapshot_start_level + snapshot_duration`.
+
+**Requires permissions?** No, anyone is allowed to call this method.
+
+<div class="padding-vert--md"></div>
+
+## Views
+
+### `get_proof`
+
+**Input type:**
+```
+(pair
+    (bytes %key)
+    (address %owner)
+)
+```
+
+**Output type:**
+```
+(pair
+    (bytes %key)
+    (bytes %merkle_root)
+    (list %proof (or (bytes %Left) (bytes %Right)))
+    (nat %snapshot)
+    (bytes %value)
+)
+```
+
+**Description:** Returns the Merkle-proof for a given data entry.

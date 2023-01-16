@@ -1,5 +1,66 @@
 ---
-title: Validator
+title: EIP-1186 Proof Validator
 slug: /relay-contracts/tezos/validator
 hide_title: true
 ---
+
+## Methods
+
+### `submit_block_state_root`
+
+**Input type:**
+```
+(pair %submit_block_state_root
+    (nat %block_number)
+    (bytes %state_root)
+)
+```
+
+**Description:** Relayers call this method with the block state roots of an EVM [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) enabled chain.
+
+**Requires permissions?** Yes, only `relayers` can call this method.
+
+<div class="padding-vert--md"></div>
+
+### `configure`
+
+**Input type:**
+```
+(list %configure
+    (or
+        (address %update_administrator)
+        (nat %update_history_length)
+        (nat %update_minimum_endorsements)
+        (nat %update_snapshot_interval)
+        (set %update_validators (or (address %add) (address %remove)))
+    )
+)
+```
+
+**Description:** This method modifies the contract configurations.
+
+**Requires permissions?** Yes, only the multisig administrator can call this method.
+
+<div class="padding-vert--md"></div>
+
+## Views
+
+### `validate_storage_proof`
+
+**Input type:**
+
+```
+(pair
+    (bytes %account)
+    (bytes %account_proof_rlp)
+    (nat %block_number)
+    (bytes %storage_proof_rlp)
+    (bytes %storage_slot)
+)
+```
+
+**Output type:** `bytes`
+
+**Description:** Contracts in a Tezos ecosystem can call this method to validate [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) storage slot proofs of EVM contracts.
+
+If the proof is valid, it returns the [RLP](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp) encoded value of the EVM contract storage slot.

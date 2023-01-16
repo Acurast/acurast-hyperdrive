@@ -8,16 +8,16 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const config = {
   title: 'IBCF Docs',
   tagline: 'Inter Blockchain Communication Framework',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://github.com',
+  baseUrl: process.env.NODE_ENV === 'development' ? '/' : '/ibcf-docs/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'papers', // Usually your GitHub org/user name.
-  projectName: 'ibcf', // Usually your repo name.
+  organizationName: 'RoMarQ',
+  projectName: 'ibcf-docs', // Usually your repo name.
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -48,11 +48,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Docs',
-        logo: {
-          alt: 'IBCF',
-          src: 'img/logo.svg',
-        },
+        title: 'Documentation',
         items: [
           {
             href: 'https://github.com/facebook/docusaurus',

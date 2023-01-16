@@ -1,5 +1,40 @@
 ---
-title: Validator
+title: Proof Validator
 slug: /relay-contracts/evm/validator
 hide_title: true
 ---
+
+## Methods
+
+### `submit_state_root`
+
+**Signature:** `submit_state_root(uint snapshot_number, bytes32 state_root)`
+
+**Description:** Relayers call this method with the snapshot state roots of a Tezos chain.
+
+**Requires permissions?** Yes, only `relayers` can call this method.
+
+<div class="padding-vert--md"></div>
+
+## Views
+
+### `verify_proof`
+
+**Signature:**
+
+```
+function verify_proof(
+    uint snapshot_number,
+    bytes memory owner,
+    bytes memory key,
+    bytes memory value,
+    bytes32[2][] memory proof
+);
+```
+
+**Output type:** `void`
+
+**Description:**
+Contracts in a EVM chain can call this method to validate that a given state exists on the Tezos blockchain at a snapshot.
+
+It first asserts that the snapshot state was signed by at least `X` validators and then validates the proof against the snapshot state.

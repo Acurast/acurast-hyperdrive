@@ -17,13 +17,13 @@ const sidebars = {
     "introduction",
     {
       type: "category",
-      label: "Relay",
+      label: "State Relaying",
       items: [
         "relay-contracts/overview",
         {
           type: "category",
           label: "Tezos Contracts",
-          items: ["relay-contracts/tezos/validator"],
+          items: ["relay-contracts/tezos/state", "relay-contracts/tezos/validator"],
           collapsed: false,
         },
         {
