@@ -65,7 +65,7 @@ code
                     EDIV;       
                     IF_NONE
                       {
-                        PUSH int 48; 
+                        PUSH int 49; 
                         FAILWITH;   
                       }
                       {}; 
@@ -277,7 +277,7 @@ code
                                             EDIV;       
                                             IF_NONE
                                               {
-                                                PUSH int 48; 
+                                                PUSH int 49; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -545,7 +545,7 @@ code
                                         EDIV;       
                                         IF_NONE
                                           {
-                                            PUSH int 48; 
+                                            PUSH int 49; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -813,7 +813,7 @@ code
                                         EDIV;       
                                         IF_NONE
                                           {
-                                            PUSH int 48; 
+                                            PUSH int 49; 
                                             FAILWITH;   
                                           }
                                           {}; 

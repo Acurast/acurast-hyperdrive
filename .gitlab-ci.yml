@@ -86,3 +86,9 @@ test_evm_contracts:
   stage: test
   script:
     - make test-evm
+
+test_sdk:
+  extends: .setup
+  stage: test
+  script:
+    - make test-sdk

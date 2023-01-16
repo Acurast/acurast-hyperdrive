@@ -1,5 +1,5 @@
 pyyaml==6.0
-pytezos-3.7.3.tar.gz
+pytezos==3.7.4
 termcolor==1.1.0
 black==22.6.0
 graphviz==0.20

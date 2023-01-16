@@ -13,20 +13,19 @@
         "build": "rm -rf dist/ && tsc -p tsconfig.json",
         "prettier": "prettier",
         "lint": "eslint",
-        "test": "jest --runInBand --detectOpenHandles --watch"
+        "test": "jest --runInBand --detectOpenHandles",
+        "test:watch": "jest --runInBand --detectOpenHandles --watch"
     },
     "dependencies": {
         "@taquito/michel-codec": "^15.0.0",
         "@taquito/michelson-encoder": "^15.0.0",
         "@taquito/taquito": "^15.0.0",
         "bignumber.js": "^9.1.1",
-        "eth-util-lite": "1.0.1",
         "ethers": "^5.7.0"
     },
     "devDependencies": {
         "@taquito/signer": "^15.0.0",
         "@types/jest": "29.2.3",
-        "@types/node": "18.11.9",
         "@typescript-eslint/eslint-plugin": "5.42.1",
         "@typescript-eslint/parser": "5.42.1",
         "eslint": "8.27.0",

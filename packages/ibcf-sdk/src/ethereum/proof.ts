@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { toBuffer } from 'eth-util-lite';
 
 export interface EthereumProof {
     block_number: number;
@@ -7,27 +6,27 @@ export interface EthereumProof {
     storage_proof_rlp: string;
 }
 
-function buildHeaderBytes(block: any) {
-    const fields = [
-        toBuffer(block.parentHash),
-        toBuffer(block.sha3Uncles),
-        toBuffer(block.miner),
-        toBuffer(block.stateRoot),
-        toBuffer(block.transactionsRoot),
-        toBuffer(block.receiptsRoot),
-        toBuffer(block.logsBloom),
-        toBuffer(ethers.utils.hexlify(block.difficulty)),
-        toBuffer(ethers.utils.hexlify(block.number)),
-        toBuffer(ethers.utils.hexlify(block.gasLimit)),
-        toBuffer(ethers.utils.hexlify(block.gasUsed)),
-        toBuffer(ethers.utils.hexlify(block.timestamp)),
-        toBuffer(block.extraData),
-        toBuffer(block.mixHash),
-        toBuffer(block.nonce),
-        toBuffer(ethers.utils.hexlify(block.baseFeePerGas)),
-    ];
-    return Buffer.from(ethers.utils.RLP.encode(fields)).toString('hex');
-}
+// function buildHeaderBytes(block: any) {
+//     const fields = [
+//         toBuffer(block.parentHash),
+//         toBuffer(block.sha3Uncles),
+//         toBuffer(block.miner),
+//         toBuffer(block.stateRoot),
+//         toBuffer(block.transactionsRoot),
+//         toBuffer(block.receiptsRoot),
+//         toBuffer(block.logsBloom),
+//         toBuffer(ethers.utils.hexlify(block.difficulty)),
+//         toBuffer(ethers.utils.hexlify(block.number)),
+//         toBuffer(ethers.utils.hexlify(block.gasLimit)),
+//         toBuffer(ethers.utils.hexlify(block.gasUsed)),
+//         toBuffer(ethers.utils.hexlify(block.timestamp)),
+//         toBuffer(block.extraData),
+//         toBuffer(block.mixHash),
+//         toBuffer(block.nonce),
+//         toBuffer(ethers.utils.hexlify(block.baseFeePerGas)),
+//     ];
+//     return Buffer.from(ethers.utils.RLP.encode(fields)).toString('hex');
+// }
 
 export async function generateProof(
     provider: ethers.providers.JsonRpcProvider,

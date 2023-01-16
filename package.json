@@ -26,11 +26,12 @@
     "lint:fix": "yarn workspaces foreach --topological --topological-dev --verbose run lint --fix .",
     "prettier:check": "yarn workspaces foreach --verbose run prettier --check .",
     "prettier:fix": "yarn workspaces foreach --verbose run prettier --write .",
-    "fmt": "yarn lint:fix && yarn prettier:fix"
+    "fmt": "yarn lint:fix && yarn prettier:fix",
+    "test:sdk": "yarn workspace @ibcf/sdk run test"
   },
   "workspaces": [
     "packages/**",
-    "apps/**"
+    "apps/bridge-playground"
   ],
   "packageManager": "yarn@3.3.0"
 }

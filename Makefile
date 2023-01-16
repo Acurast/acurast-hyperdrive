@@ -81,6 +81,10 @@ test-evm: setup_env clean-evm-tests
 
 test: test-tezos test-evm
 	@echo "Tested all contracts."
+
+test-sdk: install-npm-packages
+	@yarn test:sdk
+
 ##
 ## - Tests
 ##
