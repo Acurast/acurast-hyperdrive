@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - run: sudo apt-get update
+    - run: sudo apt-get install -y --no-install-recommends python3-dev python3-pip python3-setuptools build-essential libsodium-dev libsecp256k1-dev libgmp3-dev git curl
+    - run: make
+
+    - name: Compile Tezos Contracts
+      run: make compile-tezos
+
+    - name: Compile EVM Contracts
+      run: make compile-evm
+
+    - name: Test Tezos Contracts
+      run: make test-tezos
+
+    - name: Test EVM Contracts
+      run: make test-evm
+
+    - name: Test SDK
+      run: make test-sdk
