@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { MichelsonV1Expression } from '@taquito/rpc';
+import type { MichelsonV1Expression } from '@taquito/rpc';
 import { BigMapAbstraction, ContractProvider } from '@taquito/taquito';
 import { Schema, Semantic } from '@taquito/michelson-encoder';
 

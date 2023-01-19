@@ -10,13 +10,11 @@ import useAppContext from 'src/hooks/useAppContext';
 import WrapsTable from './Table';
 import Constants from 'src/constants';
 import Dialog from '../base/Dialog';
-import CodeBlock from '../base/CodeBlock';
 import AssetCard from './AssetCard';
 import Logger from 'src/services/logger';
 
 const Ethereum = () => {
     const { ethereum } = useAppContext();
-    const [proof, setProof] = React.useState<IbcfSdk.Ethereum.Proof.EthereumProof>();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
     const [wrapModalOpen, setWrapModalOpen] = React.useState(false);
@@ -175,9 +173,6 @@ const Ethereum = () => {
                 >
                     Etherscan
                 </a>
-            </Dialog>
-            <Dialog title="Proof" open={!!proof} onClose={() => setProof(undefined)}>
-                {!!proof ? <CodeBlock language="json" code={JSON.stringify(proof, null, 2)} /> : ''}
             </Dialog>
         </>
     );

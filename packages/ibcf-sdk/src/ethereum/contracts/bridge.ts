@@ -3,7 +3,9 @@ import { Contract as EthersContract } from '@ethersproject/contracts';
 import { JsonRpcProvider, TransactionResponse } from '@ethersproject/providers';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
+
 import { unpackAddress } from '../../tezos/utils';
+import { ProofGenerator } from '../proof';
 import ABI from './abi/bridge.json';
 
 export interface Wrap {
@@ -33,7 +35,7 @@ export class Contract {
 
     constructor(signer: Signer, contractAddress: string) {
         this.signer = signer;
-        this.provider = signer.provider! as JsonRpcProvider;
+        this.provider = signer.provider as JsonRpcProvider;
         this.contractAddress = contractAddress;
     }
 
@@ -80,26 +82,19 @@ export class Contract {
         const destinationSlot = ethers.utils.keccak256('0x' + hexNonce + destinationRegistryIndex);
         const amountSlot = ethers.utils.keccak256('0x' + hexNonce + amountRegistryIndex);
 
-        const proof = await this.provider.send('eth_getProof', [
+        const proofGenerator = new ProofGenerator(this.provider);
+
+        const proof = await proofGenerator.generateStorageProof(
             this.contractAddress,
             [destinationSlot, amountSlot],
-            '0x' + block_number.toString(16),
-        ]);
-        const account_proof_rlp = ethers.utils.RLP.encode(
-            proof.accountProof.map((node: string) => ethers.utils.RLP.decode(node)),
-        );
-        const destination_proof_rlp = ethers.utils.RLP.encode(
-            proof.storageProof[0].proof.map((node: string) => ethers.utils.RLP.decode(node)),
-        );
-        const amount_proof_rlp = ethers.utils.RLP.encode(
-            proof.storageProof[1].proof.map((node: string) => ethers.utils.RLP.decode(node)),
+            block_number,
         );
 
         return {
             block_number,
-            account_proof_rlp,
-            destination_proof_rlp,
-            amount_proof_rlp,
+            account_proof_rlp: proof.account_proof_rlp,
+            destination_proof_rlp: proof.storage_proofs_rlp[0],
+            amount_proof_rlp: proof.storage_proofs_rlp[1],
         };
     }
 

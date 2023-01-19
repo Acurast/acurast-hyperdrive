@@ -1,9 +1,9 @@
-import { ethers } from 'ethers';
+import { ethers, providers } from 'ethers';
 
-export interface EthereumProof {
+export interface EthereumStorageProof {
     block_number: number;
     account_proof_rlp: string;
-    storage_proof_rlp: string;
+    storage_proofs_rlp: string[];
 }
 
 // function buildHeaderBytes(block: any) {
@@ -28,35 +28,30 @@ export interface EthereumProof {
 //     return Buffer.from(ethers.utils.RLP.encode(fields)).toString('hex');
 // }
 
-export async function generateProof(
-    provider: ethers.providers.JsonRpcProvider,
-    address: string,
-    slot: string,
-    block_number: number,
-): Promise<EthereumProof> {
-    // const block = await web3_eth.getBlock(block_number);
-    // const block_header_rlp = buildHeaderBytes(block);
+export class ProofGenerator {
+    constructor(private provider: providers.JsonRpcProvider) {}
 
-    const proof = await provider.send('eth_getProof', [address, [slot], block_number]);
-    const account_proof_rlp =
-        '0x' +
-        Buffer.from(
-            ethers.utils.RLP.encode(proof.accountProof.map((node: string) => ethers.utils.RLP.decode(node)) as any),
-        ).toString('hex');
-    const storage_proof_rlp =
-        '0x' +
-        Buffer.from(
-            ethers.utils.RLP.encode(
-                proof.storageProof[0].proof.map((node: string) => ethers.utils.RLP.decode(node)) as any,
-            ),
-        ).toString('hex');
+    async generateStorageProof(
+        contract: string,
+        slots: string[],
+        block_number?: number,
+    ): Promise<EthereumStorageProof> {
+        block_number ||= await this.provider.getBlockNumber();
 
-    return {
-        //storage_slot: '0x' + proof.storageProof[0].key.slice(2).padStart(64, '0'),
-        // state_root: block.stateRoot,
-        // block_header_rlp: block_header_rlp,
-        block_number,
-        account_proof_rlp: account_proof_rlp,
-        storage_proof_rlp: storage_proof_rlp,
-    };
+        const proof = await this.provider.send('eth_getProof', [contract, slots, '0x' + block_number.toString(16)]);
+
+        const account_proof_rlp = ethers.utils.RLP.encode(
+            proof.accountProof.map((node: string) => ethers.utils.RLP.decode(node)),
+        );
+
+        const storage_proofs_rlp = slots.map((_, i) =>
+            ethers.utils.RLP.encode(proof.storageProof[i].proof.map((node: string) => ethers.utils.RLP.decode(node))),
+        );
+
+        return {
+            block_number,
+            account_proof_rlp,
+            storage_proofs_rlp,
+        };
+    }
 }

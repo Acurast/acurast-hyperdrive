@@ -1,5 +1,5 @@
 import { Schema } from '@taquito/michelson-encoder';
-import { BigMapAbstraction, ContractMethod, ContractProvider, TezosToolkit } from '@taquito/taquito';
+import type { BigMapAbstraction, ContractMethod, ContractProvider, TezosToolkit } from '@taquito/taquito';
 import { smartContractAbstractionSemantic } from './semantic';
 import BigNumber from 'bignumber.js';
 import { ethers } from 'ethers';
@@ -14,7 +14,7 @@ export interface BridgeStorage {
     eth_bridge_address: string;
 }
 
-interface WrapArgument {
+export interface WrapArgument {
     block_number: string;
     nonce: string;
     account_proof_rlp: string;
