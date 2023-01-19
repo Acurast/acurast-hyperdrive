@@ -138,7 +138,6 @@ install-smartpy: $(BUILD_FOLDER)/install-smartpy
 $(BUILD_FOLDER)/install-smartpy:
 	@rm -rf $(SMARTPY_CLI_PATH)
 	@bash -c "bash <(curl -s https://smartpy.io/cli/install.sh) --prefix $(SMARTPY_CLI_PATH) --yes"
-	# @cp smartpy-patch/smartpyc.js _build/smartpy-cli/smartpyc.js
 	$(touch_done)
 
 install-npm-packages: $(BUILD_FOLDER)/npm-packages

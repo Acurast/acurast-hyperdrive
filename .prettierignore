@@ -3,4 +3,3 @@ node_modules
 __SNAPSHOTS__
 _build
 .yarn
-smartpy-patch
