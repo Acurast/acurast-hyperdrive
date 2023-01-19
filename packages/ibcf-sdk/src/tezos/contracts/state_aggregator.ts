@@ -36,7 +36,7 @@ export class Contract {
         return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(this.sdk.contract));
     }
 
-    async getProof(owner: string, key: string, blockLevel: string): Promise<TezosProof> {
+    async getProof(owner: string, key: string, blockLevel: number): Promise<TezosProof> {
         const result = await this.sdk.rpc.runScriptView(
             {
                 contract: this.contractAddress,
@@ -47,7 +47,7 @@ export class Contract {
                 view: 'get_proof',
                 chain_id: await this.sdk.rpc.getChainId(),
             },
-            { block: blockLevel },
+            { block: String(blockLevel) },
         );
 
         const pair: any = result.data;

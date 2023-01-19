@@ -1,4 +1,4 @@
-import { MichelsonMap, TezosToolkit, TransferParams } from '@taquito/taquito';
+import { TezosToolkit, TransferParams } from '@taquito/taquito';
 import { InMemorySigner } from '@taquito/signer';
 import { BigNumber, ethers } from 'ethers';
 
@@ -57,13 +57,13 @@ class Monitor {
                         const proof = await this.context.tezos_state.getProof(
                             this.context.tezos_bridge_address,
                             key,
-                            snapshotLevel.toString(),
+                            snapshotLevel.toNumber(),
                         );
                         const result = await this.context.evm_bridge.unwrap(
                             proof.snapshot,
                             proof.key,
                             proof.value,
-                            proof.proof,
+                            proof.path,
                         );
 
                         // Wait for the operation to be included in at least `ethereum_finality` blocks.

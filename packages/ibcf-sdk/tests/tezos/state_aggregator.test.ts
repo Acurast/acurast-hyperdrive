@@ -37,7 +37,7 @@ describe('Tezos > State Aggregator', () => {
 
     describe('Views', () => {
         it('get_proof', async () => {
-            const result = await contract.getProof('KT1HqtX5EGxjYkQHeT6vJwnT7wt42wxGPRba', '0x8101', '1850867');
+            const result = await contract.getProof('KT1HqtX5EGxjYkQHeT6vJwnT7wt42wxGPRba', '0x8101', 1850867);
 
             expect(result).toEqual({
                 key: '0x05',
