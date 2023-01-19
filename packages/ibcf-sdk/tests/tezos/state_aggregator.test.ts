@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import { TezosToolkit } from '@taquito/taquito';
-import { InMemorySigner } from '@taquito/signer';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 
@@ -38,14 +37,27 @@ describe('Tezos > State Aggregator', () => {
 
     describe('Views', () => {
         it('get_proof', async () => {
-            const result = await contract.getProof('KT1HqtX5EGxjYkQHeT6vJwnT7wt42wxGPRba', '0x8101', '1804054');
+            const result = await contract.getProof('KT1HqtX5EGxjYkQHeT6vJwnT7wt42wxGPRba', '0x8101', '1850867');
 
             expect(result).toEqual({
-                key: '0x8101',
-                merkle_root: '0x90a2e0d4299cc150e5deb92044e1c9ef69b1042f4ca6b1b9fc844a0e57e0125b',
-                proof: [],
+                key: '0x05',
+                merkle_root: '0xe454c3e9cc4e8d3297a9770a60791ca4e7083b12f59ef082ad91768c825fc2c3',
+                path: [
+                    [
+                        '0x77e9d904a5433b61e7b2eb1f0f271cc24492acb00f8c19a642a27f7c126ddfa1',
+                        '0x0000000000000000000000000000000000000000000000000000000000000000',
+                    ],
+                    [
+                        '0x0000000000000000000000000000000000000000000000000000000000000000',
+                        '0xc332e8089ae5a06975fafe0a4d4c495679e1f1fb4089e2257f7a59bcaca2ffaa',
+                    ],
+                    [
+                        '0x0000000000000000000000000000000000000000000000000000000000000000',
+                        '0xcdbacddfed638c93aaa8c21658fcfa67823c997174ee6110212c2a0f8d0b589c',
+                    ],
+                ],
                 snapshot: BigNumber(1),
-                value: '0xd794836f1abf07dbdb7f262d0a71067dadc421fe3df0810a',
+                value: '0xffffffffff',
             });
         });
     });
@@ -69,24 +81,49 @@ describe('Tezos > State Aggregator', () => {
 
 function http_handlers(url: string) {
     return [
-        rest.post(`${url}/chains/main/blocks/1804054/helpers/scripts/run_script_view`, async (req, res, ctx) => {
+        rest.post(`${url}/chains/main/blocks/1850867/helpers/scripts/run_script_view`, async (req, res, ctx) => {
             return res(
                 ctx.json({
                     data: {
                         prim: 'Pair',
                         args: [
                             {
-                                bytes: '8101',
+                                bytes: '05',
                             },
                             {
-                                bytes: '90a2e0d4299cc150e5deb92044e1c9ef69b1042f4ca6b1b9fc844a0e57e0125b',
+                                bytes: 'e454c3e9cc4e8d3297a9770a60791ca4e7083b12f59ef082ad91768c825fc2c3',
                             },
-                            [],
+                            [
+                                {
+                                    prim: 'Left',
+                                    args: [
+                                        {
+                                            bytes: '77e9d904a5433b61e7b2eb1f0f271cc24492acb00f8c19a642a27f7c126ddfa1',
+                                        },
+                                    ],
+                                },
+                                {
+                                    prim: 'Right',
+                                    args: [
+                                        {
+                                            bytes: 'c332e8089ae5a06975fafe0a4d4c495679e1f1fb4089e2257f7a59bcaca2ffaa',
+                                        },
+                                    ],
+                                },
+                                {
+                                    prim: 'Right',
+                                    args: [
+                                        {
+                                            bytes: 'cdbacddfed638c93aaa8c21658fcfa67823c997174ee6110212c2a0f8d0b589c',
+                                        },
+                                    ],
+                                },
+                            ],
                             {
                                 int: '1',
                             },
                             {
-                                bytes: 'd794836f1abf07dbdb7f262d0a71067dadc421fe3df0810a',
+                                bytes: 'ffffffffff',
                             },
                         ],
                     },

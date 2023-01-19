@@ -117,6 +117,45 @@ contract("IBCF_Validator", async ([alice, primary]) => {
     );
   });
 
+
+  it("Call verify_proof 2 (Valid proof)", async function () {
+    const snapshot = 1;
+    const state_root = "0xe454c3e9cc4e8d3297a9770a60791ca4e7083b12f59ef082ad91768c825fc2c3";
+
+    await instance.submit_state_root(snapshot, state_root, { from: primary });
+    await instance.submit_state_root(snapshot, state_root, { from: alice });
+
+    const proof = [
+      [
+        '0x77e9d904a5433b61e7b2eb1f0f271cc24492acb00f8c19a642a27f7c126ddfa1',
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+      ],
+      [
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0xc332e8089ae5a06975fafe0a4d4c495679e1f1fb4089e2257f7a59bcaca2ffaa',
+      ],
+      [
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0xcdbacddfed638c93aaa8c21658fcfa67823c997174ee6110212c2a0f8d0b589c',
+      ],
+    ];
+
+    const owner = "0x050a0000001600008a8584be3718453e78923713a6966202b05f99c6";
+    const key = "0x05";
+    const value = "0xffffffffff";
+    await instance.verify_proof.call(snapshot, owner, key, value, proof);
+    console.log(
+      "\n\tConsumed gas: ",
+      await instance.verify_proof.estimateGas(
+        snapshot,
+        owner,
+        key,
+        value,
+        proof
+      )
+    );
+  });
+
   it("Call verify_proof (Invalid signature)", async function () {
     const snapshot = 1;
 

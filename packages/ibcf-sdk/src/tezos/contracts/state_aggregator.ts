@@ -23,7 +23,7 @@ export interface TezosProof {
     merkle_root: string;
     key: string;
     value: string;
-    proof: [string, string][];
+    path: [string, string][];
 }
 
 export class Contract {
@@ -35,27 +35,6 @@ export class Contract {
 
         return contractSchema.Execute(script.storage, smartContractAbstractionSemantic(this.sdk.contract));
     }
-
-    // async generateProof(owner: string, key: string, blockLevel: number): Promise<TezosProof> {
-    //     const contract = await this.sdk.contract.at(this.contractAddress);
-
-    //     const proof = await contract.contractViews
-    //         .get_proof({ key, owner, level: blockLevel })
-    //         .executeView({ viewCaller: owner });
-
-    //     console.log(proof.proof);
-    //     const blindedPath = proof.proof.reduce(() => {
-    //         // TODO
-    //     }, []);
-
-    //     return {
-    //         level: proof.level.toNumber(),
-    //         merkle_root: '0x' + proof.merkle_root,
-    //         key: '0x' + proof.key,
-    //         value: '0x' + proof.value,
-    //         proof: blindedPath,
-    //     };
-    // }
 
     async getProof(owner: string, key: string, blockLevel: string): Promise<TezosProof> {
         const result = await this.sdk.rpc.runScriptView(
@@ -71,18 +50,19 @@ export class Contract {
             { block: blockLevel },
         );
 
-        const data: any = result.data;
-
-        const blindedPath = data.args[2].reduce(() => {
-            // TODO
+        const pair: any = result.data;
+        const null_node = '0x0000000000000000000000000000000000000000000000000000000000000000';
+        const blindedPath = (pair.args[2] as any[]).reduce<[string, string][]>((acc, { prim, args }) => {
+            const node = '0x' + args[0].bytes;
+            return [...acc, [prim == 'Left' ? node : null_node, prim == 'Right' ? node : null_node]];
         }, []);
 
         return {
-            key: '0x' + data.args[0].bytes,
-            merkle_root: '0x' + data.args[1].bytes,
-            proof: blindedPath,
-            snapshot: BigNumber(data.args[3].int),
-            value: '0x' + data.args[4].bytes,
+            key: '0x' + pair.args[0].bytes,
+            merkle_root: '0x' + pair.args[1].bytes,
+            path: blindedPath,
+            snapshot: BigNumber(pair.args[3].int),
+            value: '0x' + pair.args[4].bytes,
         };
     }
 
