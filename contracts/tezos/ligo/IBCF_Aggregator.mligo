@@ -57,16 +57,17 @@ let finalize_snapshot (required, store : bool * storage) : return =
       // Finalize & Start snapshot
       let snapshot_counter = store.snapshot_counter + 1n in
       let snapshot_start_level = Tezos.get_level() in
+      let snapshot_level = is_nat (snapshot_start_level - 1) in
       let event_payload = {
         snapshot = store.snapshot_counter;
-        level = Tezos.get_level();
+        level = snapshot_level;
       } in
       (
         [Tezos.emit "%SNAPSHOT_FINALIZED" event_payload],
         { store with
           snapshot_counter;
           snapshot_start_level;
-          snapshot_level = Big_map.update (snapshot_counter : nat) (is_nat (snapshot_start_level - 1)) store.snapshot_level;
+          snapshot_level = Big_map.update (snapshot_counter : nat) snapshot_level store.snapshot_level;
           merkle_tree = PatriciaTrie.empty_tree
         }
       )
@@ -163,7 +164,7 @@ type get_proof_result = [@layout:comb] {
   merkle_root: bytes;
   key: bytes;
   value: bytes;
-  proof: path_node list;
+  path: path_node list;
 }
 
 (* Returns the Merkle-proof for the given key. *)
@@ -205,13 +206,13 @@ type get_proof_result = [@layout:comb] {
       let new_edge = Option.unopt (Map.find_opt head node) in
       get_path(tree, new_edge, tail, path_node :: proof)
   in
-  let value, proof = get_path(store.merkle_tree, store.merkle_tree.root_edge, label, []) in
+  let value, path = get_path(store.merkle_tree, store.merkle_tree.root_edge, label, []) in
   {
     snapshot = store.snapshot_counter + 1n;
     merkle_root = store.merkle_tree.root;
     key = key;
     value;
-    proof;
+    path;
   }
 
 
@@ -220,7 +221,7 @@ type verify_proof_argument = [@layout:comb] {
   owner: address;
   key: bytes;
   value: bytes;
-  proof: path_node list;
+  path: path_node list;
 }
 
 (* Validates a proof against a given state. *)
@@ -233,5 +234,5 @@ type verify_proof_argument = [@layout:comb] {
       PatriciaTrie.hash_function (Bytes.concat acc h)
   in
   let value_hash = PatriciaTrie.hash_state(param.owner, param.key, param.value) in
-  let derived_hash = List.fold_left derive_hash value_hash param.proof in
+  let derived_hash = List.fold_left derive_hash value_hash param.path in
   derived_hash = param.state_root

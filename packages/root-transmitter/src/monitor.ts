@@ -9,15 +9,12 @@ interface MonitorContext {
     tezos_finality: number;
     tezos_finalize_snapshots: boolean;
     tezos_sdk: TezosToolkit;
-    tezos_state_address: string;
     tezos_state: Tezos.Contracts.StateAggregator.Contract;
-    tezos_validator_address: string;
     tezos_validator: Tezos.Contracts.Validator.Contract;
     ethereum_signer: ethers.Wallet;
     ethereum_finality: number;
-    evm_validator_address: string;
     evm_validator: Ethereum.Contracts.Validator.Contract;
-    processor_address: string;
+    processor_tezos_address: string;
 }
 
 class Monitor {
@@ -104,7 +101,7 @@ class Monitor {
 
         Logger.debug('[Tezos]', 'Confirming block:', current_snapshot, `\n\tSubmissions:`, endorsers);
 
-        if (!endorsers.includes(this.context.processor_address)) {
+        if (!endorsers.includes(this.context.processor_tezos_address)) {
             const provider = this.context.ethereum_signer.provider as ethers.providers.JsonRpcProvider;
             const rawBlock = await provider.send('eth_getBlockByNumber', [
                 ethers.utils.hexValue(current_snapshot),
@@ -147,32 +144,19 @@ class Monitor {
         }
     }
 }
-
-function getEnv() {
-    const env = {
-        TEZOS_RPC: process.env['TEZOS_RPC']!,
-        TEZOS_FINALITY: Number(process.env['TEZOS_FINALITY']!),
-        TEZOS_FINALIZE_SNAPSHOTS: process.env['TEZOS_FINALIZE_SNAPSHOTS'] == '1',
-        TEZOS_AGGREGATOR_ADDRESS: process.env['TEZOS_AGGREGATOR_ADDRESS']!,
-        TEZOS_VALIDATOR_ADDRESS: process.env['TEZOS_VALIDATOR_ADDRESS']!,
-        TEZOS_PRIVATE_KEY: process.env['TEZOS_PRIVATE_KEY']!,
-        ETHEREUM_RPC: process.env['ETHEREUM_RPC']!,
-        ETHEREUM_FINALITY: Number(process.env['ETHEREUM_FINALITY']!),
-        ETHEREUM_PRIVATE_KEY: process.env['ETHEREUM_PRIVATE_KEY']!,
-        EVM_VALIDATOR_ADDRESS: process.env['EVM_VALIDATOR_ADDRESS']!,
-    };
-    // Validate environment variables
-    Object.entries(env).forEach(([key, value]) => {
-        if (value != 0 && !value) {
-            Logger.error(`\nEnvironment variable ${key} is required!\n`);
-            process.exit(1);
-        }
-    });
-    return env;
+export interface Env {
+    TEZOS_RPC: string;
+    TEZOS_FINALITY: number;
+    TEZOS_FINALIZE_SNAPSHOTS: boolean;
+    TEZOS_STATE_ADDRESS: string;
+    TEZOS_VALIDATOR_ADDRESS: string;
+    TEZOS_PRIVATE_KEY: string;
+    ETHEREUM_RPC: string;
+    ETHEREUM_FINALITY: number;
+    ETHEREUM_PRIVATE_KEY: string;
+    EVM_VALIDATOR_ADDRESS: string;
 }
-
-export async function run_monitor() {
-    const env = getEnv();
+export async function run_monitor(env: Env) {
     // Tezos
     const tezos_sdk = new TezosToolkit(env.TEZOS_RPC);
     tezos_sdk.setProvider({ signer: await InMemorySigner.fromSecretKey(env.TEZOS_PRIVATE_KEY) });
@@ -186,13 +170,10 @@ export async function run_monitor() {
         tezos_finalize_snapshots: env.TEZOS_FINALIZE_SNAPSHOTS,
         ethereum_finality: env.ETHEREUM_FINALITY,
         ethereum_signer,
-        tezos_state_address: env.TEZOS_AGGREGATOR_ADDRESS,
-        tezos_state: new Tezos.Contracts.StateAggregator.Contract(tezos_sdk, env.TEZOS_AGGREGATOR_ADDRESS),
-        tezos_validator_address: env.TEZOS_VALIDATOR_ADDRESS,
+        tezos_state: new Tezos.Contracts.StateAggregator.Contract(tezos_sdk, env.TEZOS_STATE_ADDRESS),
         tezos_validator: new Tezos.Contracts.Validator.Contract(tezos_sdk, env.TEZOS_VALIDATOR_ADDRESS),
-        evm_validator_address: env.EVM_VALIDATOR_ADDRESS,
         evm_validator: new Ethereum.Contracts.Validator.Contract(ethereum_signer, env.EVM_VALIDATOR_ADDRESS),
-        processor_address: await tezos_sdk.signer.publicKeyHash(),
+        processor_tezos_address: await tezos_sdk.signer.publicKeyHash(),
     };
 
     const monitor = new Monitor(context);

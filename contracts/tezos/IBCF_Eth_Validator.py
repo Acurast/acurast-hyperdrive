@@ -15,8 +15,6 @@ HASH_FUNCTION = sp.keccak
 EMPTY_TRIE_ROOT_HASH = sp.bytes(
     "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
 )
-BLOCK_HEADER_STATE_ROOT_INDEX = 3
-BLOCK_HEADER_LEVEL_INDEX = 8
 ACCOUNT_STATE_ROOT_INDEX = 2
 
 
@@ -57,6 +55,7 @@ class Type:
             update_minimum_endorsements=sp.TNat,
             update_history_length=sp.TNat,
             update_snapshot_interval=sp.TNat,
+            update_current_snapshot=sp.TNat
         ).right_comb()
     )
     Submit_account_proof_argument = sp.TRecord(
@@ -499,6 +498,8 @@ class IBCF_Eth_Validator(sp.Contract):
                     self.data.config.history_length = payload
                 with cases.match("update_snapshot_interval") as payload:
                     self.data.config.snapshot_interval = payload
+                with cases.match("update_current_snapshot") as payload:
+                    self.data.current_snapshot = payload
 
     @sp.onchain_view()
     def validate_storage_proof(self, arg):

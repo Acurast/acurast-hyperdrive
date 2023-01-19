@@ -1,4 +1,4 @@
-parameter (or (list %configure (or (address %update_administrator) (or (nat %update_history_length) (or (nat %update_minimum_endorsements) (or (nat %update_snapshot_interval) (set %update_validators (or (address %add) (address %remove)))))))) (pair %submit_block_state_root (nat %block_number) (bytes %state_root)));
+parameter (or (list %configure (or (address %update_administrator) (or (nat %update_current_snapshot) (or (nat %update_history_length) (or (nat %update_minimum_endorsements) (or (nat %update_snapshot_interval) (set %update_validators (or (address %add) (address %remove))))))))) (pair %submit_block_state_root (nat %block_number) (bytes %state_root)));
 storage   (pair (pair (pair %config (pair (address %administrator) (nat %history_length)) (pair (nat %minimum_endorsements) (pair (nat %snapshot_interval) (set %validators address)))) (nat %current_snapshot)) (pair (set %history nat) (big_map %state_root nat (map address bytes))));
 code
   {
@@ -46,13 +46,9 @@ code
                     DROP;       
                     DIG 2;      
                     UNPAIR;     
-                    UNPAIR;     
-                    UNPAIR;     
                     CAR;        
-                    DIG 4;      
+                    DIG 2;      
                     SWAP;       
-                    PAIR;       
-                    PAIR;       
                     PAIR;       
                     PAIR;       
                     SWAP;       
@@ -65,8 +61,12 @@ code
                         DIG 2;      
                         UNPAIR;     
                         UNPAIR;     
-                        DIG 3;      
-                        UPDATE 3;   
+                        UNPAIR;     
+                        CAR;        
+                        DIG 4;      
+                        SWAP;       
+                        PAIR;       
+                        PAIR;       
                         PAIR;       
                         PAIR;       
                         SWAP;       
@@ -80,46 +80,61 @@ code
                             UNPAIR;     
                             UNPAIR;     
                             DIG 3;      
-                            UPDATE 5;   
+                            UPDATE 3;   
                             PAIR;       
                             PAIR;       
                             SWAP;       
                           }
                           {
-                            DUP;        
-                            ITER
+                            IF_LEFT
                               {
-                                IF_LEFT
+                                SWAP;       
+                                DROP;       
+                                DIG 2;      
+                                UNPAIR;     
+                                UNPAIR;     
+                                DIG 3;      
+                                UPDATE 5;   
+                                PAIR;       
+                                PAIR;       
+                                SWAP;       
+                              }
+                              {
+                                DUP;        
+                                ITER
                                   {
-                                    DIG 4;      
-                                    UNPAIR;     
-                                    UNPAIR;     
-                                    DUP;        
-                                    GET 6;      
-                                    PUSH bool True; 
-                                    DIG 5;      
-                                    UPDATE;     
-                                    UPDATE 6;   
-                                    PAIR;       
-                                    PAIR;       
-                                    DUG 3;      
-                                  }
-                                  {
-                                    DIG 4;      
-                                    UNPAIR;     
-                                    UNPAIR;     
-                                    DUP;        
-                                    GET 6;      
-                                    PUSH bool False; 
-                                    DIG 5;      
-                                    UPDATE;     
-                                    UPDATE 6;   
-                                    PAIR;       
-                                    PAIR;       
-                                    DUG 3;      
+                                    IF_LEFT
+                                      {
+                                        DIG 4;      
+                                        UNPAIR;     
+                                        UNPAIR;     
+                                        DUP;        
+                                        GET 6;      
+                                        PUSH bool True; 
+                                        DIG 5;      
+                                        UPDATE;     
+                                        UPDATE 6;   
+                                        PAIR;       
+                                        PAIR;       
+                                        DUG 3;      
+                                      }
+                                      {
+                                        DIG 4;      
+                                        UNPAIR;     
+                                        UNPAIR;     
+                                        DUP;        
+                                        GET 6;      
+                                        PUSH bool False; 
+                                        DIG 5;      
+                                        UPDATE;     
+                                        UPDATE 6;   
+                                        PAIR;       
+                                        PAIR;       
+                                        DUG 3;      
+                                      }; 
                                   }; 
+                                DROP 2;     
                               }; 
-                            DROP 2;     
                           }; 
                       }; 
                   }; 
@@ -191,7 +206,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 447; 
+                PUSH int 446; 
                 FAILWITH;   
               }
               {}; 
@@ -280,7 +295,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 109; 
+                    PUSH int 108; 
                     FAILWITH;   
                   }
                   {}; 
@@ -322,7 +337,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 116; 
+                    PUSH int 115; 
                     FAILWITH;   
                   }
                   {}; 
@@ -622,7 +637,7 @@ view
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 146; 
+                    PUSH int 145; 
                     FAILWITH;   
                   }
                   {
@@ -631,7 +646,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 146; 
+                    PUSH int 145; 
                     FAILWITH;   
                   }
                   {}; 
@@ -643,7 +658,7 @@ view
                 EDIV;       
                 IF_NONE
                   {
-                    PUSH int 150; 
+                    PUSH int 149; 
                     FAILWITH;   
                   }
                   {
@@ -652,7 +667,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 150; 
+                    PUSH int 149; 
                     FAILWITH;   
                   }
                   {}; 
@@ -665,7 +680,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 151; 
+                    PUSH int 150; 
                     FAILWITH;   
                   }
                   {}; 
@@ -738,7 +753,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 176; 
+                    PUSH int 175; 
                     FAILWITH;   
                   }
                   {}; 
@@ -750,7 +765,7 @@ view
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 175; 
+                    PUSH int 174; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1124,7 +1139,7 @@ view
                     EDIV;       
                     IF_NONE
                       {
-                        PUSH int 146; 
+                        PUSH int 145; 
                         FAILWITH;   
                       }
                       {
@@ -1133,7 +1148,7 @@ view
                     SLICE;      
                     IF_NONE
                       {
-                        PUSH int 146; 
+                        PUSH int 145; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1145,7 +1160,7 @@ view
                     EDIV;       
                     IF_NONE
                       {
-                        PUSH int 150; 
+                        PUSH int 149; 
                         FAILWITH;   
                       }
                       {
@@ -1154,7 +1169,7 @@ view
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 150; 
+                        PUSH int 149; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1167,7 +1182,7 @@ view
                     SLICE;      
                     IF_NONE
                       {
-                        PUSH int 151; 
+                        PUSH int 150; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1202,7 +1217,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 191; 
+                PUSH int 190; 
                 FAILWITH;   
               }
               {}; 
@@ -1421,7 +1436,7 @@ view
             EDIV;       
             IF_NONE
               {
-                PUSH int 232; 
+                PUSH int 231; 
                 FAILWITH;   
               }
               {
@@ -1430,7 +1445,7 @@ view
             SLICE;      
             IF_NONE
               {
-                PUSH int 232; 
+                PUSH int 231; 
                 FAILWITH;   
               }
               {}; 
@@ -1441,7 +1456,7 @@ view
             EDIV;       
             IF_NONE
               {
-                PUSH int 235; 
+                PUSH int 234; 
                 FAILWITH;   
               }
               {
@@ -1513,7 +1528,7 @@ view
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 283; 
+                    PUSH int 282; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1573,7 +1588,7 @@ view
                         GET;        
                         IF_NONE
                           {
-                            PUSH int 302; 
+                            PUSH int 301; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1620,7 +1635,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 321; 
+                                PUSH int 320; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1638,7 +1653,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 326; 
+                                PUSH int 325; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1716,7 +1731,7 @@ view
                                 GET;        
                                 IF_NONE
                                   {
-                                    PUSH int 341; 
+                                    PUSH int 340; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1739,7 +1754,7 @@ view
                                 GET;        
                                 IF_NONE
                                   {
-                                    PUSH int 356; 
+                                    PUSH int 355; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1783,7 +1798,7 @@ view
                             GET;        
                             IF_NONE
                               {
-                                PUSH int 374; 
+                                PUSH int 373; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1930,7 +1945,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 109; 
+                PUSH int 108; 
                 FAILWITH;   
               }
               {}; 
@@ -1972,7 +1987,7 @@ view
             GET;        
             IF_NONE
               {
-                PUSH int 116; 
+                PUSH int 115; 
                 FAILWITH;   
               }
               {}; 
@@ -3489,7 +3504,7 @@ view
     GET;        
     IF_NONE
       {
-        PUSH int 552; 
+        PUSH int 553; 
         FAILWITH;   
       }
       {}; 

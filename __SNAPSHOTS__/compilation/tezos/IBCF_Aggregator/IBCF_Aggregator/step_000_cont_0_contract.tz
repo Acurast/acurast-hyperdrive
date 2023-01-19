@@ -59,22 +59,23 @@ code
             PUSH nat 1; 
             ADD;        
             UPDATE 5;   
-            DUP;        
-            DUG 3;      
-            DUP;        
-            GET 7;      
+            DUG 2;      
             PUSH nat 1; 
             LEVEL;      
             SUB;        
             ISNAT;      
             IF_NONE
               {
-                PUSH int 325; 
+                PUSH int 327; 
                 FAILWITH;   
               }
               {}; 
+            DUP 4;      
+            DUP;        
+            GET 7;      
+            DUP 3;      
             SOME;       
-            DIG 5;      
+            DIG 6;      
             GET 5;      
             UPDATE;     
             UPDATE 7;   
@@ -85,16 +86,14 @@ code
             PUSH bytes 0x; 
             EMPTY_MAP bytes (map int (pair (pair nat nat) bytes)); 
             PAIR 4;     
+            DIG 4;      
+            DROP;       
             UPDATE 3;   
             DUG 2;      
-            DUP;        
-            DUP 4;      
+            SWAP;       
+            DUP 3;      
             GET 5;      
-            LEVEL;      
-            DIG 3;      
-            DROP;       
-            DIG 3;      
-            DROP;       
+            DIG 2;      
             PAIR;       
             EMIT %SNAPSHOT_FINALIZED (pair (nat %level) (nat %snapshot)); 
             CONS;       
@@ -518,7 +517,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 400; 
+                    PUSH int 401; 
                     FAILWITH;   
                   }
                   {}; 
@@ -532,7 +531,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 404; 
+                    PUSH int 405; 
                     FAILWITH;   
                   }
                   {}; 
@@ -1006,7 +1005,7 @@ code
     PAIR;       
   };
 view
-  "get_proof" (pair (bytes %key) (address %owner)) (pair (bytes %key) (pair (bytes %merkle_root) (pair (list %proof (or (bytes %Left) (bytes %Right))) (pair (nat %snapshot) (bytes %value)))))
+  "get_proof" (pair (bytes %key) (address %owner)) (pair (bytes %key) (pair (bytes %merkle_root) (pair (list %path (or (bytes %Left) (bytes %Right))) (pair (nat %snapshot) (bytes %value)))))
   {
     UNPAIR;     
     LAMBDA
@@ -1584,7 +1583,7 @@ view
     DROP;       
   };
 view
-  "verify_proof" (pair (list %proof (or (bytes %Left) (bytes %Right))) (pair %state (bytes %key) (pair (address %owner) (bytes %value)))) unit
+  "verify_proof" (pair (list %path (or (bytes %Left) (bytes %Right))) (pair %state (bytes %key) (pair (address %owner) (bytes %value)))) unit
   {
     UNPAIR;     
     DUP;        

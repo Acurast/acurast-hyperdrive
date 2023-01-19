@@ -107,7 +107,7 @@ def test():
     scenario.verify(
         ibcf.verify_proof(
             sp.record(
-                proof=proof.proof,
+                path=proof.path,
                 state=sp.record(
                     owner=alice.address,
                     key=encoded_counter_key,
@@ -137,7 +137,7 @@ def test():
     ex = sp.catch_exception(
         ibcf.verify_proof(
             sp.record(
-                proof=proof.proof,
+                path=proof.path,
                 state=sp.record(
                     owner=alice.address,
                     key=encoded_counter_key,
@@ -163,7 +163,7 @@ def test():
     scenario.verify(
         ibcf.verify_proof(
             sp.record(
-                proof=proof.proof,
+                path=proof.path,
                 state=sp.record(
                     owner=claus.address,
                     key=encoded_counter_key,

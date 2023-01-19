@@ -142,7 +142,7 @@ let test =
         merkle_root = 0x3ca1cde89d2ea298ece17ce0957f79080fa5f4d6365f4b7c5f6bc4b82943cb60;
         key = 0x636f756e746574;
         value = 0x0202020202020202020202020202020202020202020202020202020202020202;
-        proof =  [
+        path =  [
             (Left 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f)
         ];
     } in
@@ -154,7 +154,7 @@ let test =
         owner = claus;
         key = 0x636f756e746574;
         value = 0x0202020202020202020202020202020202020202020202020202020202020202;
-        proof =  [
+        path =  [
             (Left 0xc25b22ebb302fded358354f46dcec544fe1c0d4a3586f44d2cf25dd51f28007f)
         ];
     } in

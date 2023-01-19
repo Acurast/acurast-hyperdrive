@@ -163,7 +163,7 @@ def test():
     scenario.verify(
         aggregator.verify_proof(
             sp.record(
-                proof=proof.proof,
+                path=proof.path,
                 state=sp.record(
                     owner=bridge.address,
                     key=proof.key,

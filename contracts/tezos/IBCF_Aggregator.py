@@ -102,10 +102,10 @@ class Type:
         merkle_root=sp.TBytes,
         key=sp.TBytes,
         value=sp.TBytes,
-        proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
+        path=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
     ).right_comb()
     Verify_proof_argument = sp.TRecord(
-        proof=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
+        path=sp.TList(sp.TOr(sp.TBytes, sp.TBytes)),
         state=sp.TRecord(
             owner=sp.TAddress,
             key=sp.TBytes,
@@ -220,7 +220,7 @@ class IBCF_Aggregator(sp.Contract):
                         key         = sp.TBytes,
                         value       = sp.TBytes,
                         merkle_root = sp.TBytes,
-                        proof       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
+                        path       = sp.TList(sp.TOr(sp.TBytes, sp.TBytes))
                     )
         """
         sp.set_type(arg, Type.Get_proof_argument)
@@ -302,7 +302,7 @@ class IBCF_Aggregator(sp.Contract):
                     key=arg.key,
                     value=tree.value.states[root_edge.value.node],
                     merkle_root=tree.value.root,
-                    proof=blinded_path.value,
+                    path=blinded_path.value,
                 )
             )
 
@@ -322,16 +322,17 @@ class IBCF_Aggregator(sp.Contract):
         ):
             # Finalize snapshot
             self.data.snapshot_counter += 1
-            self.data.snapshot_level[self.data.snapshot_counter] = sp.as_nat(
-                sp.level - 1
-            )
 
-            # Start snapshot
+            # Snapshot previous block level
+            snapshot_level = sp.compute(sp.as_nat(sp.level - 1))
+            self.data.snapshot_level[self.data.snapshot_counter] = snapshot_level
+
+            # Start new snapshot
             self.data.snapshot_start_level = sp.level
             self.data.merkle_tree = EMPTY_TREE
 
             sp.emit(
-                sp.record(snapshot=self.data.snapshot_counter, level=sp.level),
+                sp.record(snapshot=self.data.snapshot_counter, level=snapshot_level),
                 with_type=True,
                 tag="SNAPSHOT_FINALIZED",
             )
@@ -347,7 +348,7 @@ class IBCF_Aggregator(sp.Contract):
 
         state_hash = Inlined.hash_state(arg.state.owner, arg.state.key, arg.state.value)
         derived_hash = sp.local("derived_hash", state_hash)
-        with sp.for_("el", arg.proof) as el:
+        with sp.for_("el", arg.path) as el:
             with el.match_cases() as cases:
                 with cases.match("Left") as left:
                     derived_hash.value = HASH_FUNCTION(left + derived_hash.value)

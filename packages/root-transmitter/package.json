@@ -7,6 +7,15 @@
         "email": "r.quelhas@papers.ch"
     },
     "license": "MIT",
+    "engines": {
+        "node": ">=10"
+    },
+    "files": [
+        "./bin/index.js"
+    ],
+    "bin": {
+        "root-relayer": "./bin/index.js"
+    },
     "scripts": {
         "start": "node -r dotenv/config build/index.js",
         "dev": "DEBUG=true ts-node -r dotenv/config src/index.ts",

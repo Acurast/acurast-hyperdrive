@@ -33,7 +33,7 @@ actions:
         minimum_endorsements: 1
         history_length: 10
         snapshot_interval: 10
-      current_snapshot: 8290460
+      current_snapshot: 8338100
 
   # Blueprints
 
@@ -68,12 +68,3 @@ actions:
     contract_address: Asset
     entrypoint: set_administrator
     argument: IBCF_Bridge
-
-  # - kind: contract_call
-  #   contract_address: IBCF_Client
-  #   entrypoint: ping
-
-  # - kind: contract_call
-  #   contract_address: IBCF_Aggragator
-  #   entrypoint: insert
-  #   script: insert_multiple_states

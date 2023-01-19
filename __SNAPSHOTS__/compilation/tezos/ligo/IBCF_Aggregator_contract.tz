@@ -133,29 +133,29 @@
                   GET 5 ;
                   ADD ;
                   LEVEL ;
-                  DUP 3 ;
-                  GET 5 ;
-                  LEVEL ;
-                  PAIR ;
+                  PUSH int 1 ;
+                  DUP 2 ;
+                  SUB ;
+                  ISNAT ;
                   DUP 4 ;
                   DUP 4 ;
                   UPDATE 5 ;
-                  DUP 3 ;
+                  DIG 2 ;
                   UPDATE 3 ;
-                  DIG 4 ;
+                  DUP 4 ;
                   GET 7 ;
-                  PUSH int 1 ;
-                  DIG 4 ;
-                  SUB ;
-                  ISNAT ;
+                  DUP 3 ;
                   DIG 4 ;
                   UPDATE ;
                   UPDATE 7 ;
-                  DIG 2 ;
+                  DIG 3 ;
                   UPDATE 8 ;
                   NIL operation ;
-                  DIG 2 ;
-                  EMIT %SNAPSHOT_FINALIZED (pair (nat %level) (nat %snapshot)) ;
+                  DIG 3 ;
+                  GET 5 ;
+                  DIG 3 ;
+                  PAIR ;
+                  EMIT %SNAPSHOT_FINALIZED (pair (option %level nat) (nat %snapshot)) ;
                   CONS }
                 { DIG 2 ;
                   DROP ;
@@ -693,7 +693,7 @@
              (bytes %merkle_root)
              (bytes %key)
              (bytes %value)
-             (list %proof (or (bytes %left) (bytes %right))))
+             (list %path (or (bytes %left) (bytes %right))))
        { UNPAIR ;
          UNPAIR ;
          PUSH nat 256 ;
@@ -1007,7 +1007,7 @@
              (address %owner)
              (bytes %key)
              (bytes %value)
-             (list %proof (or (bytes %left) (bytes %right))))
+             (list %path (or (bytes %left) (bytes %right))))
        bool
        { LAMBDA bytes bytes { KECCAK } ;
          SWAP ;
