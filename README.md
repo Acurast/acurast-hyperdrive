@@ -1,6 +1,10 @@
 # Inter Blockchain Communication Framework
 
-![merkle tree](ibcf.svg)
+IBCF is a building block allowing for general bidirectional message passing between Tezos and Ethereum networks.
+
+It allows smart contracts on a source chain to store ✉️ states that are verifiable on a target chain. It provides a generic way for contracts to communicate between chains by means of validating Merkle proofs about these states stored in the source chain.
+
+# [Protocol documentation](https://romarq.github.io/ibcf-docs)
 
 ## Dependencies
 
@@ -112,19 +116,10 @@ make fmt-check
 make fmt-fix
 ```
 
-## Scripts
-
-### Get proof
-
-```sh
-python scripts/extract_proof.py https://tezos-ithacanet-node-1.diamond.papers.tech KT18hC6xwPMaQtBqZgPa4id1hUBEcBaSFNwS
-```
-
 ## Demo application
 
-- [Ping Pong](./apps/ping-pong)
+- [Bridge](./apps/bridge-playground)
 
 ## Packages
 
-- [Transmitters](./packages/transmitters/README.md)
 - [SDK](./packages/ibcf-sdk)
