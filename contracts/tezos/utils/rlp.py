@@ -215,6 +215,33 @@ class Decoder:
                         sp.result(sp.as_nat(byte0 - 247) + 1)
 
 
+class EvmStorage:
+    @staticmethod
+    def read_string_slot(b):
+        """
+           Read string from EVM storage slot
+
+           Details: https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html#bytes-and-string
+        """
+        lowest_byte = sp.slice(b, abs(sp.len(b)-1), 1).open_some()
+        # If lowest byte is set, it means the string is stored in the slot and the lowest byte is the length
+        sp.verify(lowest_byte != sp.bytes("0x00"), "MULTIPLE_SLOT_READ_NOT_SUPPORTED")
+
+        string_length = Lambda.decode_nat(lowest_byte) / 2
+        string_bytes = sp.slice(b, 0, string_length + 1).open_some()
+
+        sp.result(Lambda.decode_string(string_bytes))
+
+    @staticmethod
+    def write_uint_slot(n):
+        """
+           Write nat as an EVM storage slot
+
+           Details: https://docs.soliditylang.org/en/latest/internals/layout_in_storage.html
+        """
+        pad_start_lambda = sp.build_lambda(Bytes.pad_start)
+        sp.result(pad_start_lambda((Lambda.encode_nat(n), sp.bytes("0x00"), 32)))
+
 class Lambda:
     # Encoding
     encode_list = sp.build_lambda(Encoder.encode_list)
@@ -224,3 +251,4 @@ class Lambda:
     without_length_prefix = sp.build_lambda(Decoder.without_length_prefix)
     decode_nat = sp.build_lambda(Decoder.decode_nat)
     decode_list = sp.build_lambda(Decoder.decode_list)
+    decode_string = sp.build_lambda(Decoder.decode_string)

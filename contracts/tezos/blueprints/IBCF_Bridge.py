@@ -7,7 +7,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type as IBCF_Aggregator_Type
-from contracts.tezos.IBCF_Eth_Validator import Type as ValidatiorInterface
+from contracts.tezos.IBCF_Eth_Validator import Type as ValidatorInterface
 from contracts.tezos.utils.fa2_lib import (
     Fa2SingleAsset,
     BurnSingleAsset,
@@ -163,7 +163,7 @@ class IBCF_Bridge(sp.Contract):
                     storage_slot=destination_slot,
                     storage_proof_rlp=param.destination_proof_rlp,
                 ),
-                ValidatiorInterface.Validate_storage_proof_argument,
+                ValidatorInterface.Validate_storage_proof_argument,
             ),
             t=sp.TBytes,
         ).open_some(Error.INVALID_VIEW)
@@ -178,7 +178,7 @@ class IBCF_Bridge(sp.Contract):
                     storage_slot=amount_slot,
                     storage_proof_rlp=param.amount_proof_rlp,
                 ),
-                ValidatiorInterface.Validate_storage_proof_argument,
+                ValidatorInterface.Validate_storage_proof_argument,
             ),
             t=sp.TBytes,
         ).open_some(Error.INVALID_VIEW)
