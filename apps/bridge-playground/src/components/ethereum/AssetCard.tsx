@@ -86,7 +86,7 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                                 </Grid>
                                 <Grid item>
                                     <Button fullWidth size="small" onClick={() => setModalOpen('transfer')}>
-                                        Trasfer
+                                        Transfer
                                     </Button>
                                 </Grid>
                             </Grid>

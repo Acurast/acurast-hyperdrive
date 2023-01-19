@@ -8,7 +8,6 @@ import useAppContext from 'src/hooks/useAppContext';
 import Constants from 'src/constants';
 import Dialog from '../base/Dialog';
 import WrapsTable from './Table';
-import CodeBlock from '../base/CodeBlock';
 import TextField from '../base/TextField';
 import useWalletContext from 'src/hooks/useWalletContext';
 import AssetCard from './AssetCard';
@@ -18,7 +17,6 @@ const Tezos = () => {
     const { tezos } = useAppContext();
     const { connectTezosWallet, pkh } = useWalletContext();
     const [error, setError] = React.useState('');
-    const [proof, setProof] = React.useState<IbcfSdk.Tezos.Contracts.StateAggregator.TezosProof>();
     const [operationHash, setOperationHash] = React.useState('');
     const [wrapModalOpen, setUnwrapModalOpen] = React.useState(false);
     const [destination, setDestination] = React.useState<string>();
@@ -215,9 +213,6 @@ const Tezos = () => {
                 >
                     TzKT
                 </a>
-            </Dialog>
-            <Dialog title="Proof" open={!!proof} onClose={() => setProof(undefined)}>
-                {!!proof ? <CodeBlock language="json" code={JSON.stringify(proof, null, 2)} /> : ''}
             </Dialog>
         </>
     );
