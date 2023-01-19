@@ -3,7 +3,7 @@ SNAPSHOTS_FOLDER := __SNAPSHOTS__
 SMARTPY_CLI_PATH := $(BUILD_FOLDER)/smartpy-cli
 PYTHONPATH := $(SMARTPY_CLI_PATH):$(shell pwd)
 FLEXTESA_IMAGE=oxheadalpha/flextesa:latest
-FLEXTESA_SCRIPT=jakartabox
+FLEXTESA_SCRIPT=kathmandubox
 CONTAINER_NAME=ibc-tezos-sandbox
 LIGO_VERSION=0.57.0
 
