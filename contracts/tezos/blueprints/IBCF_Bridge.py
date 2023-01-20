@@ -14,8 +14,7 @@ from contracts.tezos.utils.fa2_lib import (
     MintSingleAsset,
     Admin,
 )
-from contracts.tezos.utils.bytes import Bytes
-import contracts.tezos.utils.rlp as RLP
+from contracts.tezos.utils.utils import RLP, Bytes
 
 
 class Constant:
@@ -108,9 +107,9 @@ class IBCF_Bridge(sp.Contract):
             amount=param.amount,
         )
 
-        encode_nat_lambda = sp.compute(RLP.Lambda.encode_nat)
-        with_length_prefix_lambda = sp.compute(RLP.Lambda.with_length_prefix)
-        encode_list_lambda = sp.compute(RLP.Lambda.encode_list)
+        encode_nat_lambda = sp.compute(RLP.Lambda.encode_nat())
+        with_length_prefix_lambda = sp.compute(RLP.Lambda.with_length_prefix())
+        encode_list_lambda = sp.compute(RLP.Lambda.encode_list())
 
         # Encode payload
         rlp_destination = with_length_prefix_lambda(param.destination)
@@ -139,8 +138,8 @@ class IBCF_Bridge(sp.Contract):
     def wrap(self, param):
         mint_method = Inlined.getMintEntrypoint(self.data.asset_address)
 
-        decode_nat_lambda = sp.compute(RLP.Lambda.decode_nat)
-        without_length_prefix = sp.compute(RLP.Lambda.without_length_prefix)
+        decode_nat_lambda = sp.compute(RLP.Lambda.decode_nat())
+        without_length_prefix = sp.compute(RLP.Lambda.without_length_prefix())
 
         # Verify that wrap was not yet processed, fail otherwise
         nonce = param.nonce

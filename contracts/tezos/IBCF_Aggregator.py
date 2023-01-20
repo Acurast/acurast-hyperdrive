@@ -14,7 +14,7 @@ from contracts.tezos.utils.patricia_trie import (
     NULL_HASH,
     EMPTY_TREE,
 )
-from contracts.tezos.utils.nat import Nat
+from contracts.tezos.utils.utils import Nat
 
 
 def ENCODE(d):

@@ -7,9 +7,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type
-import contracts.tezos.utils.rlp as RLP
-from contracts.tezos.utils.bytes import Bytes
-from contracts.tezos.utils.nat import Nat
+from contracts.tezos.utils.utils import Bytes, Nat, RLP
 
 HASH_FUNCTION = sp.keccak
 EMPTY_TRIE_ROOT_HASH = sp.bytes(
@@ -55,7 +53,7 @@ class Type:
             update_minimum_endorsements=sp.TNat,
             update_history_length=sp.TNat,
             update_snapshot_interval=sp.TNat,
-            update_current_snapshot=sp.TNat
+            update_current_snapshot=sp.TNat,
         ).right_comb()
     )
     Submit_account_proof_argument = sp.TRecord(

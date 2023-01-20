@@ -1,15 +1,18 @@
 import smartpy as sp
 
-import contracts.tezos.utils.rlp as RLP
+from contracts.tezos.utils.utils import EvmStorage
+
 
 class Constant:
     EVM_ACTION_REGISTRY_INDEX = sp.bytes(
         "0x0000000000000000000000000000000000000000000000000000000000000001"
     )
 
+
 class Error:
     INVALID_VIEW = "INVALID_VIEW"
     INVALID_ACTION = "INVALID_ACTION"
+
 
 class Type:
     Validate_storage_proof_argument = sp.TRecord(
@@ -25,30 +28,37 @@ class Type:
         action_proof_rlp=sp.TBytes,
     ).right_comb()
 
+
 class IBCF_Client(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
-                ibcf = sp.TRecord(
+                ibcf=sp.TRecord(
                     action_counter=sp.TNat,
                     proof_validator=sp.TAddress,
                     evm_address=sp.TBytes,
                 ),
-                performed_actions = sp.TList(sp.TString)
+                performed_actions=sp.TList(sp.TString),
             )
         )
 
     @sp.entry_point(parameter_type=Type.ActionArgument)
     def perform(self, param):
-        write_uint_slot_lambda = sp.compute(sp.build_lambda(RLP.EvmStorage.write_uint_slot))
-        decode_string_lambda = sp.compute(sp.build_lambda(RLP.EvmStorage.read_string_slot))
+        write_uint_slot_lambda = sp.compute(sp.build_lambda(EvmStorage.write_uint_slot))
+        decode_string_lambda = sp.compute(sp.build_lambda(EvmStorage.read_string_slot))
 
         # New action, increase action counter
         self.data.ibcf.action_counter += 1
 
         # Compute the storage slot for the proof
-        action_counter_evm_storage_slot = write_uint_slot_lambda(self.data.ibcf.action_counter)
-        action_slot = sp.compute(sp.keccak(action_counter_evm_storage_slot + Constant.EVM_ACTION_REGISTRY_INDEX))
+        action_counter_evm_storage_slot = write_uint_slot_lambda(
+            self.data.ibcf.action_counter
+        )
+        action_slot = sp.compute(
+            sp.keccak(
+                action_counter_evm_storage_slot + Constant.EVM_ACTION_REGISTRY_INDEX
+            )
+        )
 
         # Validate proof and extract storage value (The action to be performed)
         rlp_action = sp.view(
