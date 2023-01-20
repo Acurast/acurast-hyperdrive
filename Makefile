@@ -102,8 +102,12 @@ deploy-evm: setup_env
 	@npm run deploy 2>&1 | tee __SNAPSHOTS__/evm-deployment.txt
 
 deploy: deploy-evm deploy-tezos
+
+deploy-docs:
+	./scripts/update-docs.sh
+
 ##
-## + Deployment
+## - Deployment
 ##
 
 fmt-check:

@@ -1,0 +1,79 @@
+---
+title: Generating Proofs
+slug: /examples/generate-proofs
+---
+
+
+import { RunnableCode } from "@site/src/components/RunnableCode/RunnableCode";
+
+## Generate proof-of-inclusion (Tezos :arrow_right: EVM)
+
+The example below calls the state aggregator contract on the Tezos blockchain, which generates a Merkle proof for a given state inserted by a given origin.
+
+<RunnableCode>
+
+```ts
+import { Tezos } from 'ibcf-sdk';
+import { TezosToolkit } from "@taquito/taquito";
+
+const TEZOS_RPC = 'https://rpc.ghostnet.teztnets.xyz';
+const TEZOS_DAPP = 'KT1PjTU47jtuDVMXeSEiYLtaFNeiEYGf6rbM';
+
+const tezosSdk = new TezosToolkit(TEZOS_RPC);
+const stateAggregator = new Tezos.Contracts.StateAggregator.Contract(tezosSdk, TEZOS_DAPP);
+
+// DApp address, the contract that inserts the state
+const STATE_ORIGIN = 'tz1YGTtd1hqGYTYKtcWSXYKSgCj5hvjaTPVd';
+// The key of the state you want to validate
+const STATE_KEY = '0x05';
+// Block level where the snapshot was taken
+const SNAPSHOT_LEVEL = 1850867;
+
+stateAggregator.getProof(
+    STATE_ORIGIN,               // Origin
+    STATE_KEY,                  // State key
+    SNAPSHOT_LEVEL              // Block level where the snapshot was taken
+).then(console.log)
+```
+
+</RunnableCode>
+
+## Generate proof-of-inclusion (EVM :arrow_right: Tezos)
+
+The example below uses [eth_getProof](https://eips.ethereum.org/EIPS/eip-1186) to extract a storage proof of an EVM smart contract.
+
+Both the storage slot and proof are [RLP](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp) encoded.
+
+<RunnableCode>
+
+```ts
+import { Ethereum }from 'ibcf-sdk';
+import { ethers } from 'ethers';
+
+const ETHEREUM_RPC = 'https://goerli.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f';
+const ETHEREUM_DAPP = '0x715E4360a220a5e021dE5413F5c6314EDC234AC3';
+const BLOCK_NUMBER = 8339150;
+
+const provider = new ethers.providers.JsonRpcProvider(ETHEREUM_RPC);
+
+const proofGenerator = new Ethereum.ProofGenerator(provider);
+
+// EVM storage slot indexes (Each slot index is identified by 32 bytes)
+// - storage index 0 ...
+// - storage index 1 -> mapping(uint => string) action_registry;
+const actionRegistryIndex = '1'.padStart(64, '0');
+
+// Key encoded as an EVM storage slot (32 bytes)
+const key = "1".padStart(64, '0');
+
+// Storage slots
+// - Each mapping slot is the result of keccak256(<key> +  <slot_index>)
+const actionSlot = ethers.utils.keccak256("0x" + key + actionRegistryIndex);
+proofGenerator.generateStorageProof(
+    ETHEREUM_DAPP,
+    [actionSlot],
+    BLOCK_NUMBER
+).then(console.log)
+```
+
+</RunnableCode>

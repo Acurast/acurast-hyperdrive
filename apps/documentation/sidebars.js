@@ -17,6 +17,20 @@ const sidebars = {
     "introduction",
     {
       type: "category",
+      label: "Developers",
+      items: [
+        "developers/get-started",
+        {
+          type: "category",
+          label: "Examples",
+          items: ["developers/examples/generating-proofs"],
+          collapsed: false,
+        }
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
       label: "State Relaying",
       items: [
         "relay-contracts/overview",
@@ -35,12 +49,7 @@ const sidebars = {
       ],
       collapsed: false,
     },
-    {
-      type: "category",
-      label: "Examples",
-      items: ["examples/bridge"],
-      collapsed: false,
-    }
+    "deployments"
   ],
 };
 

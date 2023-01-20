@@ -4,7 +4,7 @@ IBCF is a building block allowing for general bidirectional message passing betw
 
 It allows smart contracts on a source chain to store ✉️ states that are verifiable on a target chain. It provides a generic way for contracts to communicate between chains by means of validating Merkle proofs about these states stored in the source chain.
 
-# [Protocol documentation](https://romarq.github.io/ibcf-docs)
+# [Protocol documentation](https://airgap-it.github.io/ibcf)
 
 ## Dependencies
 
