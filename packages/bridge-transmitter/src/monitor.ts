@@ -2,7 +2,7 @@ import { TezosToolkit, TransferParams } from '@taquito/taquito';
 import { InMemorySigner } from '@taquito/signer';
 import { BigNumber, ethers } from 'ethers';
 
-import { Ethereum, Tezos } from '@ibcf/sdk';
+import { Ethereum, Tezos } from 'ibcf-sdk';
 import Logger from './logger';
 
 interface MonitorContext {

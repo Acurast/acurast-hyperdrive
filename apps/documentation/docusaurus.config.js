@@ -39,7 +39,8 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/airgap-it/ibcf/tree/main/apps/documentation",
+          editUrl:
+            "https://github.com/airgap-it/ibcf/tree/main/apps/documentation",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),

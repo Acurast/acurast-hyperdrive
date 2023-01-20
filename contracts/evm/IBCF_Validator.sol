@@ -20,6 +20,11 @@ struct StateRootSubmission {
     bytes32 state_root;
 }
 
+struct Snapshot {
+    uint snapshot_number;
+    bytes32 merkle_root;
+}
+
 contract IBCF_Validator {
     uint current_snapshot = 1;
     address administrator;
@@ -250,6 +255,10 @@ contract IBCF_Validator {
         }
 
         return has_enough_endorsements && single_most_endorsed;
+    }
+
+    function get_history() public view returns (uint[] memory) {
+        return history;
     }
 
     function get_current_snapshot() public view returns (uint) {

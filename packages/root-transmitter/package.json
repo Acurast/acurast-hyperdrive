@@ -25,10 +25,10 @@
         "lint": "eslint"
     },
     "dependencies": {
-        "@ibcf/sdk": "workspace:*",
         "@taquito/signer": "^15.0.0",
         "@taquito/taquito": "^15.0.0",
-        "ethers": "5.7.2"
+        "ethers": "5.7.2",
+        "ibcf-sdk": "workspace:*"
     },
     "devDependencies": {
         "@types/elliptic": "6.4.14",

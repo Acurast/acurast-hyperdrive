@@ -5,7 +5,7 @@ import Tezos from 'src/services/tezos';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';
 import { ContractAbstraction } from '@taquito/taquito';
-import * as IbcfSdk from '@ibcf/sdk';
+import * as IbcfSdk from 'ibcf-sdk';
 import EthereumEthers, { Contract } from 'src/services/ethereum';
 import WalletService from 'src/services/wallet';
 

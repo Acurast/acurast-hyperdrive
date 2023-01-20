@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Grid, Typography, CardContent, CardActions, Divider, TextField, DialogActions } from '@mui/material';
-import * as IbcfSdk from '@ibcf/sdk';
+import * as IbcfSdk from 'ibcf-sdk';
 
 import abi from './abi';
 import EthereumSDK, { Contract } from 'src/services/ethereum';

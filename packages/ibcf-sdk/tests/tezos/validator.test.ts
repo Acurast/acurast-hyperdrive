@@ -29,12 +29,31 @@ describe('Tezos > Validator', () => {
     it('getStorage', async () => {
         const contractStorage = await contract.getStorage();
 
-        expect(contractStorage.current_snapshot).toEqual(new BigNumber(1));
+        expect(contractStorage.config.administrator).toEqual('tz1YGTtd1hqGYTYKtcWSXYKSgCj5hvjaTPVd');
+        expect(contractStorage.config.minimum_endorsements.toNumber()).toEqual(1);
+        expect(contractStorage.config.snapshot_interval.toNumber()).toEqual(10);
+        expect(contractStorage.config.validators).toEqual([
+            'tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB',
+            'tz1YGTtd1hqGYTYKtcWSXYKSgCj5hvjaTPVd',
+            'tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3',
+            'tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR',
+        ]);
+        expect(contractStorage.current_snapshot).toEqual(new BigNumber(8343650));
+        expect(contractStorage.history.length).toEqual(contractStorage.config.history_length.toNumber());
+    });
+
+    it('latestSnapshot', async () => {
+        const latestSnapshot = await contract.latestSnapshot();
+
+        expect(latestSnapshot).toEqual({
+            block_number: 8343640,
+            merkle_root: '59f8fcb141d9e750d4e380c3630b7462b9533b8ab96d2fd79cd37ff21d8eb4a8',
+        });
     });
 
     describe('Entrypoints', () => {
         it('submit_block_state_root', async () => {
-            const result = await contract.submit_block_state_root(1, '0x0000');
+            const result = await contract.submitBlockStateRoot(1, '0x0000');
             expect(result.toTransferParams()).toEqual({
                 amount: 0,
                 fee: undefined,
@@ -54,6 +73,34 @@ describe('Tezos > Validator', () => {
 
 function http_handlers(url: string) {
     return [
+        rest.post(`${url}/chains/main/blocks/head/helpers/scripts/pack_data`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    packed: '050098c1fa07',
+                    gas: 'unaccounted',
+                }),
+            );
+        }),
+        rest.get(
+            `${url}/chains/main/blocks/head/context/big_maps/235755/expruWT9HPZspb6HMuAC4DEVyWDpGfVA1C4ARneriPdqZB93WPCnqp`,
+            async (req, res, ctx) => {
+                return res(
+                    ctx.json([
+                        {
+                            prim: 'Elt',
+                            args: [
+                                {
+                                    string: 'tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB',
+                                },
+                                {
+                                    bytes: '59f8fcb141d9e750d4e380c3630b7462b9533b8ab96d2fd79cd37ff21d8eb4a8',
+                                },
+                            ],
+                        },
+                    ]),
+                );
+            },
+        ),
         rest.get(`${url}/chains/main/blocks/head/protocols`, async (req, res, ctx) => {
             return res(
                 ctx.json({

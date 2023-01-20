@@ -1,6 +1,6 @@
 {
-    "name": "@ibcf/sdk",
-    "version": "0.0.5",
+    "name": "ibcf-sdk",
+    "version": "0.0.7",
     "author": {
         "name": "Rodrigo Quelhas",
         "email": "r.quelhas@papers.ch"

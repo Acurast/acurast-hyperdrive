@@ -27,7 +27,7 @@
     "prettier:check": "yarn workspaces foreach --topological --topological-dev --verbose run prettier --check .",
     "prettier:fix": "yarn workspaces foreach --topological --topological-dev --verbose run prettier --write .",
     "fmt": "yarn lint:fix && yarn prettier:fix",
-    "test:sdk": "yarn workspace @ibcf/sdk run test"
+    "test:sdk": "yarn workspace ibcf-sdk run test"
   },
   "workspaces": [
     "packages/**",

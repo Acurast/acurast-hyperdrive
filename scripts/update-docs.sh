@@ -8,7 +8,7 @@ rm -rf packages/ibcf-sdk/api_documentation
 # Build documentation
 npm --prefix apps/documentation install
 npm --prefix apps/documentation run build
-yarn workspace @ibcf/sdk run generate:doc
+yarn workspace ibcf-sdk run generate:doc
 
 # Deploy
 rm -rf /tmp/docs

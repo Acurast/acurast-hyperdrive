@@ -7,7 +7,7 @@ import {
     Box,
     Typography,
 } from '@mui/material';
-import { Tezos } from '@ibcf/sdk';
+import { Tezos } from 'ibcf-sdk';
 
 import TableRow from 'src/components/base/TableRow';
 import Table from '../base/Table';

@@ -2,7 +2,7 @@ import { MichelsonMap, TezosToolkit, TransferParams } from '@taquito/taquito';
 import { InMemorySigner } from '@taquito/signer';
 import { BigNumber, ethers } from 'ethers';
 
-import { Ethereum, Tezos } from '@ibcf/sdk';
+import { Ethereum, Tezos } from 'ibcf-sdk';
 import Logger from './logger';
 
 interface MonitorContext {
@@ -113,7 +113,7 @@ class Monitor {
 
             this.tezos_operations.push(
                 (
-                    await this.context.tezos_validator.submit_block_state_root(current_snapshot, state_root)
+                    await this.context.tezos_validator.submitBlockStateRoot(current_snapshot, state_root)
                 ).toTransferParams(),
             );
         }

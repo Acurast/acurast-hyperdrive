@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Grid, Typography, CardContent, CardActions, Divider, DialogActions } from '@mui/material';
-import * as IbcfSdk from '@ibcf/sdk';
+import * as IbcfSdk from 'ibcf-sdk';
 import TezosSdk from 'src/services/tezos';
 import Button from 'src/components/base/Button';
 import TezosIcon from 'src/components/base/icons/tezos';
