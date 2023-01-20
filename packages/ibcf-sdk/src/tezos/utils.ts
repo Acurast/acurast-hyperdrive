@@ -1,6 +1,4 @@
 import { packDataBytes, unpackDataBytes } from '@taquito/michel-codec';
-import { b58cdecode, prefix } from '@taquito/utils';
-import { hexOfUint8Array } from '../misc';
 
 export enum MichelsonType {
     nat = 'nat',

@@ -12,7 +12,7 @@ yarn add ibcf-sdk
 
 ```ts
 import { Tezos } from 'ibcf-sdk';
-import { TezosToolkit } from "@taquito/taquito";
+import { TezosToolkit } from '@taquito/taquito';
 
 const TEZOS_RPC = 'https://rpc.ghostnet.teztnets.xyz';
 const STATE_AGGREGATOR_CONTRACT = 'KT1Aqdz8opKsfADxmF2vf6NMoYwgamL5R4KT';
@@ -24,21 +24,22 @@ const STATE_ORIGIN = 'KT1AfcN12T2d43XtJLbahmpDr13xda4Zedxx';
 const STATE_KEY = '0x01';
 const SNAPSHOT_LEVEL = '1805119';
 
-stateAggregator.getProof(
-    STATE_ORIGIN,         // Origin
-    STATE_KEY,            // State key
-    SNAPSHOT_LEVEL        // Block level where the snapshot was taken
-).then(console.log)
+stateAggregator
+    .getProof(
+        STATE_ORIGIN, // Origin
+        STATE_KEY, // State key
+        SNAPSHOT_LEVEL, // Block level where the snapshot was taken
+    )
+    .then(console.log);
 ```
 
 ### Generate a proof-of-inclusion of a state stored on EVM
-
 
 ```ts
 import { Ethereum } from 'ibcf-sdk';
 import { ethers } from 'ethers';
 
-const ETHEREUM_RPC="https://goerli.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f";
+const ETHEREUM_RPC = 'https://goerli.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f';
 const ETHEREUM_DAPP = '0x10758d99D642428fd6A8B62A149aB2d1ade20C24';
 const BLOCK_NUMBER = 8332856;
 
@@ -58,16 +59,12 @@ const destinationRegistryIndex = '5'.padStart(64, '0');
 const amountRegistryIndex = '6'.padStart(64, '0');
 
 // Key RLP encoded
-const keyRLP = "0x01";
+const keyRLP = '0x01';
 
 // Storage slots
 // - Each mapping slot is the result of keccak256(<rlp_key> +  <slot_index>)
 const destinationSlot = ethers.utils.keccak256(keyRLP + destinationRegistryIndex);
 const amountSlot = ethers.utils.keccak256(keyRLP + amountRegistryIndex);
 
-proofGenerator.generateStorageProof(
-    ETHEREUM_DAPP,
-    [destinationSlot, amountSlot],
-    BLOCK_NUMBER
-).then(console.log)
+proofGenerator.generateStorageProof(ETHEREUM_DAPP, [destinationSlot, amountSlot], BLOCK_NUMBER).then(console.log);
 ```

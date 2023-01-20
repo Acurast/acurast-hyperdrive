@@ -25,7 +25,7 @@ const sidebars = {
           label: "Examples",
           items: ["developers/examples/generating-proofs"],
           collapsed: false,
-        }
+        },
       ],
       collapsed: false,
     },
@@ -37,7 +37,10 @@ const sidebars = {
         {
           type: "category",
           label: "Tezos Contracts",
-          items: ["relay-contracts/tezos/state", "relay-contracts/tezos/validator"],
+          items: [
+            "relay-contracts/tezos/state",
+            "relay-contracts/tezos/validator",
+          ],
           collapsed: false,
         },
         {
@@ -45,11 +48,11 @@ const sidebars = {
           label: "EVM Contracts",
           items: ["relay-contracts/evm/validator"],
           collapsed: false,
-        }
+        },
       ],
       collapsed: false,
     },
-    "deployments"
+    "deployments",
   ],
 };
 

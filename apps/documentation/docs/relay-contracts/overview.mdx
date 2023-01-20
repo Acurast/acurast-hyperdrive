@@ -12,13 +12,13 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 The relaying process from Tezos to EVM involves interacting with two contracts (a [State Aggregator](/relay-contracts/tezos/state) and a [Proof Validator](/relay-contracts/evm/validator)).
 
 <center>
-<ThemedImage
-  width="480px"
-  sources={{
-    light: useBaseUrl("/img/ibcf-relay-tezos-evm.svg"),
-    dark: useBaseUrl("/img/ibcf-relay-tezos-evm-dark.svg"),
-  }}
-/>
+  <ThemedImage
+    width="480px"
+    sources={{
+      light: useBaseUrl("/img/ibcf-relay-tezos-evm.svg"),
+      dark: useBaseUrl("/img/ibcf-relay-tezos-evm-dark.svg"),
+    }}
+  />
 </center>
 
 <div class="padding-vert--md"></div>
@@ -35,13 +35,13 @@ The root node hash (or **state root**) of every snapshot is then transmitted to 
 Relaying from an EVM chain to Tezos, requires the EVM chain to be [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) enabled and a Tezos (:cop: [**Proof Validator**](/relay-contracts/tezos/validator)) contract capable of validating `EIP-1186` storage proofs.
 
 <center>
-<ThemedImage
-  width="480px"
-  sources={{
-    light: useBaseUrl("/img/ibcf-relay-evm-tezos.svg"),
-    dark: useBaseUrl("/img/ibcf-relay-evm-tezos-dark.svg"),
-  }}
-/>
+  <ThemedImage
+    width="480px"
+    sources={{
+      light: useBaseUrl("/img/ibcf-relay-evm-tezos.svg"),
+      dark: useBaseUrl("/img/ibcf-relay-evm-tezos-dark.svg"),
+    }}
+  />
 </center>
 
 <div class="padding-vert--md"></div>

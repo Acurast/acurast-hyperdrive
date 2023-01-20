@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { useColorMode } from "@docusaurus/theme-common";
 // import { libs } from "./monaco-types";
-const libs = []
+const libs = [];
 const MonacoEditor = lazy(() => import("react-monaco-editor"));
 
 function Monaco(props) {
@@ -57,7 +57,7 @@ function Monaco(props) {
         editorWillMount={onEditorWillMount}
         editorWillUnmount={() => undefined}
         editorDidMount={onEditorDidMount}
-        theme={colorMode === 'dark' ? "vs-dark" : "vs-light"}
+        theme={colorMode === "dark" ? "vs-dark" : "vs-light"}
       />
     </Suspense>
   );

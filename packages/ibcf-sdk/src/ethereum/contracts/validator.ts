@@ -11,7 +11,7 @@ export class Contract {
 
     constructor(signer: Signer, contractAddress: string) {
         this.signer = signer;
-        this.provider = signer.provider! as JsonRpcProvider;
+        this.provider = signer.provider as JsonRpcProvider;
         this.contractAddress = contractAddress;
     }
 

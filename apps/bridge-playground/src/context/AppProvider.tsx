@@ -4,10 +4,9 @@ import AppContext, { TezosBridgeStorage, EthereumStorage, TezosStateAggregatorSt
 import Tezos from 'src/services/tezos';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';
-import { BigMapAbstraction, ContractAbstraction, MichelsonMap } from '@taquito/taquito';
+import { ContractAbstraction } from '@taquito/taquito';
 import * as IbcfSdk from '@ibcf/sdk';
 import EthereumEthers, { Contract } from 'src/services/ethereum';
-import BigNumber from 'bignumber.js';
 import WalletService from 'src/services/wallet';
 
 // Cached contracts

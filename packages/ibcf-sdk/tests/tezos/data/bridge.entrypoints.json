@@ -5,42 +5,32 @@
             "args": [
                 {
                     "prim": "bytes",
-                    "annots": [
-                        "%account_proof_rlp"
-                    ]
+                    "annots": ["%account_proof_rlp"]
                 },
                 {
                     "prim": "pair",
                     "args": [
                         {
                             "prim": "bytes",
-                            "annots": [
-                                "%amount_proof_rlp"
-                            ]
+                            "annots": ["%amount_proof_rlp"]
                         },
                         {
                             "prim": "pair",
                             "args": [
                                 {
                                     "prim": "nat",
-                                    "annots": [
-                                        "%block_number"
-                                    ]
+                                    "annots": ["%block_number"]
                                 },
                                 {
                                     "prim": "pair",
                                     "args": [
                                         {
                                             "prim": "bytes",
-                                            "annots": [
-                                                "%destination_proof_rlp"
-                                            ]
+                                            "annots": ["%destination_proof_rlp"]
                                         },
                                         {
                                             "prim": "bytes",
-                                            "annots": [
-                                                "%nonce"
-                                            ]
+                                            "annots": ["%nonce"]
                                         }
                                     ]
                                 }
@@ -55,15 +45,11 @@
             "args": [
                 {
                     "prim": "nat",
-                    "annots": [
-                        "%amount"
-                    ]
+                    "annots": ["%amount"]
                 },
                 {
                     "prim": "bytes",
-                    "annots": [
-                        "%destination"
-                    ]
+                    "annots": ["%destination"]
                 }
             ]
         }

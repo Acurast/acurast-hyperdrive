@@ -8,10 +8,7 @@ import ThemedImage from "@theme/ThemedImage";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
 <head>
-  <meta
-    name="description"
-    content="IBCF Documentation - Introduction"
-  />
+  <meta name="description" content="IBCF Documentation - Introduction" />
 </head>
 
 <div class="padding-vert--md"></div>
@@ -25,19 +22,19 @@ It allows smart contracts on a source chain to store ✉️ states that are veri
 # How does it work?
 
 As an initial step, a trusted set of validators is responsible for relaying the state root of snapshots between chains.
-It means that for two chains  (`A` and `B`), that chain `B` will know the state roots of snapshots contained in chain `A`, and
+It means that for two chains (`A` and `B`), that chain `B` will know the state roots of snapshots contained in chain `A`, and
 chain `A` will also know the state roots contained in `B`.
 
 <div class="padding-vert--md"></div>
 
 <center>
-<ThemedImage
-  width="480px"
-  sources={{
-    light: useBaseUrl("/img/ibcf-relay.svg"),
-    dark: useBaseUrl("/img/ibcf-relay-dark.svg"),
-  }}
-/>
+  <ThemedImage
+    width="480px"
+    sources={{
+      light: useBaseUrl("/img/ibcf-relay.svg"),
+      dark: useBaseUrl("/img/ibcf-relay-dark.svg"),
+    }}
+  />
 </center>
 
 <div class="padding-vert--md"></div>
@@ -47,11 +44,11 @@ The state roots transmitted in the step above allow smart contracts in a target 
 <div class="padding-vert--md"></div>
 
 <center>
-<ThemedImage
-  width="520px"
-  sources={{
-    light: useBaseUrl("/img/ibcf-client-interaction.svg"),
-    dark: useBaseUrl("/img/ibcf-client-interaction-dark.svg"),
-  }}
-/>
+  <ThemedImage
+    width="520px"
+    sources={{
+      light: useBaseUrl("/img/ibcf-client-interaction.svg"),
+      dark: useBaseUrl("/img/ibcf-client-interaction-dark.svg"),
+    }}
+  />
 </center>

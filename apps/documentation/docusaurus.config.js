@@ -2,22 +2,21 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 const path = require("path");
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const lightCodeTheme = require("prism-react-renderer/themes/github");
+const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
-
-const organizationName = 'airgap-it';
-const projectName = 'ibcf';
+const organizationName = "airgap-it";
+const projectName = "ibcf";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'IBCF Documentation',
-  tagline: 'Inter Blockchain Communication Framework',
-  url: 'https://github.com',
-  baseUrl: process.env.NODE_ENV === 'development' ? '/' : `/${projectName}/`,
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  title: "IBCF Documentation",
+  tagline: "Inter Blockchain Communication Framework",
+  url: "https://github.com",
+  baseUrl: process.env.NODE_ENV === "development" ? "/" : `/${projectName}/`,
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
+  favicon: "img/favicon.ico",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -28,22 +27,22 @@ const config = {
   // metadata like html lang. For example, if your site is Chinese, you may want
   // to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: "en",
+    locales: ["en"],
   },
 
   presets: [
     [
-      'classic',
+      "classic",
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
           routeBasePath: "/",
-          sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/airgap-it/ibcf-docs',
+          sidebarPath: require.resolve("./sidebars.js"),
+          editUrl: "https://github.com/airgap-it/ibcf-docs",
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve("./src/css/custom.css"),
         },
       }),
     ],
@@ -53,22 +52,22 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Documentation',
+        title: "Documentation",
         items: [
           {
             href: `https://${organizationName}.github.io/${projectName}/api`,
-            label: 'API Documentation (TypeDoc)',
-            position: 'right',
+            label: "API Documentation (TypeDoc)",
+            position: "right",
           },
           {
-            href: 'https://github.com/facebook/docusaurus',
-            label: 'GitHub',
-            position: 'right',
+            href: "https://github.com/facebook/docusaurus",
+            label: "GitHub",
+            position: "right",
           },
         ],
       },
       footer: {
-        style: 'dark',
+        style: "dark",
         links: [],
         copyright: `Copyright © ${new Date().getFullYear()} Papers AG.`,
       },
@@ -78,10 +77,10 @@ const config = {
         additionalLanguages: ["solidity"],
       },
     }),
-    plugins: [
-      path.join(__dirname, "/plugins/monaco-editor"),
-      path.join(__dirname, "/plugins/webpack")
-    ],
+  plugins: [
+    path.join(__dirname, "/plugins/monaco-editor"),
+    path.join(__dirname, "/plugins/webpack"),
+  ],
 };
 
 module.exports = config;

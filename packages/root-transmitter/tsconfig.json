@@ -9,7 +9,7 @@
         "alwaysStrict": true,
         "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true,
-		"outDir": "bin",
+        "outDir": "bin"
     },
     "include": ["src"],
     "exclude": ["node_modules"]

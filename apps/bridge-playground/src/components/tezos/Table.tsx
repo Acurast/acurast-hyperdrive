@@ -43,7 +43,6 @@ interface OwnProps {
 
 const TableTemplate =
     <T extends OwnProps>(Component: React.FC<T>): React.FC<T> =>
-    // eslint-disable-next-line react/display-name
     (props) =>
         (
             <Table

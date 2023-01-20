@@ -7,5 +7,5 @@ module.exports = {
         sourceType: 'module', // Allows for the use of imports
     },
     extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
-    ignorePatterns: ['dist/**', 'node_modules/**'],
+    ignorePatterns: ['dist/**', 'node_modules/**', 'api_documentation/**'],
 };

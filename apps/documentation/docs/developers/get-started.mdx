@@ -60,6 +60,7 @@ contract IBCF_Client {
 
 ### Tezos
 
+The contract on Tezos will be capable of receiving and validating storage proofs from the EVM contract deployed above. For this to be possible, the EVM contract deployed above needs to be stored and used in the proof validation.
 
 [Deploy with SmartPy IDE](/) (Use Ghostnet)
 
@@ -69,6 +70,7 @@ import smartpy as sp
 import contracts.tezos.utils.rlp as RLP
 
 class Constant:
+    # Memory index of `mapping(uint => string) action_registry`
     EVM_ACTION_REGISTRY_INDEX = sp.bytes(
         "0x0000000000000000000000000000000000000000000000000000000000000001"
     )
@@ -84,7 +86,7 @@ class Type:
         storage_slot=sp.TBytes,
         storage_proof_rlp=sp.TBytes,
     ).right_comb()
-    ActionArgument = sp.TRecord(
+    Action_argument = sp.TRecord(
         block_number=sp.TNat,
         account_proof_rlp=sp.TBytes,
         action_proof_rlp=sp.TBytes,
@@ -95,15 +97,19 @@ class IBCF_Client(sp.Contract):
         self.init_type(
             sp.TRecord(
                 ibcf = sp.TRecord(
+                    # Replay attack prevention
                     action_counter=sp.TNat,
+                    # The proof validation contract
                     proof_validator=sp.TAddress,
+                    # The EVM address of the contract we are receiving proofs from
                     evm_address=sp.TBytes,
                 ),
+                # This variable will store all actions sent from the EVM contract
                 performed_actions = sp.TList(sp.TString)
             )
         )
 
-    @sp.entry_point(parameter_type=Type.ActionArgument)
+    @sp.entry_point(parameter_type=Type.Action_argument)
     def perform(self, param):
         write_uint_slot_lambda = sp.compute(sp.build_lambda(RLP.EvmStorage.write_uint_slot))
         decode_string_lambda = sp.compute(sp.build_lambda(RLP.EvmStorage.read_string_slot))

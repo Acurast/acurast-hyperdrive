@@ -9,6 +9,7 @@ hide_title: true
 ### `insert`
 
 **Input type:**
+
 ```
 (pair %insert
     (bytes %key)
@@ -16,7 +17,7 @@ hide_title: true
 )
 ```
 
-**Description:** Contracts in a Tezos ecosystem can call this method to insert (*key*, *value*) entries into a Merkle tree.
+**Description:** Contracts in a Tezos ecosystem can call this method to insert (_key_, _value_) entries into a Merkle tree.
 
 **Requires permissions?** No, anyone is allowed to call this method.
 
@@ -25,6 +26,7 @@ hide_title: true
 ### `configure`
 
 **Input type:**
+
 ```
 (list %configure
     (or
@@ -56,6 +58,7 @@ hide_title: true
 ### `get_proof`
 
 **Input type:**
+
 ```
 (pair
     (bytes %key)
@@ -64,6 +67,7 @@ hide_title: true
 ```
 
 **Output type:**
+
 ```
 (pair
     (bytes %key)
