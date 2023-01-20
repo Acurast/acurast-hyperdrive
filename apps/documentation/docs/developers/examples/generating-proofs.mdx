@@ -16,12 +16,12 @@ import { Tezos } from "ibcf-sdk";
 import { TezosToolkit } from "@taquito/taquito";
 
 const TEZOS_RPC = "https://rpc.ghostnet.teztnets.xyz";
-const TEZOS_DAPP = "KT1PjTU47jtuDVMXeSEiYLtaFNeiEYGf6rbM";
+const TEZOS_STATE = "KT1PjTU47jtuDVMXeSEiYLtaFNeiEYGf6rbM";
 
 const tezosSdk = new TezosToolkit(TEZOS_RPC);
 const stateAggregator = new Tezos.Contracts.StateAggregator.Contract(
   tezosSdk,
-  TEZOS_DAPP
+  TEZOS_STATE
 );
 
 // DApp address, the contract that inserts the state

@@ -73,10 +73,8 @@ export const runCode = (rawCode: string, setOutput: (str: string) => void) => {
     ethers: ethers,
   };
 
-  console.log(code);
   code = replaceAll(code, "console.log", "progress");
   code = removeImports(code);
-  console.log(code);
   code = ts.transpile(`({
         run: async (prelude: any, progress: any): string => {
           Object.keys(prelude).forEach(key => {
@@ -90,8 +88,6 @@ export const runCode = (rawCode: string, setOutput: (str: string) => void) => {
           })()
         })`);
   let runnable: any;
-  console.log(code);
-  // console.log("TRANSPILED code", code);
   return new Promise((resolve) => {
     try {
       runnable = eval(code);

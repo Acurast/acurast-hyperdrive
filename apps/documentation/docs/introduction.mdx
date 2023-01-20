@@ -22,8 +22,8 @@ It allows smart contracts on a source chain to store ✉️ states that are veri
 # How does it work?
 
 As an initial step, a trusted set of validators is responsible for relaying the state root of snapshots between chains.
-It means that for two chains (`A` and `B`), that chain `B` will know the state roots of snapshots contained in chain `A`, and
-chain `A` will also know the state roots contained in `B`.
+It means that for two chains (`A` and `B`), that chain `B` will know the state root of snapshots contained in chain `A`, and
+chain `A` will also know ones in `B`.
 
 <div class="padding-vert--md"></div>
 
@@ -52,3 +52,7 @@ The state roots transmitted in the step above allow smart contracts in a target 
     }}
   />
 </center>
+
+<div class="padding-vert--md"></div>
+
+It enables interesting use cases for DApps, like allowing users to interact with a target chain by paying with the source chain token.

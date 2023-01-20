@@ -39,7 +39,7 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/airgap-it/ibcf-docs",
+          editUrl: "https://github.com/airgap-it/ibcf/tree/main/apps/documentation",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -60,7 +60,7 @@ const config = {
             position: "right",
           },
           {
-            href: "https://github.com/facebook/docusaurus",
+            href: "https://github.com/airgap-it/ibcf",
             label: "GitHub",
             position: "right",
           },
