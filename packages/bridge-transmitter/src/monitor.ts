@@ -42,6 +42,7 @@ class Monitor {
      * Unwrap assets from Tezos to Ethereum
      */
     private async tezosToEthereum(bridgeStorage: Tezos.Contracts.Bridge.BridgeStorage) {
+        // For every new unwrap
         let latest = this.context.tezos_latest_unwrap_nonce;
         for (; bridgeStorage.nonce.gte(latest); latest++) {
             try {
@@ -71,7 +72,7 @@ class Monitor {
                     }
                 }
             } catch (e: any) {
-                //Logger.error(e.message);
+                Logger.debug(e.message);
             }
         }
     }
@@ -83,14 +84,14 @@ class Monitor {
         try {
             const latestWraps = await this.context.evm_bridge.getWraps();
 
-            const tezos_validator = new Tezos.Contracts.Validator.Contract(
+            const tezosValidator = new Tezos.Contracts.Validator.Contract(
                 this.context.tezos_sdk,
                 bridgeStorage.proof_validator,
             );
-            const validatorStorage = await tezos_validator.getStorage();
+            const validatorStorage = await tezosValidator.getStorage();
 
             if (validatorStorage.history.length > 0) {
-                const blockNumber = validatorStorage.history.reverse()[0].toNumber();
+                const blockNumber = validatorStorage.history.pop()!.toNumber();
 
                 for (const wrap of latestWraps) {
                     const nonce = wrap.nonce.toString(16).padStart(64, '0');
@@ -117,7 +118,7 @@ class Monitor {
                 }
             }
         } catch (e) {
-            Logger.error(e);
+            Logger.debug(e);
         }
     }
 
@@ -132,32 +133,19 @@ class Monitor {
         }
     }
 }
-
-function getEnv() {
-    const env = {
-        TEZOS_RPC: process.env['TEZOS_RPC']!,
-        TEZOS_FINALITY: Number(process.env['TEZOS_FINALITY']!),
-        TEZOS_STATE_ADDRESS: process.env['TEZOS_STATE_ADDRESS']!,
-        TEZOS_BRIDGE_ADDRESS: process.env['TEZOS_BRIDGE_ADDRESS']!,
-        TEZOS_LATEST_UNWRAP_NONCE: Number(process.env['TEZOS_LATEST_UNWRAP_NONCE']!),
-        TEZOS_PRIVATE_KEY: process.env['TEZOS_PRIVATE_KEY']!,
-        ETHEREUM_RPC: process.env['ETHEREUM_RPC']!,
-        ETHEREUM_FINALITY: Number(process.env['ETHEREUM_FINALITY']!),
-        ETHEREUM_PRIVATE_KEY: process.env['ETHEREUM_PRIVATE_KEY']!,
-        EVM_BRIDGE_ADDRESS: process.env['EVM_BRIDGE_ADDRESS']!,
-    };
-    // Validate environment variables
-    Object.entries(env).forEach(([key, value]) => {
-        if (value != 0 && !value) {
-            Logger.error(`\nEnvironment variable ${key} is required!\n`);
-            process.exit(1);
-        }
-    });
-    return env;
+export interface Env {
+    TEZOS_RPC: string;
+    TEZOS_FINALITY: number;
+    TEZOS_STATE_ADDRESS: string;
+    TEZOS_PRIVATE_KEY: string;
+    TEZOS_BRIDGE_ADDRESS: string;
+    TEZOS_LATEST_UNWRAP_NONCE: number;
+    ETHEREUM_RPC: string;
+    ETHEREUM_FINALITY: number;
+    ETHEREUM_PRIVATE_KEY: string;
+    EVM_BRIDGE_ADDRESS: string;
 }
-
-export async function run_monitor() {
-    const env = getEnv();
+export async function run_monitor(env: Env) {
     // Tezos
     const tezos_sdk = new TezosToolkit(env.TEZOS_RPC);
     tezos_sdk.setProvider({ signer: await InMemorySigner.fromSecretKey(env.TEZOS_PRIVATE_KEY) });
@@ -182,13 +170,10 @@ export async function run_monitor() {
     const monitor = new Monitor(context);
     // Start service
     while (1) {
-        // Sleep 5 seconds before each check
-        // await new Promise((r) => setTimeout(r, 5000));
-
         try {
             await monitor.run();
         } catch (e) {
-            Logger.debug(e);
+            Logger.error(e);
         }
     }
 }

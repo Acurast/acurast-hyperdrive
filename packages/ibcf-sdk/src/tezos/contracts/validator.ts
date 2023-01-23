@@ -34,7 +34,7 @@ export class Contract {
     /**
      * Get the latest finalized snapshot.
      */
-    async latestSnapshot(): Promise<any> {
+    async latestSnapshot(): Promise<Snapshot> {
         const storage = await this.getStorage();
 
         const latestBlockLevel = storage.history.pop();
@@ -55,7 +55,7 @@ export class Contract {
 
         return {
             block_number: latestBlockLevel.toNumber(),
-            merkle_root: merkleRoot,
+            merkle_root: '0x' + merkleRoot,
         };
     }
 

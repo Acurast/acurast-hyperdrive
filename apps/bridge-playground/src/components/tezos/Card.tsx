@@ -12,6 +12,7 @@ import TextField from '../base/TextField';
 import useWalletContext from 'src/hooks/useWalletContext';
 import AssetCard from './AssetCard';
 import Logger from 'src/services/logger';
+import ValidatorCard from './ValidatorCard';
 
 const Tezos = () => {
     const { tezos } = useAppContext();
@@ -105,6 +106,8 @@ const Tezos = () => {
                             <TezosIcon />
                         </Grid>
                     </Grid>
+                    <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+                    <ValidatorCard />
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                     {tezos.bridgeStorage ? <AssetCard asset={tezos.bridgeStorage?.asset} /> : null}
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />

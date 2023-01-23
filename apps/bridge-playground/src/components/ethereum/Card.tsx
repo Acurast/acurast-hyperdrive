@@ -12,6 +12,7 @@ import Constants from 'src/constants';
 import Dialog from '../base/Dialog';
 import AssetCard from './AssetCard';
 import Logger from 'src/services/logger';
+import ValidatorCard from './ValidatorCard';
 
 const Ethereum = () => {
     const { ethereum } = useAppContext();
@@ -23,7 +24,7 @@ const Ethereum = () => {
     const [confirming, setConfirming] = React.useState(false);
 
     const wrap = React.useCallback(async () => {
-        const contract = new Contract(Constants.ethereum_bridge, abi.bridge, EthereumSDK.getSigner());
+        const contract = new Contract(Constants.evm_bridge, abi.bridge, EthereumSDK.getSigner());
         if (!destination || destination.length < 32) {
             return setError(new Error('Invalid destination!'));
         }
@@ -68,7 +69,9 @@ const Ethereum = () => {
                         </Grid>
                     </Grid>
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-                    {ethereum.clientStorage ? <AssetCard asset={ethereum.clientStorage?.asset} /> : null}
+                    <ValidatorCard />
+                    <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+                    {ethereum.bridgeInfo ? <AssetCard asset={ethereum.bridgeInfo?.asset} /> : null}
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                     <Card variant="outlined">
                         <CardContent>
@@ -79,10 +82,10 @@ const Ethereum = () => {
                                         <a
                                             target="_blank"
                                             style={{ color: 'white' }}
-                                            href={`${Constants.etherscan}/address/${Constants.ethereum_bridge}`}
+                                            href={`${Constants.etherscan}/address/${Constants.evm_bridge}`}
                                             rel="noreferrer"
                                         >
-                                            {Constants.ethereum_bridge}
+                                            {Constants.evm_bridge}
                                         </a>
                                     </Typography>
                                 </Grid>
@@ -115,7 +118,7 @@ const Ethereum = () => {
                                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                                     <Grid container direction="row" justifyContent="center" alignItems="center">
                                         <Grid item>
-                                            <WrapsTable wraps={ethereum.clientStorage?.wraps || []} />
+                                            <WrapsTable wraps={ethereum.bridgeInfo?.wraps || []} />
                                         </Grid>
                                     </Grid>
                                 </CardContent>

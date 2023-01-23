@@ -84,11 +84,6 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                                         Add Allowance
                                     </Button>
                                 </Grid>
-                                <Grid item>
-                                    <Button fullWidth size="small" onClick={() => setModalOpen('transfer')}>
-                                        Transfer
-                                    </Button>
-                                </Grid>
                             </Grid>
                         </Grid>
                     </Grid>
@@ -106,6 +101,15 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                         </Grid>
                     </Grid>
                 </CardContent>
+                <CardActions>
+                    <Grid container direction="row" justifyContent="center" alignItems="center">
+                        <Grid item>
+                            <Typography color="text.secondary" gutterBottom>
+                                {confirming ? 'Confirming...' : ''}
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </CardActions>
             </Card>
 
             <Dialog
@@ -155,15 +159,6 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                     Etherscan
                 </a>
             </Dialog>
-            <CardActions>
-                <Grid container direction="row" justifyContent="center" alignItems="center">
-                    <Grid item>
-                        <Typography color="text.secondary" gutterBottom>
-                            {confirming ? 'Confirming...' : ''}
-                        </Typography>
-                    </Grid>
-                </Grid>
-            </CardActions>
         </>
     );
 };

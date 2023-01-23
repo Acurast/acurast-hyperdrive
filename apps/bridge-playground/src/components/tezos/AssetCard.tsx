@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Grid, Typography, CardContent, Divider } from '@mui/material';
+import { Card, Grid, Typography, CardContent, Divider, Box } from '@mui/material';
 
 import Dialog from '../base/Dialog';
 import { AssetInfo } from 'src/context/AppContext';

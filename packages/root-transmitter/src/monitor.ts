@@ -20,6 +20,7 @@ interface MonitorContext {
 class Monitor {
     constructor(private context: MonitorContext) {}
     tezos_operations: TransferParams[] = [];
+    latest_tezos_snapshot = 0;
 
     public async run() {
         this.tezos_operations = [];
@@ -27,38 +28,40 @@ class Monitor {
         // Transmit new ethereum block states to Tezos
         await this.ethereumToTezos();
 
-        const state_aggregator_storage = await this.context.tezos_state.getStorage();
+        const stateAggregatorStorage = await this.context.tezos_state.getStorage();
         const tezosBlockLevel = (await this.context.tezos_sdk.rpc.getBlockHeader()).level;
 
         // Snapshot state if it can be done.
-        await this.snapshotIfPossible(state_aggregator_storage, tezosBlockLevel);
+        await this.snapshotIfPossible(stateAggregatorStorage, tezosBlockLevel);
 
-        const eth_current_snapshot = await this.context.evm_validator.getCurrentSnapshot();
+        const ethExpectedSnapshot = await this.context.evm_validator.getCurrentSnapshot();
 
-        if (state_aggregator_storage.snapshot_counter.gte(eth_current_snapshot)) {
+        if (
+            stateAggregatorStorage.snapshot_counter.gte(ethExpectedSnapshot) &&
+            ethExpectedSnapshot.isGreaterThan(this.latest_tezos_snapshot)
+        ) {
             // Make sure at least `this.context.tezos_finality` blocks have been confirmed
             const snapshot_level = (
-                await state_aggregator_storage.snapshot_level.get<BigNumber>(eth_current_snapshot)
+                await stateAggregatorStorage.snapshot_level.get<BigNumber>(ethExpectedSnapshot)
             )?.toNumber();
             if (snapshot_level && tezosBlockLevel - snapshot_level > this.context.tezos_finality) {
                 // Get snapshot submissions
-                const eth_current_snapshot_submissions =
-                    await this.context.evm_validator.getCurrentSnapshotSubmissions();
+                const ethCurrentSnapshotSubmissions = await this.context.evm_validator.getCurrentSnapshotSubmissions();
 
                 Logger.debug(
                     '[ETHEREUM]',
                     'Confirming snapshot:',
-                    `${eth_current_snapshot} of ${state_aggregator_storage.snapshot_counter}`,
+                    `${ethExpectedSnapshot} of ${stateAggregatorStorage.snapshot_counter}`,
                     `\n\tSubmissions:`,
-                    eth_current_snapshot_submissions,
+                    ethCurrentSnapshotSubmissions,
                 );
 
-                if (!eth_current_snapshot_submissions.includes(this.context.ethereum_signer.address)) {
-                    const storage_at_snapshot = await this.context.tezos_state.getStorage(String(snapshot_level));
+                if (!ethCurrentSnapshotSubmissions.includes(this.context.ethereum_signer.address)) {
+                    const storageAtSnapshot = await this.context.tezos_state.getStorage(String(snapshot_level));
 
                     const result = await this.context.evm_validator.submitStateRoot(
-                        eth_current_snapshot,
-                        '0x' + storage_at_snapshot.merkle_tree.root,
+                        ethExpectedSnapshot,
+                        '0x' + storageAtSnapshot.merkle_tree.root,
                     );
 
                     // Wait for the operation to be included in at least `ethereum_finality` blocks.
@@ -66,9 +69,11 @@ class Monitor {
 
                     Logger.info(
                         '[Tezos->ETHEREUM]',
-                        `Submit state root "${storage_at_snapshot.merkle_tree.root}" for snapshot ${eth_current_snapshot}.`,
+                        `Submit state root "${storageAtSnapshot.merkle_tree.root}" for snapshot ${ethExpectedSnapshot}.`,
                         `\n\tOperation hash: ${result.hash}`,
                     );
+
+                    this.latest_tezos_snapshot = ethExpectedSnapshot.toNumber();
                 }
             }
         }
@@ -99,7 +104,7 @@ class Monitor {
             endorsers.push(key);
         }
 
-        Logger.debug('[Tezos]', 'Confirming block:', current_snapshot, `\n\tSubmissions:`, endorsers);
+        Logger.debug('[TEZOS]', 'Confirming block:', current_snapshot, `\n\tSubmissions:`, endorsers);
 
         if (!endorsers.includes(this.context.processor_tezos_address)) {
             const provider = this.context.ethereum_signer.provider as ethers.providers.JsonRpcProvider;

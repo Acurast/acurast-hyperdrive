@@ -5,7 +5,7 @@ known_addresses:
   signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
   signer_2: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3
   signer_3: tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB
-  eth_bridge_address: "0x10758d99D642428fd6A8B62A149aB2d1ade20C24"
+  eth_bridge_address: "0xE0CcF3dB4316341bb3475726AE084Ca9e7961550"
 actions:
   - kind: origination
     contract_kind: IBCF_Aggragator

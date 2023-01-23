@@ -8,17 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * @dev ERC20 minting logic
  */
 contract MintableERC20 is ERC20 {
-    address private minter;
 
-    // modifier to check if caller is the minter
-    modifier is_minter() {
-        require(msg.sender == minter, "NOT_MINTER");
-        _;
-    }
-
-    constructor(string memory name, string memory symbol, address _minter) ERC20(name, symbol) {
-        minter = _minter;
-    }
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
     /**
      * @dev Function to mint tokens to address
@@ -26,7 +17,7 @@ contract MintableERC20 is ERC20 {
      * @param value The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address account, uint256 value) public is_minter returns (bool) {
+    function mint(address account, uint256 value) public returns (bool) {
         _mint(account, value);
         return true;
     }

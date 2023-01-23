@@ -3,15 +3,18 @@ import type { BigNumber } from 'bignumber.js';
 import { BigMapAbstraction } from '@taquito/taquito';
 import { Ethereum, Tezos } from 'ibcf-sdk';
 
+export interface TezosValidatorInfo {
+    latestSnapshot: Tezos.Contracts.Validator.Snapshot;
+}
+
 export interface TezosBridgeStorage {
     asset: AssetInfo;
     unwraps: Tezos.Contracts.Bridge.Unwrap[];
 }
 
-export interface TezosStateAggregatorStorage {
+export interface TezosStateAggregatorInfo {
     snapshot_level: BigMapAbstraction;
     merkle_tree: any;
-    blocks: [BigNumber, string][];
 }
 
 export interface AssetInfo {
@@ -19,19 +22,24 @@ export interface AssetInfo {
     balance: string;
 }
 
-export interface EthereumStorage {
+export interface EVMBridgeInfo {
     asset: AssetInfo;
     wraps: Ethereum.Contracts.Bridge.Wrap[];
+}
+
+export interface EVMValidatorInfo {
+    latestSnapshot: Ethereum.Contracts.Validator.Snapshot;
 }
 
 export interface IAppContext {
     tezos: {
         bridgeStorage?: TezosBridgeStorage;
-        validatorStorage?: [string, string][];
-        stateAggregatorStorage?: TezosStateAggregatorStorage;
+        validatorInfo?: TezosValidatorInfo;
+        stateAggregatorInfo?: TezosStateAggregatorInfo;
     };
     ethereum: {
-        clientStorage?: EthereumStorage;
+        bridgeInfo?: EVMBridgeInfo;
+        validatorInfo?: EVMValidatorInfo;
     };
 }
 

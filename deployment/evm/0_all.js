@@ -12,7 +12,7 @@ module.exports = async function (deployer, _network, _accounts) {
 
   const validator = await IBCF_Validator.deployed();
 
-  const asset = await deployer.deploy(ERC20, "TEST", "TEST", administrator);
+  const asset = await deployer.deploy(ERC20, "TEST", "TEST");
   // Fund accounts
   await asset.mint(administrator, "1000000");
 
