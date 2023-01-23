@@ -3,25 +3,6 @@ import * as IbcfSdk from "ibcf-sdk";
 import { TezosToolkit } from "@taquito/taquito";
 import { ethers } from "ethers";
 
-const tezosSdk = new TezosToolkit("https://rpc.ghostnet.teztnets.xyz");
-const stateAggregator = new IbcfSdk.Tezos.Contracts.StateAggregator.Contract(
-  tezosSdk,
-  "KT1Aqdz8opKsfADxmF2vf6NMoYwgamL5R4KT"
-);
-
-const ETHEREUM_RPC =
-  "https://goerli.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f";
-const provider = new ethers.providers.JsonRpcProvider(ETHEREUM_RPC);
-
-const proofGenerator = new IbcfSdk.Ethereum.ProofGenerator(provider);
-
-const destinationRegistryIndex = "05".padStart(64, "0");
-const amountRegistryIndex = "06".padStart(64, "0");
-const destinationSlot = ethers.utils.keccak256(
-  "0x" + "01" + destinationRegistryIndex
-);
-const amountSlot = ethers.utils.keccak256("0x" + "01" + amountRegistryIndex);
-
 function replaceAll(string: string, search: string, replace: string) {
   return string.split(search).join(replace);
 }

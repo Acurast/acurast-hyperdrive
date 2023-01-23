@@ -26,6 +26,7 @@ const sidebars = {
           items: ["developers/examples/generating-proofs"],
           collapsed: false,
         },
+        "developers/toolkits"
       ],
       collapsed: false,
     },
