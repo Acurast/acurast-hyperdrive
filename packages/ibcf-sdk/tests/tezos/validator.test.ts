@@ -47,7 +47,7 @@ describe('Tezos > Validator', () => {
 
         expect(latestSnapshot).toEqual({
             block_number: 8343640,
-            merkle_root: '59f8fcb141d9e750d4e380c3630b7462b9533b8ab96d2fd79cd37ff21d8eb4a8',
+            merkle_root: '0x59f8fcb141d9e750d4e380c3630b7462b9533b8ab96d2fd79cd37ff21d8eb4a8',
         });
     });
 

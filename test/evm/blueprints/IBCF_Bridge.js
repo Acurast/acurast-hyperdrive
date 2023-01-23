@@ -18,7 +18,7 @@ contract("IBCF_Bridge", async ([_, primary]) => {
     validator = await IBCF_Validator.new(primary, 1, chain_id, 5, [primary], {
       from: primary,
     });
-    asset = await ERC20.new("TOKEN", "ABC", primary, { from: primary });
+    asset = await ERC20.new("TOKEN", "ABC", { from: primary });
     bridge = await IBCF_Bridge.new(validator.address, asset.address, {
       from: primary,
     });
