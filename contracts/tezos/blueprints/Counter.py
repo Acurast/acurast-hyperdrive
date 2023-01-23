@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.utils import EvmStorage
+from contracts.tezos.libs.utils import EvmStorage
 
 
 class Constant:

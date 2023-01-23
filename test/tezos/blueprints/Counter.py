@@ -2,7 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Eth_Validator import IBCF_Eth_Validator
 from contracts.tezos.blueprints.Counter import IBCF_Client
-from contracts.tezos.utils.utils import RLP
+from contracts.tezos.libs.utils import RLP
 
 # There values can be generated with "scripts/validate_eth_proof.js"
 ETH_BLOCK_NUMBER = 8338770

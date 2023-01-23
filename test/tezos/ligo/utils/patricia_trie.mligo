@@ -1,4 +1,4 @@
-#import "../../../../contracts/tezos/ligo/utils/patricia_trie.mligo" "PatriciaTrie"
+#import "../../../../contracts/tezos/ligo/libs/patricia_trie.mligo" "PatriciaTrie"
 
 let test_common_prefix =
     let input : PatriciaTrie.edge_label * PatriciaTrie.edge_label = ({ data = 15n; length = 4n; }, { data = 7n; length = 3n; }) in

@@ -1,7 +1,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, ENCODE, Error, EMPTY_TREE
-from contracts.tezos.utils.utils import Bytes
+from contracts.tezos.libs.utils import Bytes
 
 
 def update_administrator(payload):

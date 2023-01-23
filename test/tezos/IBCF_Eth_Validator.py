@@ -6,7 +6,7 @@ from contracts.tezos.IBCF_Eth_Validator import (
     RLP_utils,
     Lambdas,
 )
-from contracts.tezos.utils.utils import RLP, Nat, Bytes
+from contracts.tezos.libs.utils import RLP, Nat, Bytes
 
 BLOCK_HEADER_STATE_ROOT_INDEX = 3
 BLOCK_HEADER_LEVEL_INDEX = 8

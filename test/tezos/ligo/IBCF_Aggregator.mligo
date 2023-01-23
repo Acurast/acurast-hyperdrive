@@ -1,5 +1,5 @@
 #import "../../../contracts/tezos/ligo/IBCF_Aggregator.mligo" "IBCF_Aggregator"
-#import "../../../contracts/tezos/ligo/utils/patricia_trie.mligo" "PatriciaTrie"
+#import "../../../contracts/tezos/ligo/libs/patricia_trie.mligo" "PatriciaTrie"
 
 let test =
     let () = Test.reset_state 10n ([] : tez list) in

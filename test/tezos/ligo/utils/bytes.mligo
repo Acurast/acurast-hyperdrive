@@ -1,4 +1,4 @@
-#import "../../../../contracts/tezos/ligo/utils/bytes.mligo" "Utils_bytes"
+#import "../../../../contracts/tezos/ligo/libs/bytes.mligo" "Utils_bytes"
 
 let test_bytes_of_nat =
     let result = Test.run Utils_bytes.of_nat 32592575621351777380295131014550050576823494298654980010178247189670100796213387298934358015n in

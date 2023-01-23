@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.utils import Nat
+from contracts.tezos.libs.utils import Nat
 
 
 @sp.add_test(name="Util_nat")

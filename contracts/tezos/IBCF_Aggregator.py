@@ -5,7 +5,7 @@
 
 import smartpy as sp
 
-from contracts.tezos.utils.patricia_trie import (
+from contracts.tezos.libs.patricia_trie import (
     chop_first_bit,
     split_common_prefix,
     remove_prefix,
@@ -14,7 +14,7 @@ from contracts.tezos.utils.patricia_trie import (
     NULL_HASH,
     EMPTY_TREE,
 )
-from contracts.tezos.utils.utils import Nat
+from contracts.tezos.libs.utils import Nat
 
 
 def ENCODE(d):

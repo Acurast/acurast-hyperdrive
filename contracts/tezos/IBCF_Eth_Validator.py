@@ -7,7 +7,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type
-from contracts.tezos.utils.utils import Bytes, Nat, RLP
+from contracts.tezos.libs.utils import Bytes, Nat, RLP
 
 HASH_FUNCTION = sp.keccak
 EMPTY_TRIE_ROOT_HASH = sp.bytes(

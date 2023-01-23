@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.fa2_lib import (
+from contracts.tezos.libs.fa2_lib import (
     Fa2SingleAsset,
     BurnSingleAsset,
     MintSingleAsset,

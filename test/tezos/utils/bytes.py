@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.utils import Bytes
+from contracts.tezos.libs.utils import Bytes
 
 
 @sp.add_test(name="Util_bytes")

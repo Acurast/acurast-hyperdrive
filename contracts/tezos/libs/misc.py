@@ -1,6 +1,4 @@
 latest_var_id = 0
-
-
 def generate_var(postfix=None):
     """
     Generate a unique variable name

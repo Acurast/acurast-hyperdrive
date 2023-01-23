@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.misc import generate_var
+from contracts.tezos.libs.misc import generate_var
 
 HASH_FUNCTION = sp.keccak
 HASH_LENGTH = 256

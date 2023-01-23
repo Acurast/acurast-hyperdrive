@@ -4,7 +4,7 @@ from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
 from contracts.tezos.IBCF_Eth_Validator import IBCF_Eth_Validator
 from contracts.tezos.blueprints.IBCF_Bridge import IBCF_Bridge
 from contracts.tezos.blueprints.Asset import Asset
-from contracts.tezos.utils.utils import RLP
+from contracts.tezos.libs.utils import RLP
 
 # There values can be generated with "scripts/validate_eth_proof.js"
 ETH_BLOCK_NUMBER = 8006370

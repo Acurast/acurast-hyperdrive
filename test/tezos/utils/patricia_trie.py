@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.utils.patricia_trie import split_common_prefix, chop_first_bit
+from contracts.tezos.libs.patricia_trie import split_common_prefix, chop_first_bit
 
 
 @sp.add_test(name="Util_patricia_trie__split_common_prefix")

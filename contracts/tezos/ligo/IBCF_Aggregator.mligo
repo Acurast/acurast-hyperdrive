@@ -1,6 +1,6 @@
-#import "./utils/nat.mligo" "Nat"
-#import "./utils/bytes.mligo" "Bytes_utils"
-#import "./utils/patricia_trie.mligo" "PatriciaTrie"
+#import "./libs/nat.mligo" "Nat"
+#import "./libs/bytes.mligo" "Bytes_utils"
+#import "./libs/patricia_trie.mligo" "PatriciaTrie"
 
 type config = [@layout:comb] {
     // Multi-sig address allowed to manage the contract

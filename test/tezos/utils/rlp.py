@@ -1,7 +1,7 @@
 import smartpy as sp
 
 
-from contracts.tezos.utils.utils import RLP
+from contracts.tezos.libs.utils import RLP
 
 
 @sp.add_test(name="RLP_Encoder")
