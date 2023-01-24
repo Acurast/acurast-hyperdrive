@@ -99,7 +99,7 @@ deploy-tezos: setup_env
 
 export INFURA_URL ?= https://ropsten.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f
 deploy-evm: setup_env
-	@npm run deploy 2>&1 | tee __SNAPSHOTS__/evm-deployment.txt
+	@npm run deploy
 
 deploy: deploy-evm deploy-tezos
 
