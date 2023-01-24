@@ -139,7 +139,6 @@ class IBCF_Bridge(sp.Contract):
         mint_method = Inlined.getMintEntrypoint(self.data.asset_address)
 
         decode_nat_lambda = sp.compute(RLP.Lambda.decode_nat())
-        without_length_prefix = sp.compute(RLP.Lambda.without_length_prefix())
 
         # Verify that wrap was not yet processed, fail otherwise
         nonce = param.nonce

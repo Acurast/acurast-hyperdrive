@@ -2,4 +2,5 @@
 15742 __SNAPSHOTS__/compilation/tezos/blueprints/BridgedAsset/BridgedAsset/step_000_cont_0_contract.tz
 36951 __SNAPSHOTS__/compilation/tezos/ligo/IBCF_Aggregator_contract.tz
 41103 __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
-67293 __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Bridge/IBCF_Bridge/step_000_cont_0_contract.tz
+46478 __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Crowdfunding/IBCF_Crowdfunding/step_000_cont_0_contract.tz
+60033 __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Bridge/IBCF_Bridge/step_000_cont_0_contract.tz

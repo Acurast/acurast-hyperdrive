@@ -4,7 +4,7 @@ contract("IBCF_Crowdfunding", async ([_, primary]) => {
   let crowdfunding;
 
   before("Deploy contract", async () => {
-    crowdfunding = await IBCF_Crowdfunding.new({from: primary});
+    crowdfunding = await IBCF_Crowdfunding.new(primary, { from: primary });
   });
 
   it("Participate", async function () {

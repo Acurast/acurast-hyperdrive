@@ -117,7 +117,6 @@ fmt-check:
 
 fmt-fix:
 	python3 -m black .
-	yarn lint:fix
 	yarn prettier:fix
 
 start-sandbox:

@@ -1680,7 +1680,7 @@ view
                                 IF
                                   {}
                                   {
-                                    PUSH string "Invalid node"; 
+                                    PUSH string "INVALID_NODE"; 
                                     FAILWITH;   
                                   }; 
                                 DUP 17;     
@@ -1699,7 +1699,7 @@ view
                         IF
                           {}
                           {
-                            PUSH string "Invalid node length"; 
+                            PUSH string "INVALID_NODE_LENGTH"; 
                             FAILWITH;   
                           }; 
                         DUP 12;     
@@ -1829,7 +1829,7 @@ view
                                 IF
                                   {}
                                   {
-                                    PUSH string "Invalid node"; 
+                                    PUSH string "INVALID_NODE"; 
                                     FAILWITH;   
                                   }; 
                                 DUP 17;     

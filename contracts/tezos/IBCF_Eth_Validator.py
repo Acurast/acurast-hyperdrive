@@ -330,7 +330,7 @@ class Lambdas:
 
                     with sp.else_():
                         # Must be a branch node at this point
-                        sp.verify(nodes_length == 17, "Invalid node length")
+                        sp.verify(nodes_length == 17, "INVALID_NODE_LENGTH")
 
                         with sp.if_(proof_node_idx + 1 == proof_nodes_length):
                             # Proof ends in a branch node, exclusion proof in most cases
@@ -583,6 +583,6 @@ class IBCF_Eth_Validator(sp.Contract):
 
 
 def get_next_hash(node):
-    sp.verify(sp.len(node) == 32, "Invalid node")
+    sp.verify(sp.len(node) == 32, "INVALID_NODE")
 
     return node
