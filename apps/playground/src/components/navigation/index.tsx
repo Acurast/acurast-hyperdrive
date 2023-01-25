@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Toolbar, AppBar, Divider, Typography } from '@mui/material';
 
 import DarkLightSwitch from '../theme/DarkLightSwitch';
-import Button from '../base/Button';
+import RouterButton from './RouterButton';
 
 const NavigationBar = () => {
     return (
@@ -11,10 +11,14 @@ const NavigationBar = () => {
                 <Typography>
                     Inter Blockchain Communication Protocol <span style={{ color: 'red' }}>Examples</span>
                 </Typography>
-                <Box sx={{ flexGrow: 1 }} />
-                <Button>Bridge</Button>
+                <Box sx={{ flexGrow: 0.6 }} />
+                <RouterButton to="/bridge" variant="outlined">
+                    Bridge
+                </RouterButton>
                 <Divider flexItem orientation="vertical" sx={{ margin: 1 }} />
-                <Button>Swap</Button>
+                <RouterButton to="/crowdfund" variant="outlined">
+                    Crowdfund
+                </RouterButton>
                 <Box sx={{ flexGrow: 1 }} />
                 <Divider flexItem orientation="vertical" sx={{ margin: 1 }} />
                 <DarkLightSwitch />

@@ -7,9 +7,19 @@ export interface TezosValidatorInfo {
     latestSnapshot: Tezos.Contracts.Validator.Snapshot;
 }
 
-export interface TezosBridgeStorage {
+export interface TezosBridgeInfo {
     asset: AssetInfo;
     unwraps: Tezos.Contracts.Bridge.Unwrap[];
+}
+
+export interface TezosFundingEvent {
+    funder: string;
+    amount: number;
+}
+
+export interface TezosCrowdfundInfo {
+    tezos_funding: TezosFundingEvent[];
+    eth_funding: TezosFundingEvent[];
 }
 
 export interface TezosStateAggregatorInfo {
@@ -31,15 +41,27 @@ export interface EVMValidatorInfo {
     latestSnapshot: Ethereum.Contracts.Validator.Snapshot;
 }
 
+export interface FundEvent {
+    funder: string;
+    amount: BigNumber;
+    nonce: BigNumber;
+}
+
+export interface EVMCrowdfundInfo {
+    funding: FundEvent[];
+}
+
 export interface IAppContext {
     tezos: {
-        bridgeStorage?: TezosBridgeStorage;
+        bridgeInfo?: TezosBridgeInfo;
         validatorInfo?: TezosValidatorInfo;
         stateAggregatorInfo?: TezosStateAggregatorInfo;
+        crowdfundInfo?: TezosCrowdfundInfo;
     };
     ethereum: {
         bridgeInfo?: EVMBridgeInfo;
         validatorInfo?: EVMValidatorInfo;
+        crowdfundInfo?: EVMCrowdfundInfo;
     };
 }
 

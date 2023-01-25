@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, Grid, Typography, CardContent, DialogActions, TextField, Divider, CardActions } from '@mui/material';
 
-import abi from './abi';
+import abi from '../abi';
 import EthereumSDK, { Contract } from 'src/services/ethereum';
 import Button from 'src/components/base/Button';
-import Dialog from '../base/Dialog';
+import Dialog from '../../base/Dialog';
 import { AssetInfo } from 'src/context/AppContext';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';

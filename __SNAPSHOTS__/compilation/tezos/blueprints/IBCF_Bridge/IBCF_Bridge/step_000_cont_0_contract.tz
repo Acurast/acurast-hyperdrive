@@ -65,7 +65,7 @@ code
                     EDIV;       
                     IF_NONE
                       {
-                        PUSH int 78; 
+                        PUSH int 80; 
                         FAILWITH;   
                       }
                       {}; 
@@ -117,7 +117,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 66; 
+                            PUSH int 68; 
                             FAILWITH;   
                           }
                           {}; 
@@ -169,7 +169,7 @@ code
                     SLICE;      
                     IF_NONE
                       {
-                        PUSH int 66; 
+                        PUSH int 68; 
                         FAILWITH;   
                       }
                       {}; 
@@ -231,7 +231,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 66; 
+                                    PUSH int 68; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -277,7 +277,7 @@ code
                                             EDIV;       
                                             IF_NONE
                                               {
-                                                PUSH int 78; 
+                                                PUSH int 80; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -329,7 +329,7 @@ code
                                                 SLICE;      
                                                 IF_NONE
                                                   {
-                                                    PUSH int 66; 
+                                                    PUSH int 68; 
                                                     FAILWITH;   
                                                   }
                                                   {}; 
@@ -381,7 +381,7 @@ code
                                             SLICE;      
                                             IF_NONE
                                               {
-                                                PUSH int 66; 
+                                                PUSH int 68; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -419,7 +419,7 @@ code
                                     SLICE;      
                                     IF_NONE
                                       {
-                                        PUSH int 66; 
+                                        PUSH int 68; 
                                         FAILWITH;   
                                       }
                                       {}; 
@@ -499,7 +499,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 66; 
+                                PUSH int 68; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -545,7 +545,7 @@ code
                                         EDIV;       
                                         IF_NONE
                                           {
-                                            PUSH int 78; 
+                                            PUSH int 80; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -597,7 +597,7 @@ code
                                             SLICE;      
                                             IF_NONE
                                               {
-                                                PUSH int 66; 
+                                                PUSH int 68; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -649,7 +649,7 @@ code
                                         SLICE;      
                                         IF_NONE
                                           {
-                                            PUSH int 66; 
+                                            PUSH int 68; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -687,7 +687,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 66; 
+                                    PUSH int 68; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -767,7 +767,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 66; 
+                                PUSH int 68; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -813,7 +813,7 @@ code
                                         EDIV;       
                                         IF_NONE
                                           {
-                                            PUSH int 78; 
+                                            PUSH int 80; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -865,7 +865,7 @@ code
                                             SLICE;      
                                             IF_NONE
                                               {
-                                                PUSH int 66; 
+                                                PUSH int 68; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -917,7 +917,7 @@ code
                                         SLICE;      
                                         IF_NONE
                                           {
-                                            PUSH int 66; 
+                                            PUSH int 68; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -955,7 +955,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 66; 
+                                    PUSH int 68; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1072,7 +1072,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 124; 
+                            PUSH int 126; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1085,7 +1085,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 125; 
+                            PUSH int 127; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1105,7 +1105,7 @@ code
                             EDIV;       
                             IF_NONE
                               {
-                                PUSH int 26; 
+                                PUSH int 28; 
                                 FAILWITH;   
                               }
                               {
@@ -1146,7 +1146,7 @@ code
                         UNPACK bls12_381_fr; 
                         IF_NONE
                           {
-                            PUSH int 132; 
+                            PUSH int 134; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1154,7 +1154,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 131; 
+                            PUSH int 133; 
                             FAILWITH;   
                           }
                           {}; 
@@ -1202,7 +1202,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 124; 
+                                PUSH int 126; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1215,7 +1215,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 125; 
+                                PUSH int 127; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1235,7 +1235,7 @@ code
                                 EDIV;       
                                 IF_NONE
                                   {
-                                    PUSH int 26; 
+                                    PUSH int 28; 
                                     FAILWITH;   
                                   }
                                   {
@@ -1276,7 +1276,7 @@ code
                             UNPACK bls12_381_fr; 
                             IF_NONE
                               {
-                                PUSH int 132; 
+                                PUSH int 134; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1284,7 +1284,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 131; 
+                                PUSH int 133; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -1311,7 +1311,7 @@ code
                     SLICE;      
                     IF_NONE
                       {
-                        PUSH int 337; 
+                        PUSH int 339; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1370,7 +1370,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 354; 
+                                    PUSH int 356; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1384,7 +1384,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 357; 
+                                    PUSH int 359; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1404,7 +1404,7 @@ code
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 218; 
+                        PUSH int 220; 
                         FAILWITH;   
                       }
                       {}; 
@@ -1412,7 +1412,7 @@ code
                     SLICE;      
                     IF_NONE
                       {
-                        PUSH int 220; 
+                        PUSH int 222; 
                         FAILWITH;   
                       }
                       {}; 

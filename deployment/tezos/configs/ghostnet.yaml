@@ -79,5 +79,6 @@ actions:
         nonce: {}
         proof_validator: IBCF_Eth_Validator
         evm_address: evm_crowdfunding_address
+      recipient: admin_address
       tezos_funding: {}
       eth_funding: {}

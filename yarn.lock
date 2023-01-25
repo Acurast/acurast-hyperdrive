@@ -2957,9 +2957,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibcf/bridge-playground@workspace:apps/bridge-playground":
+"@ibcf/bridge-playground@workspace:apps/playground":
   version: 0.0.0-use.local
-  resolution: "@ibcf/bridge-playground@workspace:apps/bridge-playground"
+  resolution: "@ibcf/bridge-playground@workspace:apps/playground"
   dependencies:
     "@airgap/beacon-sdk": 3.3.0
     "@craco/craco": 6.4.5

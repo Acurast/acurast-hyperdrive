@@ -1,57 +1,59 @@
 import React from 'react';
-import { Card, Grid, Typography, CardContent, CardActions, Divider, TextField, DialogActions } from '@mui/material';
-import * as IbcfSdk from 'ibcf-sdk';
+import { Card, Grid, Typography, CardContent, CardActions, Divider, DialogActions } from '@mui/material';
 
-import abi from './abi';
-import EthereumSDK, { Contract } from 'src/services/ethereum';
+import TezosSdk from 'src/services/tezos';
 import Button from 'src/components/base/Button';
-import EthereumIcon from 'src/components/base/icons/ethereum';
+import TezosIcon from 'src/components/base/icons/tezos';
 import useAppContext from 'src/hooks/useAppContext';
-import WrapsTable from './Table';
 import Constants from 'src/constants';
-import Dialog from '../base/Dialog';
-import AssetCard from './AssetCard';
+import Dialog from '../../base/Dialog';
+import WrapsTable from './Table';
+import TextField from '../../base/TextField';
+import useWalletContext from 'src/hooks/useWalletContext';
 import Logger from 'src/services/logger';
-import ValidatorCard from './ValidatorCard';
+import ValidatorCard from '../ValidatorCard';
 
-const Ethereum = () => {
-    const { ethereum } = useAppContext();
-    const [operationHash, setOperationHash] = React.useState('');
-    const [error, setError] = React.useState<Error>();
-    const [wrapModalOpen, setWrapModalOpen] = React.useState(false);
-    const [destination, setDestination] = React.useState<string>();
-    const [amount, setAmount] = React.useState<string>();
+const TezosCrowdfunding = () => {
+    const { tezos } = useAppContext();
+    const { connectTezosWallet } = useWalletContext();
+    const [error, setError] = React.useState('');
     const [confirming, setConfirming] = React.useState(false);
+    const [proof, setProof] = React.useState<any>();
+    const [operationHash, setOperationHash] = React.useState('');
+    const [confirmPongModalOpen, setConfirmPongModalOpen] = React.useState(false);
 
-    const wrap = React.useCallback(async () => {
-        const contract = new Contract(Constants.evm_bridge, abi.bridge, EthereumSDK.getSigner());
-        if (!destination || destination.length < 32) {
-            return setError(new Error('Invalid destination!'));
-        }
-        if (!amount || amount == '0') {
-            return setError(new Error('Invalid amount!'));
-        }
-
+    const confirmFunding = React.useCallback(async () => {
         try {
-            const packed_destination = '0x' + IbcfSdk.Tezos.Utils.packAddress(destination);
-            const result = await contract.wrap(packed_destination, amount);
+            const crowdfunding = await TezosSdk.contract.at(Constants.tezos_crowdfunding);
+
+            const result = await crowdfunding.methods
+                .funding_from_eth(
+                    proof.account_proof_rlp,
+                    proof.amount_proof_rlp,
+                    proof.block_number,
+                    proof.funder_proof_rlp,
+                    proof.nonce,
+                )
+                .send();
+
             setConfirming(true);
             setOperationHash(result.hash);
-            await result.wait(1);
+            await result.confirmation(1);
         } catch (e: any) {
             Logger.error(e);
-            return setError(e);
+            return setError(e.message);
         } finally {
             setConfirming(false);
         }
-    }, [destination, amount]);
+    }, [proof]);
 
-    const handleDestination = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        setDestination(e.target.value);
-    }, []);
-
-    const handleAmount = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        setAmount(e.target.value);
+    const handleProof = React.useCallback((e: any) => {
+        try {
+            setProof(JSON.parse(e.target.value));
+        } catch (e) {
+            setProof(undefined);
+            // ignore
+        }
     }, []);
 
     return (
@@ -61,31 +63,36 @@ const Ethereum = () => {
                     <Grid container direction="row" justifyContent="space-between" alignItems="center">
                         <Grid item>
                             <Typography color="text.secondary" gutterBottom>
-                                Ethereum
+                                Tezos
                             </Typography>
                         </Grid>
                         <Grid item>
-                            <EthereumIcon />
+                            <Button fullWidth size="small" onClick={connectTezosWallet}>
+                                Connect
+                            </Button>
+                        </Grid>
+                        <Grid item>
+                            <TezosIcon />
                         </Grid>
                     </Grid>
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                     <ValidatorCard />
                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
-                    {ethereum.bridgeInfo ? <AssetCard asset={ethereum.bridgeInfo?.asset} /> : null}
-                    <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                     <Card variant="outlined">
                         <CardContent>
                             <Grid container direction="row" justifyContent="space-between" alignItems="center">
                                 <Grid item>
-                                    <Typography color="text.secondary">Bridge</Typography>
+                                    <Typography color="text.secondary" gutterBottom>
+                                        Crowdfunding
+                                    </Typography>
                                     <Typography variant="caption" fontSize={10}>
                                         <a
                                             target="_blank"
                                             style={{ color: 'white' }}
-                                            href={`${Constants.etherscan}/address/${Constants.evm_bridge}`}
+                                            href={`${Constants.tzkt}/${Constants.tezos_crowdfunding}`}
                                             rel="noreferrer"
                                         >
-                                            {Constants.evm_bridge}
+                                            {Constants.tezos_crowdfunding}
                                         </a>
                                     </Typography>
                                 </Grid>
@@ -98,27 +105,51 @@ const Ethereum = () => {
                                         spacing={2}
                                     >
                                         <Grid item>
-                                            <Button fullWidth size="small" onClick={() => setWrapModalOpen(true)}>
-                                                Wrap
+                                            <Button
+                                                fullWidth
+                                                size="small"
+                                                onClick={() => setConfirmPongModalOpen(true)}
+                                            >
+                                                Submit Proof
                                             </Button>
                                         </Grid>
                                     </Grid>
                                 </Grid>
                             </Grid>
+
                             <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                             <Card variant="outlined">
                                 <CardContent>
                                     <Grid container direction="row" justifyContent="space-between" alignItems="center">
                                         <Grid item>
                                             <Typography color="text.secondary" gutterBottom>
-                                                Wraps
+                                                Ethereum Funding
                                             </Typography>
                                         </Grid>
                                     </Grid>
                                     <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                                     <Grid container direction="row" justifyContent="center" alignItems="center">
                                         <Grid item>
-                                            <WrapsTable wraps={ethereum.bridgeInfo?.wraps || []} />
+                                            <WrapsTable fundings={tezos.crowdfundInfo?.eth_funding || []} />
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+
+                            <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+                            <Card variant="outlined">
+                                <CardContent>
+                                    <Grid container direction="row" justifyContent="space-between" alignItems="center">
+                                        <Grid item>
+                                            <Typography color="text.secondary" gutterBottom>
+                                                Tezos Funding
+                                            </Typography>
+                                        </Grid>
+                                    </Grid>
+                                    <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
+                                    <Grid container direction="row" justifyContent="center" alignItems="center">
+                                        <Grid item>
+                                            <WrapsTable fundings={tezos.crowdfundInfo?.tezos_funding || []} />
                                         </Grid>
                                     </Grid>
                                 </CardContent>
@@ -138,47 +169,38 @@ const Ethereum = () => {
             </Card>
 
             <Dialog
-                title="Wrap token"
-                open={wrapModalOpen}
+                title="Confirm funding (Insert proof below)"
+                open={confirmPongModalOpen}
                 onClose={() => {
-                    setWrapModalOpen(false);
-                    setDestination(undefined);
-                    setAmount(undefined);
+                    setConfirmPongModalOpen(false);
+                    setProof(undefined);
                 }}
                 actions={
                     <DialogActions>
-                        <Button fullWidth size="small" onClick={wrap}>
-                            Wrap
+                        <Button fullWidth size="small" onClick={confirmFunding}>
+                            Confirm Funding
                         </Button>
                     </DialogActions>
                 }
             >
-                <TextField
-                    error={!destination}
-                    placeholder="Destination (tz...)"
-                    value={destination || ''}
-                    onChange={handleDestination}
-                    fullWidth
-                    margin="dense"
-                />
-                <TextField value={amount || 0} placeholder="Amount" onChange={handleAmount} fullWidth margin="dense" />
+                <TextField error={!proof} onChange={handleProof} fullWidth rows={10} sx={{ height: 300 }} multiline />
             </Dialog>
 
-            <Dialog title="Error" open={!!error} onClose={() => setError(undefined)}>
-                {error?.message || ''}
+            <Dialog title="Error" open={!!error} onClose={() => setError('')}>
+                {error}
             </Dialog>
             <Dialog title="Operation Hash" open={!!operationHash} onClose={() => setOperationHash('')}>
                 <a
                     style={{ color: 'white' }}
                     target="_blank"
-                    href={`${Constants.etherscan}/tx/${operationHash}`}
+                    href={`${Constants.tzkt}/${operationHash}`}
                     rel="noreferrer"
                 >
-                    Etherscan
+                    TzKT
                 </a>
             </Dialog>
         </>
     );
 };
 
-export default Ethereum;
+export default TezosCrowdfunding;

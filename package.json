@@ -31,7 +31,7 @@
   },
   "workspaces": [
     "packages/**",
-    "apps/bridge-playground"
+    "apps/playground"
   ],
   "packageManager": "yarn@3.3.0"
 }

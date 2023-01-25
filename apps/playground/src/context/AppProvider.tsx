@@ -1,29 +1,29 @@
 import React from 'react';
 import WalletProvider from './WalletProvider';
 import AppContext, {
-    TezosBridgeStorage,
+    TezosBridgeInfo,
     EVMBridgeInfo,
     TezosValidatorInfo,
     TezosStateAggregatorInfo,
     EVMValidatorInfo,
+    EVMCrowdfundInfo,
+    TezosCrowdfundInfo,
 } from './AppContext';
 import Tezos from 'src/services/tezos';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';
-import { ContractAbstraction } from '@taquito/taquito';
+import { ContractAbstraction, MichelsonMap } from '@taquito/taquito';
 import * as IbcfSdk from 'ibcf-sdk';
 import EthereumEthers, { Contract } from 'src/services/ethereum';
 import WalletService from 'src/services/wallet';
+import BigNumber from 'bignumber.js';
 
 // Cached contracts
-let bridge_contract: ContractAbstraction<any> | undefined;
+let crowdfunding_contract: ContractAbstraction<any> | undefined;
 const validator_contract = new IbcfSdk.Tezos.Contracts.Validator.Contract(Tezos, Constants.tezos_validator);
 const state_contract = new IbcfSdk.Tezos.Contracts.StateAggregator.Contract(Tezos, Constants.tezos_state_aggregator);
 
-async function fetchTezosBridgeStorage(): Promise<TezosBridgeStorage> {
-    if (!bridge_contract) {
-        bridge_contract = await Tezos.contract.at(Constants.tezos_bridge);
-    }
+async function fetchTezosBridgeInfo(): Promise<TezosBridgeInfo> {
     const bridge = new IbcfSdk.Tezos.Contracts.Bridge.Contract(Tezos, Constants.tezos_bridge);
     const storage = await bridge.getStorage();
     const asset_address = storage.asset_address;
@@ -46,32 +46,39 @@ async function fetchTezosBridgeStorage(): Promise<TezosBridgeStorage> {
     };
 }
 
+async function fetchTezosCrowdfundInfo(): Promise<TezosCrowdfundInfo> {
+    if (!crowdfunding_contract) {
+        crowdfunding_contract = await Tezos.contract.at(Constants.tezos_crowdfunding);
+    }
+    const storage = await crowdfunding_contract.storage<any>();
+
+    const tezos_funding: MichelsonMap<string, BigNumber> = storage.tezos_funding;
+    const eth_funding: MichelsonMap<string, BigNumber> = storage.eth_funding;
+
+    const tezos = [];
+    for (const [funder, amount] of tezos_funding.entries()) {
+        tezos.push({
+            funder,
+            amount: amount.toNumber(),
+        });
+    }
+
+    const eth = [];
+    for (const [funder, amount] of eth_funding.entries()) {
+        eth.push({
+            funder,
+            amount: amount.toNumber(),
+        });
+    }
+
+    return {
+        tezos_funding: tezos,
+        eth_funding: eth,
+    };
+}
+
 async function fetchTezosValidatorInfo() {
     const latestSnapshot = await validator_contract.latestSnapshot();
-    // let ethereumBlockNumber = (await EthereumEthers.getBlockNumber()) - 1;
-    // const storage_root = (await validator_contract.storage<any>()).block_state_root as BigMapAbstraction;
-
-    // const values = await storage_root.getMultipleValues<MichelsonMap<string, string>>(
-    //     [...new Array(5)].map(() => ethereumBlockNumber--),
-    // );
-
-    const block_submissions: [string, string][] = [];
-    //for (const [key, value] of values.entries()) {
-    //    const submissions: Record<string, string[]> = {};
-    //    for (const [key, _value] of value?.entries() || []) {
-    //        if (submissions[_value]) {
-    //            submissions[_value].push(key);
-    //        } else {
-    //            submissions[_value] = [key];
-    //        }
-    //    }
-    //    if (Object.keys(submissions).length) {
-    //        block_submissions.push([
-    //            key as string,
-    //            Object.entries(submissions).reduce((p, c) => (!p || p[1].length < c[1].length ? c : p), ['', []])[0],
-    //        ]);
-    //    }
-    //}
     return {
         latestSnapshot,
     };
@@ -79,17 +86,6 @@ async function fetchTezosValidatorInfo() {
 
 async function fetchTezosStateAggregatorInfo(): Promise<TezosStateAggregatorInfo> {
     const storage = await state_contract.getStorage();
-
-    // const values = await stateAggregator.snapshot_level.getMultipleValues<{ root: string }>(
-    //     stateAggregator.merkle_history_indexes,
-    // );
-
-    // const blocks: [BigNumber, string][] = [];
-    // for (const [key, value] of values.entries()) {
-    //     if (value) {
-    //         blocks.push([key as BigNumber, value.root]);
-    //     }
-    // }
 
     return {
         snapshot_level: storage.snapshot_level,
@@ -138,6 +134,57 @@ async function fetchEvmBridgeInfo(): Promise<EVMBridgeInfo> {
     };
 }
 
+async function fetchEvmCrowdfundInfo(): Promise<EVMCrowdfundInfo> {
+    const contract = new Contract(
+        Constants.evm_crowdfunding,
+        [
+            {
+                anonymous: false,
+                inputs: [
+                    {
+                        indexed: false,
+                        internalType: 'address',
+                        name: 'funder',
+                        type: 'address',
+                    },
+                    {
+                        indexed: false,
+                        internalType: 'uint256',
+                        name: 'amount',
+                        type: 'uint256',
+                    },
+                    {
+                        indexed: false,
+                        internalType: 'uint256',
+                        name: 'nonce',
+                        type: 'uint256',
+                    },
+                ],
+                name: 'Funding',
+                type: 'event',
+            },
+        ],
+        EthereumEthers,
+    );
+    const funding = await contract
+        .queryFilter(contract.filters.Funding())
+        .then((events) =>
+            events.map((event) => ({
+                funder: event.args?.[0],
+                amount: BigNumber(event.args?.[1].toString()),
+                nonce: BigNumber(event.args?.[2].toString()),
+            })),
+        )
+        .catch((err) => {
+            console.log('Err:', err);
+            return [];
+        });
+
+    return {
+        funding,
+    };
+}
+
 async function fetchEvmValidatorInfo(): Promise<EVMValidatorInfo> {
     const validator = new IbcfSdk.Ethereum.Contracts.Validator.Contract(
         EthereumEthers.getSigner(),
@@ -154,8 +201,10 @@ async function fetchEvmValidatorInfo(): Promise<EVMValidatorInfo> {
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const isMounter = React.useRef(false);
     const [evmBridgeInfo, setEvmBridgeInfo] = React.useState<EVMBridgeInfo>();
+    const [evmCrowdfundInfo, setEvmCrowdfundInfo] = React.useState<EVMCrowdfundInfo>();
     const [evmValidatorInfo, setEvmValidatorInfo] = React.useState<EVMValidatorInfo>();
-    const [tezosBridgeStorage, setTezosBridgeStorage] = React.useState<TezosBridgeStorage>();
+    const [tezosBridgeInfo, setTezosBridgeInfo] = React.useState<TezosBridgeInfo>();
+    const [tezosCrowdfundInfo, setTezosCrowdfundInfo] = React.useState<TezosCrowdfundInfo>();
     const [tezosValidatorInfo, setTezosValidatorInfo] = React.useState<TezosValidatorInfo>();
     const [tezosStateAggregatorInfo, setTezosStateAggregatorInfo] = React.useState<TezosStateAggregatorInfo>();
 
@@ -168,6 +217,13 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 .then((info) => {
                     if (isMounter.current) {
                         setEvmBridgeInfo(info);
+                    }
+                })
+                .catch(Logger.debug);
+            fetchEvmCrowdfundInfo()
+                .then((info) => {
+                    if (isMounter.current) {
+                        setEvmCrowdfundInfo(info);
                     }
                 })
                 .catch(Logger.debug);
@@ -193,10 +249,17 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     }
                 })
                 .catch(Logger.debug);
-            fetchTezosBridgeStorage()
-                .then((storage) => {
+            fetchTezosBridgeInfo()
+                .then((info) => {
                     if (isMounter.current) {
-                        setTezosBridgeStorage(storage);
+                        setTezosBridgeInfo(info);
+                    }
+                })
+                .catch(Logger.debug);
+            fetchTezosCrowdfundInfo()
+                .then((info) => {
+                    if (isMounter.current) {
+                        setTezosCrowdfundInfo(info);
                     }
                 })
                 .catch(Logger.debug);
@@ -214,13 +277,15 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <AppContext.Provider
             value={{
                 tezos: {
-                    bridgeStorage: tezosBridgeStorage,
+                    bridgeInfo: tezosBridgeInfo,
                     validatorInfo: tezosValidatorInfo,
                     stateAggregatorInfo: tezosStateAggregatorInfo,
+                    crowdfundInfo: tezosCrowdfundInfo,
                 },
                 ethereum: {
                     bridgeInfo: evmBridgeInfo,
                     validatorInfo: evmValidatorInfo,
+                    crowdfundInfo: evmCrowdfundInfo,
                 },
             }}
         >

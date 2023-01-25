@@ -7,16 +7,21 @@ import {
     Box,
     Typography,
 } from '@mui/material';
-import { Tezos } from 'ibcf-sdk';
 
 import TableRow from 'src/components/base/TableRow';
-import Table from '../base/Table';
+import Table from '../../base/Table';
+import { FundEvent } from 'src/context/AppContext';
+import Button from 'src/components/base/Button';
 
-const TRow: React.FC<Tezos.Contracts.Bridge.Unwrap> = ({ destination, amount, nonce }) => {
+interface TRowProps extends FundEvent {
+    getProof: (nonce: number) => void;
+}
+
+const TRow: React.FC<TRowProps> = ({ funder, amount, nonce, getProof }) => {
     return (
         <TableRow>
             <TableCell component="th" scope="row">
-                <Typography variant="caption">{destination}</Typography>
+                <Typography variant="caption">{funder}</Typography>
             </TableCell>
             <TableCell
                 component="th"
@@ -31,14 +36,15 @@ const TRow: React.FC<Tezos.Contracts.Bridge.Unwrap> = ({ destination, amount, no
                 <Typography variant="caption">{amount.toString()}</Typography>
             </TableCell>
             <TableCell component="th" scope="row">
-                <Typography variant="caption">{nonce.toString()}</Typography>
+                <Button onClick={() => getProof(nonce.toNumber())}>{nonce.toString()}</Button>
             </TableCell>
         </TableRow>
     );
 };
 
 interface OwnProps {
-    unwraps: Tezos.Contracts.Bridge.Unwrap[];
+    funding: FundEvent[];
+    getProof: (nonce: number) => void;
 }
 
 const TableTemplate =
@@ -49,7 +55,7 @@ const TableTemplate =
                 header={
                     <MuiTableHead>
                         <MuiTableRow>
-                            <TableCell>Destination</TableCell>
+                            <TableCell>Funder</TableCell>
                             <TableCell>Amount</TableCell>
                             <TableCell>Nonce</TableCell>
                         </MuiTableRow>
@@ -59,8 +65,8 @@ const TableTemplate =
             />
         );
 
-const ValidatedBlocksTable: React.FC<OwnProps> = ({ unwraps }) => {
-    if (!unwraps.length) {
+const FundingTable: React.FC<OwnProps> = ({ funding, getProof }) => {
+    if (!funding.length) {
         return (
             <MuiTableRow>
                 <TableCell colSpan={6}>
@@ -76,11 +82,11 @@ const ValidatedBlocksTable: React.FC<OwnProps> = ({ unwraps }) => {
 
     return (
         <>
-            {unwraps.map((unwrap, key) => (
-                <TRow key={key} {...unwrap} />
+            {funding.map((fund, key) => (
+                <TRow key={key} getProof={getProof} {...fund} />
             ))}
         </>
     );
 };
 
-export default TableTemplate(ValidatedBlocksTable);
+export default TableTemplate(FundingTable);

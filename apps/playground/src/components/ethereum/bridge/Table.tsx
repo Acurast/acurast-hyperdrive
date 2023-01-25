@@ -10,7 +10,7 @@ import {
 import { Ethereum } from 'ibcf-sdk';
 
 import TableRow from 'src/components/base/TableRow';
-import Table from '../base/Table';
+import Table from '../../base/Table';
 
 const TRow: React.FC<Ethereum.Contracts.Bridge.Wrap> = ({ address, amount, nonce }) => {
     return (

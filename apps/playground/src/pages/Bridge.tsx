@@ -1,27 +1,28 @@
 import React from 'react';
-import { Container, Grid } from '@mui/material';
-import Tezos from 'src/components/tezos/Card';
-import Ethereum from 'src/components/ethereum/Card';
+import { Container, Grid, Typography } from '@mui/material';
+import TezosBridge from 'src/components/tezos/bridge';
+import EthereumBridge from 'src/components/ethereum/bridge';
 
-const Home: React.FC = () => {
+const Bridge: React.FC = () => {
     return (
         <Container>
+            <Typography variant="overline">Bridge</Typography>
             <Grid
                 container
                 direction="row"
                 justifyContent="center"
                 alignItems="flex-start"
                 spacing={1}
-                sx={{ marginTop: 10, marginBottom: 10 }}
+                sx={{ marginBottom: 10 }}
             >
                 <Grid item xs={6}>
-                    <Tezos />
+                    <TezosBridge />
                 </Grid>
                 <Grid item xs={6}>
-                    <Ethereum />
+                    <EthereumBridge />
                 </Grid>
             </Grid>
         </Container>
     );
 };
-export default Home;
+export default Bridge;

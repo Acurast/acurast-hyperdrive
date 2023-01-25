@@ -415,9 +415,54 @@ const erc20_abi = [
     },
 ];
 
+const crowdfunding_abi = [
+    {
+        inputs: [
+            {
+                internalType: 'address payable',
+                name: '_recipient',
+                type: 'address',
+            },
+        ],
+        stateMutability: 'nonpayable',
+        type: 'constructor',
+    },
+    {
+        anonymous: false,
+        inputs: [
+            {
+                indexed: false,
+                internalType: 'address',
+                name: 'funder',
+                type: 'address',
+            },
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'amount',
+                type: 'uint256',
+            },
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'nonce',
+                type: 'uint256',
+            },
+        ],
+        name: 'Funding',
+        type: 'event',
+    },
+    {
+        stateMutability: 'payable',
+        type: 'receive',
+        payable: true,
+    },
+];
+
 const ABI = {
-    bridge: ibfc_bridge_abi as any,
-    asset: erc20_abi as any,
+    bridge: ibfc_bridge_abi,
+    asset: erc20_abi,
+    crowdfunding: crowdfunding_abi,
 };
 
 export default ABI;
