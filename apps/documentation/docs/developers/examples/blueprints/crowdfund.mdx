@@ -1,0 +1,53 @@
+---
+title: Crowdfunding
+slug: /examples/crowdfunding
+---
+
+import ThemedImage from "@theme/ThemedImage";
+import useBaseUrl from "@docusaurus/useBaseUrl";
+
+[Demo Link](https://ibcf.dev.gke.papers.tech/Crowdfund)
+
+The Crowdfund blueprint serves as a base implementation for the following use cases:
+
+  - Participating in activities by paying with tokens of a different chain;
+
+**Contracts:**
+  - [Tezos - IBCF_Crowdfunding.py](https://github.com/airgap-it/ibcf/blob/main/contracts/tezos/blueprints/IBCF_Crowdfunding.py)
+  - [EVM - IBCF_Crowdfunding.sol](https://github.com/airgap-it/ibcf/blob/main/contracts/evm/blueprints/IBCF_Crowdfunding.sol)
+
+### Using the demo
+
+1. First you need to have some Ether on Goerli testnet. You can get some from a [faucet](https://goerli-faucet.pk910.de/);
+
+2. Once you have some Ether, you can call the EVM [Crowdfunding](https://goerli.etherscan.io/address/0x91fb7A14C4100a6d7eA391D5DB82a1E6adE6B471) contract as shown below:
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+    <video width="80%" loop controls autoPlay muted>
+        <source src={require('@site/static/guides/fund.mp4').default} type='video/webm' />
+    </video>
+</div>
+
+<div class="padding-vert--md"></div>
+
+3. Then you wait for the next Ethereum state to get transmitted to Tezos;
+
+<center>
+  <ThemedImage
+    width="520px"
+    sources={{
+      light: useBaseUrl("/guides/tezos_validator.png"),
+      dark: useBaseUrl("/guides/tezos_validator.png"),
+    }}
+  />
+</center>
+
+<div class="padding-vert--md"></div>
+
+4. To finalize, you just need to generate a proof for a snapshot and submit it on Tezos:
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+    <video width="80%" loop controls autoPlay muted>
+        <source src={require('@site/static/guides/confirm_fund.mp4').default} type='video/webm' />
+    </video>
+</div>

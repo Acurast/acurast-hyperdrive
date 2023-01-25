@@ -15,14 +15,14 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 # Inter Blockchain Communication Framework
 
-IBCF is a building block allowing for general bidirectional message passing between Tezos and Ethereum networks.
+IBCF is a building block allowing for general bidirectional message passing between Tezos and EVM networks.
 
 It allows smart contracts on a source chain to store ✉️ states that are verifiable on a target chain. It provides a generic way for contracts to communicate between chains by means of validating Merkle proofs about these states stored in the source chain.
 
 # How does it work?
 
-As an initial step, a trusted set of validators is responsible for relaying the state root of snapshots between chains.
-It means that for two chains (`A` and `B`), that chain `B` will know the state root of snapshots contained in chain `A`, and
+As an initial step, a trust anchor service is responsible for transmitting the Merkle root of snapshots between chains.
+It means that for two chains (`A` and `B`), that chain `B` will know the Merkle root of snapshots contained in chain `A`, and
 chain `A` will also know ones in `B`.
 
 <div class="padding-vert--md"></div>
@@ -39,7 +39,7 @@ chain `A` will also know ones in `B`.
 
 <div class="padding-vert--md"></div>
 
-The state roots transmitted in the step above allow smart contracts in a target chain to validate arbitrary states previously stored in a source chain by calling a validatior smart contract with a proof-of-inclusion for that given state.
+The Merkle roots transmitted in the step above allow smart contracts in a target chain to validate arbitrary states previously stored in a source chain by calling a validatior smart contract with a proof-of-inclusion for that given state.
 
 <div class="padding-vert--md"></div>
 
@@ -55,4 +55,4 @@ The state roots transmitted in the step above allow smart contracts in a target 
 
 <div class="padding-vert--md"></div>
 
-It enables interesting use cases for DApps. For example, intracting with a target chain by paying with the source chain token or verifying the onwership of NFT minted in a different chain.
+It enables interesting use cases for DApps. For example, intracting with a target chain by paying with the source chain token or verifying the onwership of an NFT minted in a different chain.

@@ -8,15 +8,19 @@ hide_title: true
 
 - [IBCF_Validator.sol](https://github.com/airgap-it/ibcf/blob/main/contracts/evm/IBCF_Validator.sol)
 
+## ABI
+
+- [IBCF_Validator.json](https://github.com/airgap-it/ibcf/blob/main/__SNAPSHOTS__/compilation/evm/IBCF_Validator.json)
+
 ## Methods
 
 ### `submit_state_root`
 
 **Signature:** `submit_state_root(uint snapshot_number, bytes32 state_root)`
 
-**Description:** Relayers call this method with the snapshot state roots of a Tezos chain.
+**Description:** Validators call this method with the snapshot state roots of a Tezos chain.
 
-**Requires permissions?** Yes, only `relayers` can call this method.
+**Requires permissions?** Yes, only `validators` can call this method.
 
 <div class="padding-vert--md"></div>
 

@@ -20,10 +20,10 @@ const ValidatorCard: React.FC = () => {
                                 <a
                                     target="_blank"
                                     style={{ color: 'white' }}
-                                    href={`${Constants.tzkt}/${Constants.evm_validator}`}
+                                    href={`${Constants.tzkt}/${Constants.tezos_validator}`}
                                     rel="noreferrer"
                                 >
-                                    {Constants.evm_validator}
+                                    {Constants.tezos_validator}
                                 </a>
                             </Typography>
                         </Grid>

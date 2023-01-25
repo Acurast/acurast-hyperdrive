@@ -23,16 +23,24 @@ const sidebars = {
         {
           type: "category",
           label: "Examples",
-          items: ["developers/examples/generating-proofs"],
+          items: [
+            "developers/examples/generating-proofs",
+            {
+              type: "category",
+              label: "Application Blueprints",
+              items: ["developers/examples/blueprints/crowdfund", "developers/examples/blueprints/bridge"],
+              collapsed: false,
+            }
+          ],
           collapsed: false,
         },
-        "developers/toolkits"
+        "developers/toolkits",
       ],
       collapsed: false,
     },
     {
       type: "category",
-      label: "State Relaying",
+      label: "Cross-chain state sharing",
       items: [
         "relay-contracts/overview",
         {
@@ -42,16 +50,13 @@ const sidebars = {
             "relay-contracts/tezos/state",
             "relay-contracts/tezos/validator",
           ],
-          collapsed: false,
         },
         {
           type: "category",
           label: "EVM Contracts",
           items: ["relay-contracts/evm/validator"],
-          collapsed: false,
         },
       ],
-      collapsed: false,
     },
     "deployments",
   ],

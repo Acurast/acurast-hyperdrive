@@ -116,9 +116,9 @@ make fmt-check
 make fmt-fix
 ```
 
-## Demo application
+## Demo applications
 
-- [Bridge](./apps/bridge-playground)
+- [Playground](./apps/playground)
 
 ## Packages
 

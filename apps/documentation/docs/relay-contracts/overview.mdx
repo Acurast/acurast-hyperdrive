@@ -1,15 +1,15 @@
 ---
 title: Overview
-slug: /relay-contracts
+slug: /trust-anchor
 hide_title: true
 ---
 
 import ThemedImage from "@theme/ThemedImage";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
-## Relaying Tezos to EVM
+## Tezos :arrow_right: EVM
 
-The relaying process from Tezos to EVM involves interacting with two contracts (a [State Aggregator](/relay-contracts/tezos/state) and a [Proof Validator](/relay-contracts/evm/validator)).
+Sharing the state from Tezos to EVM involves interacting with two contracts (a [State Aggregator](/relay-contracts/tezos/state) and a [Proof Validator](/relay-contracts/evm/validator)).
 
 <center>
   <ThemedImage
@@ -28,11 +28,20 @@ It produces a snapshot of a Merkle tree every `X` blocks, where the root node of
 
 The origin contract address is included on every added state to authenticate the proofs on the EVM chain.
 
-The root node hash (or **state root**) of every snapshot is then transmitted to an EVM contract (:cop: [**Proof Validator**](/relay-contracts/evm/validator)), which allows the contracts on the EVM environment to validate the proofs of :envelope: states added on Tezos at a given snapshot.
+The **Merkle root** of every snapshot is then transmitted to an EVM contract (:cop: [**Proof Validator**](/relay-contracts/evm/validator)), which allows the contracts on the EVM environment to validate the proofs of :envelope: states added on Tezos at a given snapshot.
 
-## Relaying EVM to Tezos
+This step can be done from any Tezos chain to any EVM chain.
 
-Relaying from an EVM chain to Tezos, requires the EVM chain to be [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) enabled and a Tezos (:cop: [**Proof Validator**](/relay-contracts/tezos/validator)) contract capable of validating `EIP-1186` storage proofs.
+- Tezos :arrow_right: Ethereum
+- Tezos :arrow_right: Polygon
+- Tezos :arrow_right: Binance Smart Chain
+- Tezos :arrow_right: Avalanche
+- Tezos :arrow_right: Moonbeam
+- Tezos :arrow_right: Astar
+
+## EVM :arrow_right: Tezos
+
+Sharing the state from an EVM chain to Tezos requires the EVM chain to be [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) enabled and a Tezos (:cop: [**Proof Validator**](/relay-contracts/tezos/validator)) contract capable of validating `EIP-1186` storage proofs.
 
 <center>
   <ThemedImage
@@ -46,10 +55,12 @@ Relaying from an EVM chain to Tezos, requires the EVM chain to be [EIP-1186](htt
 
 <div class="padding-vert--md"></div>
 
-The relayer first asks the Tezos (:cop: [**EIP-1186 Proof Validator**](/relay-contracts/tezos/validator)) which snapshot/block level it is expecting, then queries the state root of that level and sends it to the validator.
+The state transmitter first asks the Tezos (:cop: [**EIP-1186 Proof Validator**](/relay-contracts/tezos/validator)) which `snapshot/block_level` it is expecting, then queries the **Merkle root** of that `snapshot/block_level` and sends it to the validator.
 
 Applications can then leverage [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) for producing storage proofs of EVM contracts that get validated on Tezos.
 
-## Decentralization
-
-The relaying solution is not trustless. Applications building on top of it need to trust that the majority of the validators are not faulty.
+Supported chains:
+- Tezos :arrow_right: Ethereum
+- Tezos :arrow_right: Polygon
+- Tezos :arrow_right: Binance Smart Chain
+- Tezos :arrow_right: Avalanche
