@@ -166,7 +166,7 @@ sp.record(
         # First action will be 1
         action_counter  = 0,
         # The ghostnet validator
-        proof_validator = sp.address("KT1BoJd7Ry6uHD81p82EZUJSwfREpNESaeiG"),
+        proof_validator = sp.address("KT1QfWxeYitE4NXvC4caBJpwimzxZygqPJ9F"),
         # The address of the EVM contract deployed in the previous step
         evm_address     = sp.bytes("<evm_counter_address>"),
     ),
@@ -190,7 +190,7 @@ Now that both contracts got deployed, you can start transmitting actions from th
   import { TezosToolkit } from "@taquito/taquito";
 
   const TEZOS_RPC = "https://rpc.ghostnet.teztnets.xyz";
-  const TEZOS_VALIDATOR = "KT1BoJd7Ry6uHD81p82EZUJSwfREpNESaeiG";
+  const TEZOS_VALIDATOR = "KT1QfWxeYitE4NXvC4caBJpwimzxZygqPJ9F";
 
   const tezosSdk = new TezosToolkit(TEZOS_RPC);
   const validator = new Tezos.Contracts.Validator.Contract(

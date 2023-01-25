@@ -13,3 +13,21 @@ The bridge blueprint serves as a base implementation for the following use cases
 **Contracts:**
   - [Tezos - IBCF_Bridge.py](https://github.com/airgap-it/ibcf/blob/main/contracts/tezos/blueprints/IBCF_Bridge.py)
   - [EVM - IBCF_Bridge.sol](https://github.com/airgap-it/ibcf/blob/main/contracts/evm/blueprints/IBCF_Bridge.sol)
+
+### Using the demo
+
+1. First, you need to mint some tokens on Ethereum. The deployed asset is a custom ERC20 that allows anyone to mint.
+
+2. Once you have minted some tokens, you need to give an allowance to the bridge. The allowance is the amount you want to bridge to Tezos.
+
+3. You then need to submit the `wrap` operation. It will ask you for an amount and a destination Tezos address.
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+    <video width="80%" loop controls autoPlay muted>
+        <source src={require('@site/static/guides/bridge.mp4').default} type='video/webm' />
+    </video>
+</div>
+
+<div class="padding-vert--md"></div>
+
+4. You can also `unwrap` the tokens. It does the reverse operation, sending a given amount from Tezos to Ethereum.

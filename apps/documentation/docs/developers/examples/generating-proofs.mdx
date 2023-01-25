@@ -16,7 +16,7 @@ import { Tezos } from "ibcf-sdk";
 import { TezosToolkit } from "@taquito/taquito";
 
 const TEZOS_RPC = "https://rpc.ghostnet.teztnets.xyz";
-const TEZOS_STATE = "KT1PjTU47jtuDVMXeSEiYLtaFNeiEYGf6rbM";
+const TEZOS_STATE = "KT1B8F7BhA2EeGQvPFpaVStd99ZDSzwrAcBL";
 
 const tezosSdk = new TezosToolkit(TEZOS_RPC);
 const stateAggregator = new Tezos.Contracts.StateAggregator.Contract(
@@ -25,11 +25,11 @@ const stateAggregator = new Tezos.Contracts.StateAggregator.Contract(
 );
 
 // DApp address, the contract that inserts the state
-const STATE_ORIGIN = "tz1YGTtd1hqGYTYKtcWSXYKSgCj5hvjaTPVd";
+const STATE_ORIGIN = "KT1AyXoM57cyXv8yZLn4nBNzVSmCJKMtuEdf";
 // The key of the state you want to validate
-const STATE_KEY = "0x05";
+const STATE_KEY = "0x01";
 // Block level where the snapshot was taken
-const SNAPSHOT_LEVEL = 1850867;
+const SNAPSHOT_LEVEL = 1883726;
 
 stateAggregator
   .getProof(

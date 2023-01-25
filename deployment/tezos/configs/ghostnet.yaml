@@ -5,8 +5,8 @@ known_addresses:
   signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
   signer_2: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3
   signer_3: tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB
-  evm_bridge_address: "0xE0CcF3dB4316341bb3475726AE084Ca9e7961550"
-  evm_crowdfunding_address: "0x91fb7A14C4100a6d7eA391D5DB82a1E6adE6B471"
+  evm_bridge_address: "0x945BEeA0C9C8052764e8Ef54a571386Cd1027BF1"
+  evm_crowdfunding_address: "0x79a20860c063a70EB483f5b6fb70b9CaDb022729"
 actions:
   - kind: origination
     contract_kind: IBCF_Aggragator
@@ -34,7 +34,7 @@ actions:
         minimum_endorsements: 1
         history_length: 10
         snapshot_interval: 10
-      current_snapshot: 8338100
+      current_snapshot: 8375880
 
   # Blueprints
 
