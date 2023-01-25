@@ -77,11 +77,10 @@
          DIG 5 ;
          UNPAIR ;
          LAMBDA
-           (pair (pair (pair bytes
-                             (pair (pair nat nat) bytes)
-                             (map bytes (map int (pair (pair nat nat) bytes)))
-                             (map bytes bytes))
-                       bytes)
+           (pair (pair bytes
+                       (pair (pair nat nat) bytes)
+                       (map bytes (map int (pair (pair nat nat) bytes)))
+                       (map bytes bytes))
                  (pair bool
                        (pair address nat nat)
                        nat
@@ -101,8 +100,7 @@
                        (map bytes (map int (pair (pair nat nat) bytes)))
                        (map bytes bytes)))
            { UNPAIR ;
-             UNPAIR ;
-             DIG 2 ;
+             SWAP ;
              UNPAIR ;
              PUSH nat 0 ;
              DUP 3 ;
@@ -110,22 +108,15 @@
              COMPARE ;
              EQ ;
              IF { SWAP ; LEVEL ; UPDATE 3 ; DUP 3 ; UPDATE 8 } { SWAP } ;
-             DIG 3 ;
-             DUP 2 ;
-             GET 8 ;
-             CAR ;
-             COMPARE ;
-             NEQ ;
              LEVEL ;
-             DUP 3 ;
+             DUP 2 ;
              CAR ;
              GET 3 ;
-             DUP 4 ;
+             DUP 3 ;
              GET 3 ;
              ADD ;
              COMPARE ;
              LT ;
-             AND ;
              IF { SWAP ;
                   DROP ;
                   PUSH nat 1 ;
@@ -164,9 +155,7 @@
                   IF {} { PUSH string "CANNOT_SNAPSHOT" ; FAILWITH } ;
                   NIL operation } ;
              PAIR } ;
-         DUP 6 ;
-         DUP 6 ;
-         PAIR ;
+         DUP 5 ;
          APPLY ;
          DIG 4 ;
          DROP ;

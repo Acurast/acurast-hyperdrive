@@ -52,7 +52,7 @@ let finalize_snapshot (required, store : bool * storage) : return =
   else
     store
   in
-  if store.snapshot_start_level + store.config.snapshot_duration < Tezos.get_level() && store.merkle_tree.root <> PatriciaTrie.null_hash
+  if store.snapshot_start_level + store.config.snapshot_duration < Tezos.get_level()
   then
       // Finalize & Start snapshot
       let snapshot_counter = store.snapshot_counter + 1n in

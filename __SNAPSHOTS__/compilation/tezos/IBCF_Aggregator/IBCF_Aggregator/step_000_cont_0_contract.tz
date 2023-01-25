@@ -41,18 +41,6 @@ code
         LT;         
         IF
           {
-            PUSH bytes 0x; 
-            DUP 4;      
-            GET 3;      
-            GET 3;      
-            COMPARE;    
-            NEQ;        
-          }
-          {
-            PUSH bool False; 
-          }; 
-        IF
-          {
             DIG 2;      
             DUP;        
             GET 5;      
@@ -66,7 +54,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 327; 
+                PUSH int 324; 
                 FAILWITH;   
               }
               {}; 
@@ -517,7 +505,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 401; 
+                    PUSH int 398; 
                     FAILWITH;   
                   }
                   {}; 
@@ -531,7 +519,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 405; 
+                    PUSH int 402; 
                     FAILWITH;   
                   }
                   {}; 

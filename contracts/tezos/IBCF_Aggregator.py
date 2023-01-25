@@ -314,11 +314,8 @@ class IBCF_Aggregator(sp.Contract):
             self.data.merkle_tree = EMPTY_TREE
 
         with sp.if_(
-            (
-                self.data.snapshot_start_level + self.data.config.snapshot_duration
-                < sp.level
-            )
-            & (self.data.merkle_tree.root != NULL_HASH)
+            self.data.snapshot_start_level + self.data.config.snapshot_duration
+            < sp.level
         ):
             # Finalize snapshot
             self.data.snapshot_counter += 1
