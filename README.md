@@ -118,7 +118,7 @@ make fmt-fix
 
 ## Demo applications
 
-- [Playground](./apps/playground)
+- [Bridge & Crowdfund](./apps/playground)
 
 ## Packages
 
