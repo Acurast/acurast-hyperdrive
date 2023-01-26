@@ -3,11 +3,40 @@ title: Generating Proofs
 slug: /examples/generate-proofs
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import { RunnableCode } from "@site/src/components/RunnableCode/RunnableCode";
 
 ## Generate proof-of-inclusion (Tezos :arrow_right: EVM)
 
 The example below calls the state aggregator contract on the Tezos blockchain, which generates a Merkle proof for a given state inserted by a given origin.
+
+Install the SDK's:
+
+<Tabs
+groupId="packet-manager"
+defaultValue="npm"
+values={[
+{ label: "NPM", value: "npm" },
+{ label: "Yarn", value: "yarn" },
+]}
+>
+
+<TabItem value="npm">
+
+```bash
+npm install --save ibcf-sdk @taquito/taquito
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn add ibcf-sdk @taquito/taquito
+```
+
+</TabItem>
+</Tabs>
 
 <RunnableCode>
 
@@ -47,6 +76,33 @@ stateAggregator
 The example below uses [eth_getProof](https://eips.ethereum.org/EIPS/eip-1186) to extract a storage proof of an EVM smart contract.
 
 Both the storage slot and proof are [RLP](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp) encoded.
+
+Install the SDK's:
+
+<Tabs
+groupId="packet-manager"
+defaultValue="npm"
+values={[
+{ label: "NPM", value: "npm" },
+{ label: "Yarn", value: "yarn" },
+]}
+>
+
+<TabItem value="npm">
+
+```bash
+npm install --save ibcf-sdk ethers
+```
+
+</TabItem>
+<TabItem value="yarn">
+
+```bash
+yarn add ibcf-sdk ethers
+```
+
+</TabItem>
+</Tabs>
 
 <RunnableCode>
 

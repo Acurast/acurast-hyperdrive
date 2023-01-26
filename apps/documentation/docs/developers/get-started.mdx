@@ -3,6 +3,8 @@ title: Getting Started
 slug: /get-started
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import { RunnableCode } from "@site/src/components/RunnableCode/RunnableCode";
 
 The example below explains how a smart contract in an EVM chain with [EIP-1186](https://eips.ethereum.org/EIPS/eip-1186) can communicate with Tezos contracts.
@@ -179,9 +181,36 @@ sp.record(
 
 Now that both contracts got deployed, you can start transmitting actions from the EVM chain to Tezos.
 
-- For that, you first need to create an action on the EVM contract by calling the `increment()` function;
+- Install the SDK's:
 
-- Then you will need to wait for a snapshot with a `block_number` greater or equal to the `block_number` of the `increment()` transaction. You can do that by querying the latest snapshot as shown in the example below.
+    <Tabs
+    groupId="packet-manager"
+    defaultValue="npm"
+    values={[
+    { label: "NPM", value: "npm" },
+    { label: "Yarn", value: "yarn" },
+    ]}
+    >
+
+    <TabItem value="npm">
+
+    ```bash
+    npm install --save ibcf-sdk @taquito/taquito
+    ```
+
+    </TabItem>
+    <TabItem value="yarn">
+
+    ```bash
+    yarn add ibcf-sdk @taquito/taquito
+    ```
+
+    </TabItem>
+    </Tabs>
+
+- First, you need to create an action on the EVM contract by calling the `increment()` function;
+
+- Then wait for a snapshot with a `block_number` greater or equal to the `block_number` of the `increment()` transaction. You can do that by querying the latest snapshot as shown in the example below.
 
    <RunnableCode>
 
