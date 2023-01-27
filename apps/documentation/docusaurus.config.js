@@ -5,12 +5,12 @@ const path = require("path");
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
-const organizationName = "airgap-it";
-const projectName = "ibcf";
+const organizationName = "acurast";
+const projectName = "acurast-hyperdrive";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "IBCF Documentation",
+  title: "Acurast Hyperdrive Documentation",
   tagline: "Inter Blockchain Communication Framework",
   url: "https://github.com",
   baseUrl: process.env.NODE_ENV === "development" ? "/" : `/${projectName}/`,
@@ -61,7 +61,7 @@ const config = {
             position: "right",
           },
           {
-            href: "https://github.com/airgap-it/ibcf",
+            href: `https://github.com/${organizationName}/${projectName}`,
             label: "GitHub",
             position: "right",
           },

@@ -12,7 +12,7 @@ yarn workspace ibcf-sdk run generate:doc
 
 # Deploy
 rm -rf /tmp/docs
-git clone --depth 1 --branch gh-pages git@github.com:airgap-it/ibcf.git "/tmp/docs"
+git clone --depth 1 --branch gh-pages git@github.com:acurast/acurast-hyperdrive.git "/tmp/docs"
 git -C /tmp/docs rm -rf .
 cp -r apps/documentation/build/* /tmp/docs
 cp -r packages/ibcf-sdk/api_documentation /tmp/docs/api

@@ -1,10 +1,10 @@
-# Inter Blockchain Communication Framework
+# Acurast Hyperdrive
 
-IBCF is a building block allowing for general bidirectional message passing between Tezos and Ethereum networks.
+Acurast Hyperdrive is a building block allowing for general bidirectional message passing between Tezos and Ethereum networks.
 
 It allows smart contracts on a source chain to store ✉️ states that are verifiable on a target chain. It provides a generic way for contracts to communicate between chains by means of validating Merkle proofs about these states stored in the source chain.
 
-# [Protocol documentation](https://airgap-it.github.io/ibcf)
+# [Protocol documentation](https://acurast.github.io/acurast-hyperdrive)
 
 ## Dependencies
 
