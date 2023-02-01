@@ -66,15 +66,14 @@ contract IBCF_Client {
 
 The contract on Tezos will be capable of receiving and validating storage proofs from the EVM contract deployed above. For this to be possible, the EVM contract deployed above needs to be stored and used in the proof validation.
 
-[Deploy with SmartPy IDE](https://smartpy.io/ide?cid=Qmeq7m4FjtRhDgaLDqFvKUQqfPvpKuR9a5tDRS1VqdC36y&k=6959ae30c72fd2eff48d) (Use Ghostnet)
+[Deploy with SmartPy IDE](https://smartpy.io/ide?cid=QmaEB9fGwMfY9ksLtpuWEAPXkSDzA9NttNqQGN21JXoF6r&k=40a7361fcc5f545a1234) (Use Ghostnet)
 
 ```python title="client.py"
 import smartpy as sp
 
 Utils = sp.io.import_script_from_url(
-    "https://raw.githubusercontent.com/airgap-it/ibcf/main/contracts/tezos/utils/utils.py"
+    "https://raw.githubusercontent.com/Acurast/acurast-hyperdrive/main/contracts/tezos/libs/utils.py"
 )
-
 
 class Constant:
     # Memory index of `mapping(uint => string) action_registry`

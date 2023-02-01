@@ -40,7 +40,7 @@ const config = {
           routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl:
-            "https://github.com/airgap-it/ibcf/tree/main/apps/documentation",
+            "https://github.com/Acurast/acurast-hyperdrive/tree/main/apps/documentation",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
