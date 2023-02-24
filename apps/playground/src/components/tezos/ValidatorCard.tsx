@@ -5,7 +5,7 @@ import useAppContext from 'src/hooks/useAppContext';
 import Constants from 'src/constants';
 
 const ValidatorCard: React.FC = () => {
-    const { tezos } = useAppContext();
+    const { tezos, network } = useAppContext();
 
     return (
         <>
@@ -20,10 +20,10 @@ const ValidatorCard: React.FC = () => {
                                 <a
                                     target="_blank"
                                     style={{ color: 'white' }}
-                                    href={`${Constants.tzkt}/${Constants.tezos_validator}`}
+                                    href={`${Constants[network].tzkt}/${Constants[network].tezos_validator}`}
                                     rel="noreferrer"
                                 >
-                                    {Constants.tezos_validator}
+                                    {Constants[network].tezos_validator}
                                 </a>
                             </Typography>
                         </Grid>

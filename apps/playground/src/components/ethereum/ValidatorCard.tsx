@@ -5,7 +5,7 @@ import useAppContext from 'src/hooks/useAppContext';
 import Constants from 'src/constants';
 
 const ValidatorCard: React.FC = () => {
-    const { ethereum } = useAppContext();
+    const { ethereum, network } = useAppContext();
 
     return (
         <>
@@ -20,10 +20,10 @@ const ValidatorCard: React.FC = () => {
                                 <a
                                     target="_blank"
                                     style={{ color: 'white' }}
-                                    href={`${Constants.etherscan}/address/${Constants.evm_validator}`}
+                                    href={`${Constants[network].etherscan}/address/${Constants[network].evm_validator}`}
                                     rel="noreferrer"
                                 >
-                                    {Constants.evm_validator}
+                                    {Constants[network].evm_validator}
                                 </a>
                             </Typography>
                         </Grid>

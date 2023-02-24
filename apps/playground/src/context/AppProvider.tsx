@@ -8,23 +8,23 @@ import AppContext, {
     EVMValidatorInfo,
     EVMCrowdfundInfo,
     TezosCrowdfundInfo,
+    Network,
 } from './AppContext';
 import Tezos from 'src/services/tezos';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';
-import { ContractAbstraction, MichelsonMap } from '@taquito/taquito';
+import { MichelsonMap } from '@taquito/taquito';
 import * as IbcfSdk from 'ibcf-sdk';
 import EthereumEthers, { Contract } from 'src/services/ethereum';
 import WalletService from 'src/services/wallet';
 import BigNumber from 'bignumber.js';
 
 // Cached contracts
-let crowdfunding_contract: ContractAbstraction<any> | undefined;
-const validator_contract = new IbcfSdk.Tezos.Contracts.Validator.Contract(Tezos, Constants.tezos_validator);
-const state_contract = new IbcfSdk.Tezos.Contracts.StateAggregator.Contract(Tezos, Constants.tezos_state_aggregator);
+const validator_contract = (address: string) => new IbcfSdk.Tezos.Contracts.Validator.Contract(Tezos, address);
+const state_contract = (address: string) => new IbcfSdk.Tezos.Contracts.StateAggregator.Contract(Tezos, address);
 
-async function fetchTezosBridgeInfo(): Promise<TezosBridgeInfo> {
-    const bridge = new IbcfSdk.Tezos.Contracts.Bridge.Contract(Tezos, Constants.tezos_bridge);
+async function fetchTezosBridgeInfo(network: Network): Promise<TezosBridgeInfo> {
+    const bridge = new IbcfSdk.Tezos.Contracts.Bridge.Contract(Tezos, Constants[network].tezos_bridge);
     const storage = await bridge.getStorage();
     const asset_address = storage.asset_address;
     const asset_contract = await Tezos.contract.at(asset_address);
@@ -46,10 +46,8 @@ async function fetchTezosBridgeInfo(): Promise<TezosBridgeInfo> {
     };
 }
 
-async function fetchTezosCrowdfundInfo(): Promise<TezosCrowdfundInfo> {
-    if (!crowdfunding_contract) {
-        crowdfunding_contract = await Tezos.contract.at(Constants.tezos_crowdfunding);
-    }
+async function fetchTezosCrowdfundInfo(network: Network): Promise<TezosCrowdfundInfo> {
+    const crowdfunding_contract = await Tezos.contract.at(Constants[network].tezos_crowdfunding);
     const storage = await crowdfunding_contract.storage<any>();
 
     const tezos_funding: MichelsonMap<string, BigNumber> = storage.tezos_funding;
@@ -77,15 +75,15 @@ async function fetchTezosCrowdfundInfo(): Promise<TezosCrowdfundInfo> {
     };
 }
 
-async function fetchTezosValidatorInfo() {
-    const latestSnapshot = await validator_contract.latestSnapshot();
+async function fetchTezosValidatorInfo(network: Network) {
+    const latestSnapshot = await validator_contract(Constants[network].tezos_validator).latestSnapshot();
     return {
         latestSnapshot,
     };
 }
 
-async function fetchTezosStateAggregatorInfo(): Promise<TezosStateAggregatorInfo> {
-    const storage = await state_contract.getStorage();
+async function fetchTezosStateAggregatorInfo(network: Network): Promise<TezosStateAggregatorInfo> {
+    const storage = await state_contract(Constants[network].tezos_state_aggregator).getStorage();
 
     return {
         snapshot_level: storage.snapshot_level,
@@ -93,8 +91,11 @@ async function fetchTezosStateAggregatorInfo(): Promise<TezosStateAggregatorInfo
     };
 }
 
-async function fetchEvmBridgeInfo(): Promise<EVMBridgeInfo> {
-    const bridge = new IbcfSdk.Ethereum.Contracts.Bridge.Contract(EthereumEthers.getSigner(), Constants.evm_bridge);
+async function fetchEvmBridgeInfo(network: Network): Promise<EVMBridgeInfo> {
+    const bridge = new IbcfSdk.Ethereum.Contracts.Bridge.Contract(
+        EthereumEthers.getSigner(),
+        Constants[network].evm_bridge,
+    );
     const assetAddress = await bridge.getAssetAddress();
     const contract = new Contract(
         assetAddress,
@@ -134,9 +135,9 @@ async function fetchEvmBridgeInfo(): Promise<EVMBridgeInfo> {
     };
 }
 
-async function fetchEvmCrowdfundInfo(): Promise<EVMCrowdfundInfo> {
+async function fetchEvmCrowdfundInfo(network: Network): Promise<EVMCrowdfundInfo> {
     const contract = new Contract(
-        Constants.evm_crowdfunding,
+        Constants[network].evm_crowdfunding,
         [
             {
                 anonymous: false,
@@ -166,8 +167,10 @@ async function fetchEvmCrowdfundInfo(): Promise<EVMCrowdfundInfo> {
         ],
         EthereumEthers,
     );
+
+    const block = await EthereumEthers.getBlockNumber();
     const funding = await contract
-        .queryFilter(contract.filters.Funding())
+        .queryFilter(contract.filters.Funding(), block - 1000, block)
         .then((events) =>
             events.map((event) => ({
                 funder: event.args?.[0],
@@ -185,10 +188,10 @@ async function fetchEvmCrowdfundInfo(): Promise<EVMCrowdfundInfo> {
     };
 }
 
-async function fetchEvmValidatorInfo(): Promise<EVMValidatorInfo> {
+async function fetchEvmValidatorInfo(network: Network): Promise<EVMValidatorInfo> {
     const validator = new IbcfSdk.Ethereum.Contracts.Validator.Contract(
         EthereumEthers.getSigner(),
-        Constants.evm_validator,
+        Constants[network].evm_validator,
     );
 
     const latestSnapshot = await validator.latestSnapshot();
@@ -200,6 +203,7 @@ async function fetchEvmValidatorInfo(): Promise<EVMValidatorInfo> {
 
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const isMounter = React.useRef(false);
+    const [network, setNetwork] = React.useState(Network.Ethereum);
     const [evmBridgeInfo, setEvmBridgeInfo] = React.useState<EVMBridgeInfo>();
     const [evmCrowdfundInfo, setEvmCrowdfundInfo] = React.useState<EVMCrowdfundInfo>();
     const [evmValidatorInfo, setEvmValidatorInfo] = React.useState<EVMValidatorInfo>();
@@ -213,21 +217,21 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         const fetch = () => {
             // Ethereum
-            fetchEvmBridgeInfo()
+            fetchEvmBridgeInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setEvmBridgeInfo(info);
                     }
                 })
                 .catch(Logger.debug);
-            fetchEvmCrowdfundInfo()
+            fetchEvmCrowdfundInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setEvmCrowdfundInfo(info);
                     }
                 })
                 .catch(Logger.debug);
-            fetchEvmValidatorInfo()
+            fetchEvmValidatorInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setEvmValidatorInfo(info);
@@ -235,28 +239,28 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 })
                 .catch(Logger.debug);
             // Tezos
-            fetchTezosStateAggregatorInfo()
+            fetchTezosStateAggregatorInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setTezosStateAggregatorInfo(info);
                     }
                 })
                 .catch(Logger.debug);
-            fetchTezosValidatorInfo()
+            fetchTezosValidatorInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setTezosValidatorInfo(info);
                     }
                 })
                 .catch(Logger.debug);
-            fetchTezosBridgeInfo()
+            fetchTezosBridgeInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setTezosBridgeInfo(info);
                     }
                 })
                 .catch(Logger.debug);
-            fetchTezosCrowdfundInfo()
+            fetchTezosCrowdfundInfo(network)
                 .then((info) => {
                     if (isMounter.current) {
                         setTezosCrowdfundInfo(info);
@@ -266,16 +270,26 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         };
         fetch(); // First fetch
 
-        const cron = setInterval(fetch, 5000 /* 5 seconds */);
+        const cron = setInterval(fetch, 10000 /* 5 seconds */);
         return () => {
             isMounter.current = false;
             clearInterval(cron);
         };
-    }, []);
+    }, [network]);
 
     return (
         <AppContext.Provider
             value={{
+                network,
+                updateNetwork: (network: Network) => {
+                    EthereumEthers.network.chainId = Number(Constants[network].ethChainId);
+                    (window as any).ethereum
+                        .request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: Constants[network].ethChainId }],
+                        })
+                        .then(() => setNetwork(network));
+                },
                 tezos: {
                     bridgeInfo: tezosBridgeInfo,
                     validatorInfo: tezosValidatorInfo,

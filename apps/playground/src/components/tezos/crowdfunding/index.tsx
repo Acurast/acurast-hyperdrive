@@ -14,7 +14,7 @@ import Logger from 'src/services/logger';
 import ValidatorCard from '../ValidatorCard';
 
 const TezosCrowdfunding = () => {
-    const { tezos } = useAppContext();
+    const { tezos, network } = useAppContext();
     const { connectTezosWallet } = useWalletContext();
     const [error, setError] = React.useState('');
     const [confirming, setConfirming] = React.useState(false);
@@ -24,7 +24,7 @@ const TezosCrowdfunding = () => {
 
     const confirmFunding = React.useCallback(async () => {
         try {
-            const crowdfunding = await TezosSdk.contract.at(Constants.tezos_crowdfunding);
+            const crowdfunding = await TezosSdk.contract.at(Constants[network].tezos_crowdfunding);
 
             const result = await crowdfunding.methods
                 .funding_from_eth(
@@ -89,10 +89,10 @@ const TezosCrowdfunding = () => {
                                         <a
                                             target="_blank"
                                             style={{ color: 'white' }}
-                                            href={`${Constants.tzkt}/${Constants.tezos_crowdfunding}`}
+                                            href={`${Constants[network].tzkt}/${Constants[network].tezos_crowdfunding}`}
                                             rel="noreferrer"
                                         >
-                                            {Constants.tezos_crowdfunding}
+                                            {Constants[network].tezos_crowdfunding}
                                         </a>
                                     </Typography>
                                 </Grid>
@@ -193,7 +193,7 @@ const TezosCrowdfunding = () => {
                 <a
                     style={{ color: 'white' }}
                     target="_blank"
-                    href={`${Constants.tzkt}/${operationHash}`}
+                    href={`${Constants[network].tzkt}/${operationHash}`}
                     rel="noreferrer"
                 >
                     TzKT

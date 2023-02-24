@@ -29,7 +29,7 @@ module.exports = async function (deployer, _network, _accounts) {
     `IBCF_Bridge: ${bridge.address}\n` +
     `IBCF_Crowdfunding: ${crowdfunding.address}`;
 
-  fs.writeFileSync("__SNAPSHOTS__/evm-deployment.txt", output, {
+  fs.writeFileSync(`__SNAPSHOTS__/evm-${network}-deployment.txt`, output, {
     encoding: "utf-8",
   });
 };

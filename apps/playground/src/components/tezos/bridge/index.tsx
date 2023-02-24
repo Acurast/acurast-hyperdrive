@@ -15,7 +15,7 @@ import Logger from 'src/services/logger';
 import ValidatorCard from '../ValidatorCard';
 
 const TezosBridge = () => {
-    const { tezos } = useAppContext();
+    const { tezos, network } = useAppContext();
     const { connectTezosWallet, pkh } = useWalletContext();
     const [error, setError] = React.useState('');
     const [operationHash, setOperationHash] = React.useState('');
@@ -33,7 +33,7 @@ const TezosBridge = () => {
         }
 
         try {
-            const bridge = new IbcfSdk.Tezos.Contracts.Bridge.Contract(TezosSdk, Constants.tezos_bridge);
+            const bridge = new IbcfSdk.Tezos.Contracts.Bridge.Contract(TezosSdk, Constants[network].tezos_bridge);
             const storage = await bridge.getStorage();
             const asset = await TezosSdk.contract.at(storage.asset_address);
 
@@ -41,7 +41,7 @@ const TezosBridge = () => {
                 {
                     add_operator: {
                         owner: pkh,
-                        operator: Constants.tezos_bridge,
+                        operator: Constants[network].tezos_bridge,
                         token_id: 0,
                     },
                 },
@@ -50,7 +50,7 @@ const TezosBridge = () => {
                 {
                     remove_operator: {
                         owner: pkh,
-                        operator: Constants.tezos_bridge,
+                        operator: Constants[network].tezos_bridge,
                         token_id: 0,
                     },
                 },
@@ -122,10 +122,10 @@ const TezosBridge = () => {
                                         <a
                                             target="_blank"
                                             style={{ color: 'white' }}
-                                            href={`${Constants.tzkt}/${Constants.tezos_bridge}`}
+                                            href={`${Constants[network].tzkt}/${Constants[network].tezos_bridge}`}
                                             rel="noreferrer"
                                         >
-                                            {Constants.tezos_bridge}
+                                            {Constants[network].tezos_bridge}
                                         </a>
                                     </Typography>
                                 </Grid>
@@ -211,7 +211,7 @@ const TezosBridge = () => {
                 <a
                     style={{ color: 'white' }}
                     target="_blank"
-                    href={`${Constants.tzkt}/${operationHash}`}
+                    href={`${Constants[network].tzkt}/${operationHash}`}
                     rel="noreferrer"
                 >
                     TzKT

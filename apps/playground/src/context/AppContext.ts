@@ -3,6 +3,11 @@ import type { BigNumber } from 'bignumber.js';
 import { BigMapAbstraction } from '@taquito/taquito';
 import { Ethereum, Tezos } from 'ibcf-sdk';
 
+export enum Network {
+    Ethereum = 'ethereum-goerli',
+    Polygon = 'polygon-mumbai',
+}
+
 export interface TezosValidatorInfo {
     latestSnapshot: Tezos.Contracts.Validator.Snapshot;
 }
@@ -52,6 +57,8 @@ export interface EVMCrowdfundInfo {
 }
 
 export interface IAppContext {
+    network: Network;
+    updateNetwork: (network: Network) => void;
     tezos: {
         bridgeInfo?: TezosBridgeInfo;
         validatorInfo?: TezosValidatorInfo;
@@ -66,6 +73,9 @@ export interface IAppContext {
 }
 
 const contextStub = {
+    network: Network.Ethereum,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    updateNetwork: () => {},
     tezos: {},
     ethereum: {},
 };

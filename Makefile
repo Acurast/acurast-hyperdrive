@@ -50,6 +50,10 @@ compile-evm: setup_env clean-evm-compilations
 
 compile: compile-tezos compile-evm
 	@echo "Compiled all contracts."
+
+build-playground: install-npm-packages
+	@yarn build
+
 ##
 ## - Compilations
 ##
@@ -93,13 +97,17 @@ test-sdk: install-npm-packages
 ## + Deployment
 ##
 
-export CONFIG_PATH ?= deployment/tezos/configs/ghostnet.yaml
+export CONFIG_PATH ?= deployment/tezos/configs/ghostnet-goerli.yaml
 deploy-tezos: setup_env
+	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
+
+export CONFIG_PATH = deployment/tezos/configs/ghostnet-mumbai.yaml
+deploy-tezos-mumbai: setup_env
 	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
 
 export INFURA_URL ?= https://ropsten.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f
 deploy-evm: setup_env
-	@npm run deploy
+	@npm run deploy:goerli
 
 deploy: deploy-evm deploy-tezos
 
@@ -151,7 +159,7 @@ $(BUILD_FOLDER)/npm-packages: package.json
 
 install-pip-packages: $(BUILD_FOLDER)/pip-packages
 $(BUILD_FOLDER)/pip-packages: requirements.txt
-	@pip install -r requirements.txt --quiet
+	@pip3 install -r requirements.txt --quiet
 	$(touch_done)
 
 install-dependencies: install-smartpy install-npm-packages install-pip-packages

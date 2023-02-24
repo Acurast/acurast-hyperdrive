@@ -15,7 +15,7 @@ import Logger from 'src/services/logger';
 import ValidatorCard from '../ValidatorCard';
 
 const EthereumBridge = () => {
-    const { ethereum } = useAppContext();
+    const { ethereum, network } = useAppContext();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
     const [wrapModalOpen, setWrapModalOpen] = React.useState(false);
@@ -24,7 +24,7 @@ const EthereumBridge = () => {
     const [confirming, setConfirming] = React.useState(false);
 
     const wrap = React.useCallback(async () => {
-        const contract = new Contract(Constants.evm_bridge, abi.bridge, EthereumSDK.getSigner());
+        const contract = new Contract(Constants[network].evm_bridge, abi.bridge, EthereumSDK.getSigner());
         if (!destination || destination.length < 32) {
             return setError(new Error('Invalid destination!'));
         }
@@ -82,10 +82,10 @@ const EthereumBridge = () => {
                                         <a
                                             target="_blank"
                                             style={{ color: 'white' }}
-                                            href={`${Constants.etherscan}/address/${Constants.evm_bridge}`}
+                                            href={`${Constants[network].etherscan}/address/${Constants[network].evm_bridge}`}
                                             rel="noreferrer"
                                         >
-                                            {Constants.evm_bridge}
+                                            {Constants[network].evm_bridge}
                                         </a>
                                     </Typography>
                                 </Grid>
@@ -171,7 +171,7 @@ const EthereumBridge = () => {
                 <a
                     style={{ color: 'white' }}
                     target="_blank"
-                    href={`${Constants.etherscan}/tx/${operationHash}`}
+                    href={`${Constants[network].etherscan}/tx/${operationHash}`}
                     rel="noreferrer"
                 >
                     Etherscan

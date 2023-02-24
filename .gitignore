@@ -20,4 +20,4 @@ __SNAPSHOTS__/**/*.*
 !__SNAPSHOTS__/**/ligo/*.tz
 !__SNAPSHOTS__/**/sizes.txt
 !__SNAPSHOTS__/*.yaml
-!__SNAPSHOTS__/evm-deployment.txt
+!__SNAPSHOTS__/*.txt

@@ -4,12 +4,14 @@ import { Card, Grid, Typography, CardContent, Divider, Box } from '@mui/material
 import Dialog from '../../base/Dialog';
 import { AssetInfo } from 'src/context/AppContext';
 import Constants from 'src/constants';
+import useAppContext from 'src/hooks/useAppContext';
 
 interface OwnProps {
     asset: AssetInfo;
 }
 
 const AssetCard: React.FC<OwnProps> = ({ asset }) => {
+    const { network } = useAppContext();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
 
@@ -26,7 +28,7 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                                 <a
                                     target="_blank"
                                     style={{ color: 'white' }}
-                                    href={`${Constants.tzkt}/${asset.address}`}
+                                    href={`${Constants[network].tzkt}/${asset.address}`}
                                     rel="noreferrer"
                                 >
                                     {asset.address}

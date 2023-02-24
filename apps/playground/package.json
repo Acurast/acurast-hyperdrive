@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "private": true,
     "devDependencies": {
-        "@airgap/beacon-sdk": "3.3.0",
+        "@airgap/beacon-sdk": "3.3.4",
         "@craco/craco": "6.4.5",
         "@emotion/react": "11.10.0",
         "@emotion/styled": "11.10.0",

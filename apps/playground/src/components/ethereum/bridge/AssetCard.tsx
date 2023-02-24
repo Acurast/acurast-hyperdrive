@@ -8,12 +8,14 @@ import Dialog from '../../base/Dialog';
 import { AssetInfo } from 'src/context/AppContext';
 import Constants from 'src/constants';
 import Logger from 'src/services/logger';
+import useAppContext from 'src/hooks/useAppContext';
 
 interface OwnProps {
     asset: AssetInfo;
 }
 
 const AssetCard: React.FC<OwnProps> = ({ asset }) => {
+    const { network } = useAppContext();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
     const [modalOpen, setModalOpen] = React.useState<string>();
@@ -65,7 +67,7 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                                 <a
                                     target="_blank"
                                     style={{ color: 'white' }}
-                                    href={`${Constants.etherscan}/address/${asset.address}`}
+                                    href={`${Constants[network].etherscan}/address/${asset.address}`}
                                     rel="noreferrer"
                                 >
                                     {asset.address}
@@ -153,7 +155,7 @@ const AssetCard: React.FC<OwnProps> = ({ asset }) => {
                 <a
                     style={{ color: 'white' }}
                     target="_blank"
-                    href={`${Constants.etherscan}/tx/${operationHash}`}
+                    href={`${Constants[network].etherscan}/tx/${operationHash}`}
                     rel="noreferrer"
                 >
                     Etherscan

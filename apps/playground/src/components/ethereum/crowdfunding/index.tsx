@@ -14,7 +14,7 @@ import Logger from 'src/services/logger';
 import CodeBlock from 'src/components/base/CodeBlock';
 
 const EthereumCrowdfunding = () => {
-    const { ethereum, tezos } = useAppContext();
+    const { ethereum, tezos, network } = useAppContext();
     const [operationHash, setOperationHash] = React.useState('');
     const [error, setError] = React.useState<Error>();
     const [modalOpen, setModalOpen] = React.useState(false);
@@ -29,7 +29,7 @@ const EthereumCrowdfunding = () => {
 
         try {
             const result = await EthereumSDK.getSigner().sendTransaction({
-                to: Constants.evm_crowdfunding,
+                to: Constants[network].evm_crowdfunding,
                 value: amount,
             });
             setConfirming(true);
@@ -58,7 +58,7 @@ const EthereumCrowdfunding = () => {
             const amountSlot = ethers.utils.keccak256('0x' + hexNonce + amountRegistryIndex);
 
             const proof = await proofGenerator.generateStorageProof(
-                Constants.evm_crowdfunding,
+                Constants[network].evm_crowdfunding,
                 [funderSlot, amountSlot],
                 tezos.validatorInfo?.latestSnapshot.block_number,
             );
@@ -98,10 +98,10 @@ const EthereumCrowdfunding = () => {
                                         <a
                                             target="_blank"
                                             style={{ color: 'white' }}
-                                            href={`${Constants.etherscan}/address/${Constants.evm_crowdfunding}`}
+                                            href={`${Constants[network].etherscan}/address/${Constants[network].evm_crowdfunding}`}
                                             rel="noreferrer"
                                         >
-                                            {Constants.evm_crowdfunding}
+                                            {Constants[network].evm_crowdfunding}
                                         </a>
                                     </Typography>
                                 </Grid>
@@ -181,7 +181,7 @@ const EthereumCrowdfunding = () => {
                 <a
                     style={{ color: 'white' }}
                     target="_blank"
-                    href={`${Constants.etherscan}/tx/${operationHash}`}
+                    href={`${Constants[network].etherscan}/tx/${operationHash}`}
                     rel="noreferrer"
                 >
                     Etherscan
