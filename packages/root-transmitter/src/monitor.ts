@@ -34,6 +34,9 @@ class Monitor {
         // Snapshot state if it can be done.
         await this.snapshotIfPossible(stateAggregatorStorage, tezosBlockLevel);
 
+        // Commit operations
+        await this.commitTezosOperations();
+
         const ethExpectedSnapshot = await this.context.evm_validator.getCurrentSnapshot();
 
         if (
@@ -61,7 +64,8 @@ class Monitor {
 
                     const result = await this.context.evm_validator.submitStateRoot(
                         ethExpectedSnapshot,
-                        '0x' + storageAtSnapshot.merkle_tree.root,
+                        '0x' +
+                            (storageAtSnapshot.merkle_tree.root ? storageAtSnapshot.merkle_tree.root : '11'.repeat(32)),
                     );
 
                     // Wait for the operation to be included in at least `ethereum_finality` blocks.
@@ -77,9 +81,6 @@ class Monitor {
                 }
             }
         }
-
-        // Commit operations
-        await this.commitTezosOperations();
     }
 
     /**

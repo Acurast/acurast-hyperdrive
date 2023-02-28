@@ -21,6 +21,8 @@
     "test": "truffle test --migrations_directory migrations_null",
     "deploy:goerli": "truffle deploy --network goerli --reset",
     "deploy:mumbai": "truffle deploy --network mumbai --reset",
+    "deploy:bsc": "truffle deploy --network bsc --reset",
+    "deploy:avalanche": "truffle deploy --network avalanche --reset",
     "build": "yarn workspaces foreach --topological --topological-dev --verbose run build",
     "doc": "yarn workspace documentation run start",
     "lint:check": "yarn workspaces foreach --topological --topological-dev --verbose run lint .",

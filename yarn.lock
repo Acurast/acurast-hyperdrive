@@ -5,135 +5,135 @@ __metadata:
   version: 6
   cacheKey: 8
 
-"@airgap/beacon-blockchain-substrate@npm:^3.3.0":
-  version: 3.3.2
-  resolution: "@airgap/beacon-blockchain-substrate@npm:3.3.2"
+"@airgap/beacon-blockchain-substrate@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-blockchain-substrate@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-types": ^3.3.2
-    "@airgap/beacon-ui": ^3.3.2
-  checksum: 383fc2b07a500f141e0c8299ff9905945c06d07cd82286e99c87b16d4c1b8006e32b4bdf037f8eb3ae921c860fb38f5e48fd7ac8a0320fe1c4e9bab557a898bd
+    "@airgap/beacon-types": ^3.3.4
+    "@airgap/beacon-ui": ^3.3.4
+  checksum: 766db0042402e898d353b04796216c4d4a1db0b1899fb00be5c435c859ac99dfd79b45830712b3cff5323798b4fdc870facdbf284162dabad9652c9c1ce85bcf
   languageName: node
   linkType: hard
 
-"@airgap/beacon-blockchain-tezos@npm:^3.3.0":
-  version: 3.3.2
-  resolution: "@airgap/beacon-blockchain-tezos@npm:3.3.2"
+"@airgap/beacon-blockchain-tezos@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-blockchain-tezos@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-types": ^3.3.2
-    "@airgap/beacon-ui": ^3.3.2
-  checksum: d051dbae221873914dd20dbc31a5741481162bc8a5db75a35c98c24aef50fb6c798c19cd39705d8c6f08084c26b2c84291418078961fae47a5c7c55b5929312f
+    "@airgap/beacon-types": ^3.3.4
+    "@airgap/beacon-ui": ^3.3.4
+  checksum: baaf20bd8c96ea32d7e6f23485c68b060afe0d9960b87361894751f4aaf09aeceb7384f4929a1e3f69a0525b21203f4744ab4d0fe09f0b6354832151e9479007
   languageName: node
   linkType: hard
 
-"@airgap/beacon-core@npm:^3.3.0, @airgap/beacon-core@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "@airgap/beacon-core@npm:3.3.2"
+"@airgap/beacon-core@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-core@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-types": ^3.3.2
-    "@airgap/beacon-utils": ^3.3.2
+    "@airgap/beacon-types": ^3.3.4
+    "@airgap/beacon-utils": ^3.3.4
     "@stablelib/ed25519": ^1.0.3
     "@stablelib/nacl": ^1.0.4
     "@stablelib/utf8": ^1.0.1
     "@stablelib/x25519-session": ^1.0.4
     bs58check: 2.1.2
-  checksum: 42ae567d82567a5dfa363e860576b557fd3cf01183de86764b4317bb9a8312881543db6ce6562067a64d1ed7ced3f4d1ec8ee33c9ade842b94830443ab5ef63f
+  checksum: 9f18f6521867c95c251ccb9c23247fcc275d0160b2d4c185fd3c38346f08a5780b66051d09e380f620e85ce03608a40df2c6a6201fab49a9b17ce44a9ee7a112
   languageName: node
   linkType: hard
 
-"@airgap/beacon-dapp@npm:^3.3.0":
-  version: 3.3.2
-  resolution: "@airgap/beacon-dapp@npm:3.3.2"
+"@airgap/beacon-dapp@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-dapp@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-core": ^3.3.2
-    "@airgap/beacon-transport-matrix": ^3.3.2
-    "@airgap/beacon-transport-postmessage": ^3.3.2
-    "@airgap/beacon-ui": ^3.3.2
+    "@airgap/beacon-core": ^3.3.4
+    "@airgap/beacon-transport-matrix": ^3.3.4
+    "@airgap/beacon-transport-postmessage": ^3.3.4
+    "@airgap/beacon-ui": ^3.3.4
     qrcode-generator: 1.4.4
-  checksum: 4453d046784ea3a0cde65236e4cbbc627ec3ab25952e2316250e18df50bf138dd6428cc7f121bcea347d0c753496426b402eae1e25097832bc519c0e040a62cb
+  checksum: 979ead0e3e993d797a27fa2d9fc9d5dcb9d96aa0ba133afd4927ed27b167c9b87e68ed989e04e93af5ffc9fddb05cdc729a1f8bd17c06a394c744d538c17042d
   languageName: node
   linkType: hard
 
-"@airgap/beacon-sdk@npm:3.3.0":
-  version: 3.3.0
-  resolution: "@airgap/beacon-sdk@npm:3.3.0"
+"@airgap/beacon-sdk@npm:3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-sdk@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-blockchain-substrate": ^3.3.0
-    "@airgap/beacon-blockchain-tezos": ^3.3.0
-    "@airgap/beacon-core": ^3.3.0
-    "@airgap/beacon-dapp": ^3.3.0
-    "@airgap/beacon-transport-matrix": ^3.3.0
-    "@airgap/beacon-transport-postmessage": ^3.3.0
-    "@airgap/beacon-types": ^3.3.0
-    "@airgap/beacon-ui": ^3.3.0
-    "@airgap/beacon-utils": ^3.3.0
-    "@airgap/beacon-wallet": ^3.3.0
-  checksum: 2427a84e88ef5e316cd33d7e7067ea3e1a0ace4aca2dc97853db5bd8960db18332fc9180e8c03baa205e4b067b61e51ddd1601212892e824807593d819aed97d
+    "@airgap/beacon-blockchain-substrate": ^3.3.4
+    "@airgap/beacon-blockchain-tezos": ^3.3.4
+    "@airgap/beacon-core": ^3.3.4
+    "@airgap/beacon-dapp": ^3.3.4
+    "@airgap/beacon-transport-matrix": ^3.3.4
+    "@airgap/beacon-transport-postmessage": ^3.3.4
+    "@airgap/beacon-types": ^3.3.4
+    "@airgap/beacon-ui": ^3.3.4
+    "@airgap/beacon-utils": ^3.3.4
+    "@airgap/beacon-wallet": ^3.3.4
+  checksum: 12426d7f4973ece03919b3471f12e7e198e03859e7cd1b264e5e74423a52d24ed6cfc5ea3289f630a3d5a358501bf4059dfaa112c54a5f18a08c40587731363b
   languageName: node
   linkType: hard
 
-"@airgap/beacon-transport-matrix@npm:^3.3.0, @airgap/beacon-transport-matrix@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "@airgap/beacon-transport-matrix@npm:3.3.2"
+"@airgap/beacon-transport-matrix@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-transport-matrix@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-core": ^3.3.2
-    "@airgap/beacon-utils": ^3.3.2
+    "@airgap/beacon-core": ^3.3.4
+    "@airgap/beacon-utils": ^3.3.4
     axios: 0.24.0
-  checksum: 74d91ef94952316906c767c04c043b728cf2d2cf787d59335f3df1ff8d59a83c418f34752d0acd878b046c77e34a09bfc67e3821a704858b36e305230411b865
+  checksum: b70beecbce11e4b41ca6a0065b865f7458b8c9829874f290e078744f228fcc6965040e06d2363981783104f1278a9edbb4c91de56581473cdf207f018053bd56
   languageName: node
   linkType: hard
 
-"@airgap/beacon-transport-postmessage@npm:^3.3.0, @airgap/beacon-transport-postmessage@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "@airgap/beacon-transport-postmessage@npm:3.3.2"
+"@airgap/beacon-transport-postmessage@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-transport-postmessage@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-core": ^3.3.2
-    "@airgap/beacon-types": ^3.3.2
-    "@airgap/beacon-utils": ^3.3.2
-  checksum: a63c9069cf06193a874fb87b91dadc52b8cad1392f0479304723eef4d0b9d00d2d323d491f374567dbc80822b44e71e19e1b2ee3ace0ae09af29d0254dfdc7a5
+    "@airgap/beacon-core": ^3.3.4
+    "@airgap/beacon-types": ^3.3.4
+    "@airgap/beacon-utils": ^3.3.4
+  checksum: 265f19637609dd7ed2cc6926c82ee1397fe4a45d220a7b5f47217565f1175dd194f960722a1aabd5e42af658a64d3a10964e93fe4aee385feffa7eb4e50a94d5
   languageName: node
   linkType: hard
 
-"@airgap/beacon-types@npm:^3.3.0, @airgap/beacon-types@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "@airgap/beacon-types@npm:3.3.2"
+"@airgap/beacon-types@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-types@npm:3.3.4"
   dependencies:
     "@types/chrome": 0.0.163
-  checksum: f1cb34022328bab367bb22f921496fe3255d0a1202479e6b7ee43b9cf853bbd5cf9c24ab3fd37985e77d8e7218948874c169a2ac9e3704ac4bdd6b9217fbe918
+  checksum: c44626182d6d69756ec58756c6ed2789977bd7287d914f56cba1124e8c2d433112f712daf57f61cf5a477fbfd3f23cd83b96a9e7fb2a62f8886334e0ade18aa2
   languageName: node
   linkType: hard
 
-"@airgap/beacon-ui@npm:^3.3.0, @airgap/beacon-ui@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "@airgap/beacon-ui@npm:3.3.2"
+"@airgap/beacon-ui@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-ui@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-core": ^3.3.2
-    "@airgap/beacon-transport-postmessage": ^3.3.2
-    "@airgap/beacon-types": ^3.3.2
-    "@airgap/beacon-utils": ^3.3.2
-  checksum: 0351ab9116c0f094689c03dee44f8b8e5856cd35b1b4e7b9f8d06743c2bfab04630ea8f6b7305ea17cd96c06a9a3458774848f9ab181562d103fa8aaf31931b6
+    "@airgap/beacon-core": ^3.3.4
+    "@airgap/beacon-transport-postmessage": ^3.3.4
+    "@airgap/beacon-types": ^3.3.4
+    "@airgap/beacon-utils": ^3.3.4
+  checksum: 009f31aa64d1c8a52866b24bfd344e931e5de61187e18528285d2264c0ffd267f6342bf24432b8ef3d75ffd86c8c74537ca5a6cf7a622ed68873a479a5261c3a
   languageName: node
   linkType: hard
 
-"@airgap/beacon-utils@npm:^3.3.0, @airgap/beacon-utils@npm:^3.3.2":
-  version: 3.3.2
-  resolution: "@airgap/beacon-utils@npm:3.3.2"
+"@airgap/beacon-utils@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-utils@npm:3.3.4"
   dependencies:
     "@stablelib/nacl": ^1.0.3
     "@stablelib/random": ^1.0.2
     "@stablelib/utf8": ^1.0.1
     bs58check: 2.1.2
-  checksum: b613febbc0d98d211ac102fdc86cb63ed4f35babea8ce772845e84784f8ff173299543a53a79aed0245c39c7ee78508f3cda5aa41ef3f84277d6433c1823615f
+  checksum: 1f9eec76dccd1d68c545f8b57bc040082677e0472a334c36c1a4265e49c0446f4d63c7a3c82e96bc18da27fd58de8c954421869d40e2d153fbe6816672603e10
   languageName: node
   linkType: hard
 
-"@airgap/beacon-wallet@npm:^3.3.0":
-  version: 3.3.2
-  resolution: "@airgap/beacon-wallet@npm:3.3.2"
+"@airgap/beacon-wallet@npm:^3.3.4":
+  version: 3.3.4
+  resolution: "@airgap/beacon-wallet@npm:3.3.4"
   dependencies:
-    "@airgap/beacon-core": ^3.3.2
-    "@airgap/beacon-transport-matrix": ^3.3.2
-    "@airgap/beacon-transport-postmessage": ^3.3.2
-  checksum: 505f258533034560c0c49ddae685414b21bb6fdd5ea229841d4e70e7d0730789606282c12995505fb1da227a277cb5378d5c243d1a58a3ba418c65eda4b28315
+    "@airgap/beacon-core": ^3.3.4
+    "@airgap/beacon-transport-matrix": ^3.3.4
+    "@airgap/beacon-transport-postmessage": ^3.3.4
+  checksum: f26dd1c05ac3eea5d398aaf1526e0f8e29727c3e8b9f83afe147d27a6438fd9b469cb8ce5ed3c78a16ab2a3a254808a163e35b517f36508a7966c817daac4697
   languageName: node
   linkType: hard
 
@@ -2961,7 +2961,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@ibcf/bridge-playground@workspace:apps/playground"
   dependencies:
-    "@airgap/beacon-sdk": 3.3.0
+    "@airgap/beacon-sdk": 3.3.4
     "@craco/craco": 6.4.5
     "@emotion/react": 11.10.0
     "@emotion/styled": 11.10.0

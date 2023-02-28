@@ -5,7 +5,7 @@ PYTHONPATH := $(SMARTPY_CLI_PATH):$(shell pwd)
 FLEXTESA_IMAGE=oxheadalpha/flextesa:latest
 FLEXTESA_SCRIPT=kathmandubox
 CONTAINER_NAME=ibc-tezos-sandbox
-LIGO_VERSION=0.57.0
+LIGO_VERSION=next
 
 HAS_DOCKER := $(shell which docker)
 
@@ -28,8 +28,8 @@ contracts/%: contracts/%.mligo
 ifeq (, ${HAS_DOCKER})
 	@echo "Skipping compilation $<, it requires docker."
 else
-	@./ligo compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
-#@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
+	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
+#	@./ligo compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
 endif
 
 compilation/%: compilation/%.py install-dependencies
@@ -68,8 +68,8 @@ test/tezos/ligo/%: test/tezos/ligo/%.mligo
 ifeq (, ${HAS_DOCKER})
 	@echo "Skipping compilation $<, it requires docker."
 else
+#	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
 	@./ligo run test $<
-#@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
 endif
 
 clean-tezos-tests:
@@ -105,7 +105,16 @@ export CONFIG_PATH = deployment/tezos/configs/ghostnet-mumbai.yaml
 deploy-tezos-mumbai: setup_env
 	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
 
-export INFURA_URL ?= https://ropsten.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f
+export CONFIG_PATH = deployment/tezos/configs/ghostnet-bsc.yaml
+deploy-tezos-bsc: setup_env
+	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
+
+
+export CONFIG_PATH = deployment/tezos/configs/ghostnet-avalanche.yaml
+deploy-tezos-avalanche: setup_env
+	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
+
+export RPC_URL ?= https://ropsten.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f
 deploy-evm: setup_env
 	@npm run deploy:goerli
 

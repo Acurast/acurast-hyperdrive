@@ -269,15 +269,17 @@
                           PUSH nat 1 ;
                           DIG 2 ;
                           PUSH nat 16 ;
-                          PAIR 3 ;
+                          PAIR ;
+                          PAIR ;
                           LEFT nat ;
                           LOOP_LEFT
-                            { UNPAIR 3 ;
+                            { UNPAIR ;
+                              UNPAIR ;
                               PUSH nat 0 ;
                               DUP 3 ;
                               COMPARE ;
                               EQ ;
-                              IF { DROP 2 ; RIGHT (pair nat nat nat) }
+                              IF { DROP 2 ; RIGHT (pair (pair nat nat) nat) }
                                  { PUSH nat 1 ;
                                    PUSH nat 1 ;
                                    DUP 4 ;
@@ -291,7 +293,8 @@
                                    DUP 3 ;
                                    DIG 3 ;
                                    MUL ;
-                                   PAIR 3 ;
+                                   PAIR ;
+                                   PAIR ;
                                    LEFT nat } } ;
                           SWAP ;
                           MUL ;
@@ -734,15 +737,17 @@
                   PUSH nat 1 ;
                   DIG 2 ;
                   PUSH nat 16 ;
-                  PAIR 3 ;
+                  PAIR ;
+                  PAIR ;
                   LEFT nat ;
                   LOOP_LEFT
-                    { UNPAIR 3 ;
+                    { UNPAIR ;
+                      UNPAIR ;
                       PUSH nat 0 ;
                       DUP 3 ;
                       COMPARE ;
                       EQ ;
-                      IF { DROP 2 ; RIGHT (pair nat nat nat) }
+                      IF { DROP 2 ; RIGHT (pair (pair nat nat) nat) }
                          { PUSH nat 1 ;
                            PUSH nat 1 ;
                            DUP 4 ;
@@ -756,7 +761,8 @@
                            DUP 3 ;
                            DIG 3 ;
                            MUL ;
-                           PAIR 3 ;
+                           PAIR ;
+                           PAIR ;
                            LEFT nat } } ;
                   SWAP ;
                   MUL ;

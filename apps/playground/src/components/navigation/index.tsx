@@ -50,6 +50,7 @@ const NavigationBar = () => {
                     >
                         <MenuItem value={Network.Ethereum}>Goerli</MenuItem>
                         <MenuItem value={Network.Polygon}>Polygon</MenuItem>
+                        <MenuItem value={Network.BSC}>Bsc</MenuItem>
                     </Select>
                 </FormControl>
                 <Divider flexItem orientation="vertical" sx={{ margin: 1 }} />

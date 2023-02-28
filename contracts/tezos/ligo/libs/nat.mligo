@@ -3,8 +3,8 @@
 
 let of_bytes (b: bytes) =
     let length = Bytes.length b in
-    let rec for_range (from, to, result : nat * nat * nat) : nat =
-        if from = to
+    let rec for_range (from, @to, result : nat * nat * nat) : nat =
+        if from = @to
         then
             result
         else
@@ -18,6 +18,6 @@ let of_bytes (b: bytes) =
             let packed_bytes : bytes = Bytes_utils.concat [packed_prefix; byte; 0x00000000000000000000000000000000000000000000000000000000000000] in
             let value : int = int (Option.unopt (Bytes.unpack packed_bytes) : bls12_381_fr) in
             let result = result + Option.unopt (is_nat (value * Math.pow(16n, base))) in
-            for_range(from+1n, to, result)
+            for_range(from+1n, @to, result)
     in
     for_range(0n, length, 0n)

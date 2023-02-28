@@ -6,6 +6,8 @@ import { Ethereum, Tezos } from 'ibcf-sdk';
 export enum Network {
     Ethereum = 'ethereum-goerli',
     Polygon = 'polygon-mumbai',
+    BSC = 'bsc-testnet',
+    Avalanche = 'avalanche-testnet',
 }
 
 export interface TezosValidatorInfo {

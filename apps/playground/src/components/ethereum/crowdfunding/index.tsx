@@ -37,7 +37,7 @@ const EthereumCrowdfunding = () => {
             await result.wait(1);
         } catch (e: any) {
             Logger.error(e);
-            return setError(e);
+            setError(e);
         } finally {
             setConfirming(false);
         }

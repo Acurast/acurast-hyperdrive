@@ -1,0 +1,74 @@
+pytezos:
+  rpc_endpoint: https://tezos-ghostnet-node-1.diamond.papers.tech
+  private_key: edskS8xUePnvXXp3XHjYkDBBKDRwigGF95uHtJzDakV74azm9y6KHvkw4gLjPUvenWiY7H9xRQN729ipPutLVLiHXHMYfaf9hS
+known_addresses:
+  signer_1: tz3LXMyngf729xwrmwV9yUv7jRwmuNvYX3JR
+  signer_2: tz1aBNXcSKfWE7aujp2Twa7V7Beua2fjhri3
+  signer_3: tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB
+  evm_bridge_address: "0xB18E503FF95Ff3F8CA212b1F9a555Aff7D34F7eb"
+  evm_crowdfunding_address: "0x4d25ff2F625D84016c6ACf245B664d84810Ad445"
+  IBCF_Aggragator: "KT1B8F7BhA2EeGQvPFpaVStd99ZDSzwrAcBL"
+actions:
+  - kind: origination
+    contract_kind: IBCF_Eth_Validator
+    name: IBCF_Eth_Validator
+    code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Eth_Validator/IBCF_Eth_Validator/step_000_cont_0_contract.tz
+    overrides:
+      config:
+        administrator: admin_address
+        validators:
+          - signer_1
+          - signer_2
+          - signer_3
+          - admin_address
+        minimum_endorsements: 1
+        history_length: 10
+        snapshot_interval: 10
+      current_snapshot: 27522360
+
+  # Blueprints
+
+  - kind: origination
+    contract_kind: Asset
+    name: Asset
+    code_path: __SNAPSHOTS__/compilation/tezos/blueprints/BridgedAsset/BridgedAsset/step_000_cont_0_contract.tz
+    overrides:
+      administrator: admin_address
+      last_token_id: 1
+      ledger: {}
+      supply: 0
+      token_metadata:
+        0:
+          - 0
+          - {}
+
+  - kind: origination
+    contract_kind: IBCF_Bridge
+    name: IBCF_Bridge
+    code_path: __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Bridge/IBCF_Bridge/step_000_cont_0_contract.tz
+    overrides:
+      nonce: 0
+      wrap_nonce: {}
+      registry: {}
+      merkle_aggregator: IBCF_Aggragator
+      proof_validator: IBCF_Eth_Validator
+      asset_address: Asset
+      eth_bridge_address: evm_bridge_address
+
+  - kind: contract_call
+    contract_address: Asset
+    entrypoint: set_administrator
+    argument: IBCF_Bridge
+
+  - kind: origination
+    contract_kind: IBCF_Crowdfunding
+    name: IBCF_Crowdfunding
+    code_path: __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Crowdfunding/IBCF_Crowdfunding/step_000_cont_0_contract.tz
+    overrides:
+      ibcf:
+        nonce: {}
+        proof_validator: IBCF_Eth_Validator
+        evm_address: evm_crowdfunding_address
+      recipient: admin_address
+      tezos_funding: {}
+      eth_funding: {}

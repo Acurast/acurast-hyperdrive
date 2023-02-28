@@ -8,7 +8,7 @@ const ERC20 = artifacts.require("MintableERC20");
 const administrator = "0x3DF95B98abEA91975780646e344C8d14d512C95E";
 const tezos_chain_id = "0xaf1864d9";
 
-module.exports = async function (deployer, _network, _accounts) {
+module.exports = async function (deployer, network, _accounts) {
   await deployer.deploy(IBCF_Validator, administrator, 1, tezos_chain_id, 5, [
     administrator,
   ]);

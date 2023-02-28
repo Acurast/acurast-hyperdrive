@@ -124,7 +124,8 @@ async function fetchEvmBridgeInfo(network: Network): Promise<EVMBridgeInfo> {
     );
 
     // Get all wrap events
-    const wraps = await bridge.getWraps();
+    const block = await EthereumEthers.getBlockNumber();
+    const wraps = await bridge.getWraps(block - 1000, block);
 
     return {
         asset: {
@@ -281,9 +282,25 @@ const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <AppContext.Provider
             value={{
                 network,
-                updateNetwork: (network: Network) => {
+                updateNetwork: async (network: Network) => {
+                    if (network != Network.Ethereum) {
+                        try {
+                            await (window as any).ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [
+                                    {
+                                        chainId: Constants[network].ethChainId,
+                                        chainName: network,
+                                        rpcUrls: Constants[network].rpcUrls,
+                                    },
+                                ],
+                            });
+                        } catch (e) {
+                            Logger.trace(e);
+                        }
+                    }
                     EthereumEthers.network.chainId = Number(Constants[network].ethChainId);
-                    (window as any).ethereum
+                    await (window as any).ethereum
                         .request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: Constants[network].ethChainId }],

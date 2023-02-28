@@ -1,6 +1,14 @@
 import Logger from './logger';
 import { Env, run_monitor } from './monitor';
 
+import dotenv from 'dotenv';
+if (process.argv[2]) {
+    console.log(process.argv[2]);
+    dotenv.config({ path: `.${process.argv[2]}.env` });
+} else {
+    dotenv.config();
+}
+
 function getEnv(): Env {
     const env = {
         TEZOS_RPC: process.env['TEZOS_RPC']!,
