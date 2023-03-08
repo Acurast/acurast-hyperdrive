@@ -88,17 +88,15 @@ def run_actions(client: PyTezosClient):
         resolve_addresses(action)
 
         if action["kind"] == ActionKind.origination:
-            print(
-                colored(f'== Originating "{action["name"]}"', "green", attrs=["bold"])
-            )
+            msg = f'== Originating "{action["name"]}"'
+            print(colored(msg, "green", attrs=["bold"]))
 
             code = ContractInterface.from_file(action["code_path"])
             storage = {}
 
             if "storage" in action:
-                if isinstance(action["storage"], str) and action["storage"].endswith(
-                    ".tz"
-                ):
+                using_file = action["storage"].endswith(".tz")
+                if isinstance(action["storage"], str) and using_file:
                     code.storage_from_file(action["storage"])
                     storage = code.storage.decode(code.storage.to_michelson())
                 else:
@@ -107,7 +105,17 @@ def run_actions(client: PyTezosClient):
                 storage = code.storage.dummy()
 
             if "overrides" in action:
-                storage = {**storage, **action["overrides"]}
+
+                def merge(storage, overrides):
+                    if type(overrides) is dict:
+                        for key in overrides.keys():
+                            storage[key] = merge(storage[key], overrides[key])
+                    else:
+                        storage = overrides
+
+                    return storage
+
+                storage = merge(storage, action["overrides"])
 
             operation_group = client.origination(
                 script=code.script(initial_storage=storage)

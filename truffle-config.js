@@ -49,10 +49,10 @@ module.exports = {
     },
     bsc: {
       provider: () =>
-      new HDWalletProvider({
-        privateKeys: [process.env["PRIVATE_KEY"]],
-        providerOrUrl: process.env["RPC_URL"],
-      }),
+        new HDWalletProvider({
+          privateKeys: [process.env["PRIVATE_KEY"]],
+          providerOrUrl: process.env["RPC_URL"],
+        }),
       network_id: 97,
       gas: 4465030,
       confirmations: 2,
@@ -61,16 +61,16 @@ module.exports = {
     },
     avalanche: {
       provider: () =>
-      new HDWalletProvider({
-        privateKeys: [process.env["PRIVATE_KEY"]],
-        providerOrUrl: process.env["RPC_URL"],
-      }),
+        new HDWalletProvider({
+          privateKeys: [process.env["PRIVATE_KEY"]],
+          providerOrUrl: process.env["RPC_URL"],
+        }),
       network_id: 0xa869,
       gas: 4465030,
       confirmations: 2,
       timeoutBlocks: 200,
       skipDryRun: true,
-    }
+    },
   },
 
   // Set default mocha options here, use special reporters, etc.
