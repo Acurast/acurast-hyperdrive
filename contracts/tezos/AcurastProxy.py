@@ -16,27 +16,62 @@ class Error:
     NOT_GOVERNANCE = "NOT_GOVERNANCE"
     ACTION_NOT_SUPPORTED = "ACTION_NOT_SUPPORTED"
     COULD_NOT_UNPACK = "COULD_NOT_UNPACK"
+    CANNOT_PARSE_ACTION_STORAGE = "CANNOT_PARSE_ACTION_STORAGE"
     JOB_UNKNOWN = "JOB_UNKNOWN"
+    UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
 
 
 class Type:
+    # Actions
+    RegisterJobAction = sp.TRecord(
+        allowedSources=sp.TOption(sp.TSet(sp.TString)),
+        allowOnlyVerifiedSources=sp.TBool,
+        destination=sp.TAddress,
+        extra=sp.TRecord(
+            requirements=sp.TRecord(
+                slots=sp.TNat,
+                reward=sp.TBytes,
+                minReputation=sp.TOption(sp.TNat),
+                instantMatch=sp.TOption(
+                    sp.TSet(sp.TRecord(source=sp.TString, startDelay=sp.TNat))
+                ),
+            ).right_comb(),
+            expectedFulfillmentFee=sp.TNat,
+        ).right_comb(),
+        script=sp.TBytes,
+        schedule=sp.TRecord(
+            duration=sp.TNat,
+            startTime=sp.TNat,
+            endTime=sp.TNat,
+            interval=sp.TNat,
+            maxStartDelay=sp.TNat,
+        ).right_comb(),
+        memory=sp.TNat,
+        networkRequests=sp.TNat,
+        storage=sp.TNat,
+    ).right_comb()
     # Storage
-    Registry = sp.TBigMap(sp.TPair(sp.TAddress, sp.TBytes), sp.TAddress)
+    JobRegistry = sp.TBigMap(sp.TNat, RegisterJobAction)
+    ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
     ActionLambdaArg = sp.TRecord(
         action_number=sp.TNat,
         merkle_aggregator=sp.TAddress,
-        registry=Registry,
         payload=sp.TBytes,
+        registry=JobRegistry,
+        storage=ActionStorage,
     ).right_comb()
-    ActionLambdaReturn = sp.TRecord(registry=Registry).right_comb()
-    ActionLambda = sp.TLambda(ActionLambdaArg, ActionLambdaReturn, with_operations=True)
+    ActionLambdaReturn = sp.TRecord(
+        registry=JobRegistry, new_action_storage=ActionStorage
+    ).right_comb()
+    ActionLambda = sp.TRecord(
+        function=sp.TLambda(ActionLambdaArg, ActionLambdaReturn, with_operations=True),
+        storage=ActionStorage,
+    ).right_comb()
     # Entrypoint
     PerformActionArgument = sp.TRecord(
         action=sp.TString, payload=sp.TBytes
     ).right_comb()
-    FulfillArgument = sp.TRecord(
-        requester=sp.TAddress, script=sp.TBytes, payload=sp.TBytes
-    ).right_comb()
+    FulfillArgument = sp.TRecord(jobId=sp.TNat, payload=sp.TBytes).right_comb()
     ConfigureArgument = sp.TList(
         sp.TVariant(
             update_governance_address=sp.TAddress,
@@ -47,34 +82,6 @@ class Type:
                 ).right_comb()
             ),
         ).right_comb()
-    )
-    # Actions
-    RegisterJobAction = sp.TRecord(
-        destination=sp.TAddress,
-        script=sp.TBytes,
-        allowedSources=sp.TOption(sp.TSet(sp.TString)),
-        allowOnlyVerifiedSources=sp.TBool,
-        schedule=sp.TRecord(
-            duration=sp.TNat,
-            startTime=sp.TNat,
-            endTime=sp.TNat,
-            interval=sp.TNat,
-            maxStartDelay=sp.TNat,
-        ),
-        memory=sp.TNat,
-        networkRequests=sp.TNat,
-        storage=sp.TNat,
-        extra=sp.TRecord(
-            requirements=sp.TRecord(
-                slots=sp.TNat,
-                reward=sp.TBytes,
-                minReputation=sp.TOption(sp.TNat),
-                instantMatch=sp.TOption(
-                    sp.TSet(sp.TRecord(source=sp.TString, startDelay=sp.TNat))
-                ),
-            ),
-            expectedFulfillmentFee=sp.TNat,
-        ),
     )
 
 
@@ -111,32 +118,92 @@ class ActionLambda:
     def register_job(arg):
         sp.set_type(arg, Type.ActionLambdaArg)
 
+        # This lambda expects the storage to be on version ONE => 1
+        sp.verify(arg.storage.version == 1, Error.UNEXPECTED_STORAGE_VERSION)
+
+        StorageType = sp.TRecord(job_id_seq=sp.TNat)
+        storage = sp.compute(
+            sp.unpack(arg.storage.data, StorageType).open_some(
+                Error.CANNOT_PARSE_ACTION_STORAGE
+            )
+        )
+        job_id = sp.compute(storage.job_id_seq + 1)
+
         action = sp.compute(
             sp.unpack(arg.payload, Type.RegisterJobAction).open_some(
                 Error.COULD_NOT_UNPACK
             )
         )
 
-        # TODO: Handle registration
-
         # Get origin
         origin = sp.compute(sp.sender)
 
         # Map the fulfillment recipient to the job
         registry = sp.local("registry", arg.registry)
-        registry.value[(origin, action.script)] = action.destination
+        registry.value[job_id] = action
 
         # Add acurast action to the state merkle tree
         merkle_aggregator_contract = sp.contract(
             IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
         ).open_some(Error.INVALID_CONTRACT)
         # Emit acurast action
-        value = sp.pack((ActionKind.REGISTER_JOB, origin, arg.payload))
+        action_with_job_id = sp.set_type_expr(
+            sp.record(
+                jobId=job_id,
+                destination=action.destination,
+                script=action.script,
+                allowedSources=action.allowedSources,
+                allowOnlyVerifiedSources=action.allowOnlyVerifiedSources,
+                schedule=action.schedule,
+                memory=action.memory,
+                networkRequests=action.networkRequests,
+                storage=action.storage,
+                extra=action.extra,
+            ),
+            sp.TRecord(
+                jobId=sp.TNat,
+                allowedSources=sp.TOption(sp.TSet(sp.TString)),
+                allowOnlyVerifiedSources=sp.TBool,
+                destination=sp.TAddress,
+                extra=sp.TRecord(
+                    requirements=sp.TRecord(
+                        slots=sp.TNat,
+                        reward=sp.TBytes,
+                        minReputation=sp.TOption(sp.TNat),
+                        instantMatch=sp.TOption(
+                            sp.TSet(sp.TRecord(source=sp.TString, startDelay=sp.TNat))
+                        ),
+                    ).right_comb(),
+                    expectedFulfillmentFee=sp.TNat,
+                ).right_comb(),
+                script=sp.TBytes,
+                schedule=sp.TRecord(
+                    duration=sp.TNat,
+                    startTime=sp.TNat,
+                    endTime=sp.TNat,
+                    interval=sp.TNat,
+                    maxStartDelay=sp.TNat,
+                ).right_comb(),
+                memory=sp.TNat,
+                networkRequests=sp.TNat,
+                storage=sp.TNat,
+            ).right_comb(),
+        )
+
+        value = sp.pack((ActionKind.REGISTER_JOB, origin, sp.pack(action_with_job_id)))
         key = sp.pack(arg.action_number)
         state_param = sp.record(key=key, value=value)
         sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
 
-        sp.result(sp.record(registry=registry.value))
+        sp.result(
+            sp.record(
+                registry=registry.value,
+                new_action_storage=sp.record(
+                    version=arg.storage.version,
+                    data=sp.pack(sp.record(job_id_seq=job_id)),
+                ),
+            )
+        )
 
 
 class AcurastProxy(sp.Contract):
@@ -150,7 +217,7 @@ class AcurastProxy(sp.Contract):
                     authorized_actions=sp.TBigMap(sp.TString, Type.ActionLambda),
                 ),
                 outgoing_counter=sp.TNat,
-                registry=Type.Registry,
+                registry=Type.JobRegistry,
             )
         )
 
@@ -165,28 +232,32 @@ class AcurastProxy(sp.Contract):
         # Process action
         self.data.outgoing_counter += 1
         lambda_argument = sp.record(
+            storage=action_lambda.storage,
             action_number=self.data.outgoing_counter,
             merkle_aggregator=self.data.config.merkle_aggregator,
             registry=self.data.registry,
             payload=args.payload,
         )
-        result = sp.compute(action_lambda(lambda_argument))
+        result = sp.compute(action_lambda.function(lambda_argument))
 
         self.data.registry = result.registry
+        self.data.config.authorized_actions[
+            args.action
+        ].storage = result.new_action_storage
 
     @sp.entry_point(parameter_type=Type.FulfillArgument)
     def fulfill(self, args):
         # TODO: Handle fulfillment
+        # - Maybe report the fulfillment to acurast
+        # - Pay processor
 
         # Get target address
-        target_address = self.data.registry.get(
-            (args.requester, args.script), message=Error.JOB_UNKNOWN
-        )
+        job_info = self.data.registry.get(args.jobId, message=Error.JOB_UNKNOWN)
 
         # Pass fulfillment to target contract
-        target_contract = sp.contract(sp.TBytes, target_address, "fulfill").open_some(
-            Error.INVALID_CONTRACT
-        )
+        target_contract = sp.contract(
+            sp.TBytes, job_info.destination, "fulfill"
+        ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(args.payload, sp.mutez(0), target_contract)
 
     @sp.entry_point(parameter_type=Type.ConfigureArgument)

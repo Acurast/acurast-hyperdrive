@@ -1,173 +1,208 @@
-parameter (or (list %configure (or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address))) (or (pair %fulfill (bytes %payload) (pair (address %requester) (bytes %script))) (pair %perform_action (string %action) (bytes %payload))));
-storage   (pair (pair %config (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator))) (pair (nat %outgoing_counter) (big_map %registry (pair address bytes) address)));
+parameter (or (list %configure (or (list %update_authorized_actions (or (pair %add (pair %function (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair (big_map %registry nat (pair (bool %allowOnlyVerifiedSources) (pair (option %allowedSources (set string)) (pair (address %destination) (pair (pair %extra (nat %expectedFulfillmentFee) (pair %requirements (option %instantMatch (set (pair (string %source) (nat %startDelay)))) (pair (option %minReputation nat) (pair (bytes %reward) (nat %slots))))) (pair (nat %memory) (pair (nat %networkRequests) (pair (pair %schedule (nat %duration) (pair (nat %endTime) (pair (nat %interval) (pair (nat %maxStartDelay) (nat %startTime))))) (pair (bytes %script) (nat %storage)))))))))) (pair %storage (bytes %data) (nat %version)))))) (list operation)) (pair (pair (pair %new_action_storage (bytes %data) (nat %version)) (big_map %registry nat (pair (bool %allowOnlyVerifiedSources) (pair (option %allowedSources (set string)) (pair (address %destination) (pair (pair %extra (nat %expectedFulfillmentFee) (pair %requirements (option %instantMatch (set (pair (string %source) (nat %startDelay)))) (pair (option %minReputation nat) (pair (bytes %reward) (nat %slots))))) (pair (nat %memory) (pair (nat %networkRequests) (pair (pair %schedule (nat %duration) (pair (nat %endTime) (pair (nat %interval) (pair (nat %maxStartDelay) (nat %startTime))))) (pair (bytes %script) (nat %storage))))))))))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_governance_address))) (or (pair %fulfill (nat %jobId) (bytes %payload)) (pair %perform_action (string %action) (bytes %payload))));
+storage   (pair (pair %config (pair (big_map %authorized_actions string (pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair (big_map %registry nat (pair (bool %allowOnlyVerifiedSources) (pair (option %allowedSources (set string)) (pair (address %destination) (pair (pair %extra (nat %expectedFulfillmentFee) (pair %requirements (option %instantMatch (set (pair (string %source) (nat %startDelay)))) (pair (option %minReputation nat) (pair (bytes %reward) (nat %slots))))) (pair (nat %memory) (pair (nat %networkRequests) (pair (pair %schedule (nat %duration) (pair (nat %endTime) (pair (nat %interval) (pair (nat %maxStartDelay) (nat %startTime))))) (pair (bytes %script) (nat %storage)))))))))) (pair %storage (bytes %data) (nat %version)))))) (list operation)) (pair (pair (pair %new_action_storage (bytes %data) (nat %version)) (big_map %registry nat (pair (bool %allowOnlyVerifiedSources) (pair (option %allowedSources (set string)) (pair (address %destination) (pair (pair %extra (nat %expectedFulfillmentFee) (pair %requirements (option %instantMatch (set (pair (string %source) (nat %startDelay)))) (pair (option %minReputation nat) (pair (bytes %reward) (nat %slots))))) (pair (nat %memory) (pair (nat %networkRequests) (pair (pair %schedule (nat %duration) (pair (nat %endTime) (pair (nat %interval) (pair (nat %maxStartDelay) (nat %startTime))))) (pair (bytes %script) (nat %storage))))))))))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator))) (pair (nat %outgoing_counter) (big_map %registry nat (pair (bool %allowOnlyVerifiedSources) (pair (option %allowedSources (set string)) (pair (address %destination) (pair (pair %extra (nat %expectedFulfillmentFee) (pair %requirements (option %instantMatch (set (pair (string %source) (nat %startDelay)))) (pair (option %minReputation nat) (pair (bytes %reward) (nat %slots))))) (pair (nat %memory) (pair (nat %networkRequests) (pair (pair %schedule (nat %duration) (pair (nat %endTime) (pair (nat %interval) (pair (nat %maxStartDelay) (nat %startTime))))) (pair (bytes %script) (nat %storage))))))))))));
 code
   {
-    UNPAIR;     # @parameter : @storage
+    UNPAIR;     
     IF_LEFT
       {
-        SENDER;     # @sender : @parameter%configure : @storage
-        DUP 3;      # @storage : @sender : @parameter%configure : @storage
-        CAR;        # pair (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator)) : @sender : @parameter%configure : @storage
-        CAR;        # pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address) : @sender : @parameter%configure : @storage
-        CDR;        # address : @sender : @parameter%configure : @storage
-        COMPARE;    # int : @parameter%configure : @storage
-        EQ;         # bool : @parameter%configure : @storage
+        SENDER;     
+        DUP 3;      
+        CAR;        
+        CAR;        
+        CDR;        
+        COMPARE;    
+        EQ;         
         IF
           {}
           {
-            PUSH string "NOT_GOVERNANCE"; # string : @parameter%configure : @storage
-            FAILWITH;   # FAILED
-          }; # @parameter%configure : @storage
-        DUP;        # @parameter%configure : @parameter%configure : @storage
+            PUSH string "NOT_GOVERNANCE"; 
+            FAILWITH;   
+          }; 
+        DUP;        
         ITER
           {
-            DUP;        # or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure : @storage
+            DUP;        
             IF_LEFT
               {
-                DUP;        # list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure : @storage
+                DUP;        
                 ITER
                   {
                     IF_LEFT
                       {
-                        DIG 4;      # @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DUP;        # @storage : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        CAR;        # pair (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UNPAIR;     # pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address) : pair (address %merkle_aggregator) (address %proof_validator) : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UNPAIR;     # big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DUP 5;      # pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        CAR;        # lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        SOME;       # option (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DIG 5;      # pair (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind) : option (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        CDR;        # string : option (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UPDATE;     # big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        PAIR;       # pair (big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        PAIR;       # pair (pair (big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) address) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UPDATE 1;   # @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DUG 3;      # list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure : @storage
+                        DIG 4;      
+                        DUP;        
+                        CAR;        
+                        UNPAIR;     
+                        UNPAIR;     
+                        DUP 5;      
+                        CAR;        
+                        SOME;       
+                        DIG 5;      
+                        CDR;        
+                        UPDATE;     
+                        PAIR;       
+                        PAIR;       
+                        UPDATE 1;   
+                        DUG 3;      
                       }
                       {
-                        DIG 4;      # @storage : string : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DUP;        # @storage : @storage : string : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        CAR;        # pair (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : string : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UNPAIR;     # pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address) : pair (address %merkle_aggregator) (address %proof_validator) : @storage : string : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UNPAIR;     # big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : string : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        NONE (lambda (pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))); # option (lambda (pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : string : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DIG 5;      # string : option (lambda (pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UPDATE;     # big_map string (lambda (pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        PAIR;       # pair (big_map string (lambda (pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        PAIR;       # pair (pair (big_map string (lambda (pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) address) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        UPDATE 1;   # @storage : list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure
-                        DUG 3;      # list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure : @storage
-                      }; # list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : list (or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address)) : @storage
-                  }; # list (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove)) : or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : @parameter%configure : @storage
-                DROP 2;     # @parameter%configure : @storage
+                        DIG 4;      
+                        DUP;        
+                        CAR;        
+                        UNPAIR;     
+                        UNPAIR;     
+                        NONE (pair (lambda (pair (pair nat (pair address (pair bytes (pair (big_map nat (pair bool (pair (option (set string)) (pair address (pair (pair nat (pair (option (set (pair string nat))) (pair (option nat) (pair bytes nat)))) (pair nat (pair nat (pair (pair nat (pair nat (pair nat (pair nat nat)))) (pair bytes nat))))))))) (pair bytes nat))))) (list operation)) (pair (pair (pair bytes nat) (big_map nat (pair bool (pair (option (set string)) (pair address (pair (pair nat (pair (option (set (pair string nat))) (pair (option nat) (pair bytes nat)))) (pair nat (pair nat (pair (pair nat (pair nat (pair nat (pair nat nat)))) (pair bytes nat)))))))))) (list operation))) (pair bytes nat)); 
+                        DIG 5;      
+                        UPDATE;     
+                        PAIR;       
+                        PAIR;       
+                        UPDATE 1;   
+                        DUG 3;      
+                      }; 
+                  }; 
+                DROP 2;     
               }
               {
-                SWAP;       # or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address) : address : @parameter%configure : @storage
-                DROP;       # address : @parameter%configure : @storage
-                DIG 2;      # @storage : address : @parameter%configure
-                DUP;        # @storage : @storage : address : @parameter%configure
-                CAR;        # pair (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : address : @parameter%configure
-                UNPAIR;     # pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address) : pair (address %merkle_aggregator) (address %proof_validator) : @storage : address : @parameter%configure
-                CAR;        # big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : pair (address %merkle_aggregator) (address %proof_validator) : @storage : address : @parameter%configure
-                DIG 3;      # address : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : pair (address %merkle_aggregator) (address %proof_validator) : @storage : @parameter%configure
-                SWAP;       # big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : @parameter%configure
-                PAIR;       # pair (big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) address : pair (address %merkle_aggregator) (address %proof_validator) : @storage : @parameter%configure
-                PAIR;       # pair (pair (big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) address) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : @parameter%configure
-                UPDATE 1;   # @storage : @parameter%configure
-                SWAP;       # @parameter%configure : @storage
-              }; # list (or (list %update_authorized_actions (or (pair %add (lambda %function (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) (string %kind)) (string %remove))) (address %update_governance_address)) : @storage
-          }; # @parameter%configure : @storage
-        DROP;       # @storage
-        NIL operation; # list operation : @storage
+                SWAP;       
+                DROP;       
+                DIG 2;      
+                DUP;        
+                CAR;        
+                UNPAIR;     
+                CAR;        
+                DIG 3;      
+                SWAP;       
+                PAIR;       
+                PAIR;       
+                UPDATE 1;   
+                SWAP;       
+              }; 
+          }; 
+        DROP;       
+        NIL operation; 
       }
       {
         IF_LEFT
           {
-            NIL operation; # list operation : @parameter%fulfill : @storage
-            DUP 3;      # @storage : list operation : @parameter%fulfill : @storage
-            GET 4;      # big_map (pair address bytes) address : list operation : @parameter%fulfill : @storage
-            DIG 2;      # @parameter%fulfill : big_map (pair address bytes) address : list operation : @storage
-            DUP;        # @parameter%fulfill : @parameter%fulfill : big_map (pair address bytes) address : list operation : @storage
-            GET 4;      # bytes : @parameter%fulfill : big_map (pair address bytes) address : list operation : @storage
-            SWAP;       # @parameter%fulfill : bytes : big_map (pair address bytes) address : list operation : @storage
-            DUP;        # @parameter%fulfill : @parameter%fulfill : bytes : big_map (pair address bytes) address : list operation : @storage
-            DUG 4;      # @parameter%fulfill : bytes : big_map (pair address bytes) address : list operation : @parameter%fulfill : @storage
-            GET 3;      # address : bytes : big_map (pair address bytes) address : list operation : @parameter%fulfill : @storage
-            PAIR;       # pair address bytes : big_map (pair address bytes) address : list operation : @parameter%fulfill : @storage
-            GET;        # option address : list operation : @parameter%fulfill : @storage
+            NIL operation; 
+            DUP 3;      
+            GET 4;      
+            DUP 3;      
+            CAR;        
+            GET;        
             IF_NONE
               {
-                PUSH string "JOB_UNKNOWN"; # string : list operation : @parameter%fulfill : @storage
-                FAILWITH;   # FAILED
+                PUSH string "JOB_UNKNOWN"; 
+                FAILWITH;   
               }
-              {}; # @some : list operation : @parameter%fulfill : @storage
-            CONTRACT %fulfill bytes; # option (contract bytes) : list operation : @parameter%fulfill : @storage
+              {}; 
+            GET 5;      
+            CONTRACT %fulfill bytes; 
             IF_NONE
               {
-                PUSH string "INVALID_CONTRACT"; # string : list operation : @parameter%fulfill : @storage
-                FAILWITH;   # FAILED
+                PUSH string "INVALID_CONTRACT"; 
+                FAILWITH;   
               }
-              {}; # @some : list operation : @parameter%fulfill : @storage
-            PUSH mutez 0; # mutez : @some : list operation : @parameter%fulfill : @storage
-            DIG 3;      # @parameter%fulfill : mutez : @some : list operation : @storage
-            CAR;        # bytes : mutez : @some : list operation : @storage
-            TRANSFER_TOKENS; # operation : list operation : @storage
-            CONS;       # list operation : @storage
+              {}; 
+            PUSH mutez 0; 
+            DIG 3;      
+            CDR;        
+            TRANSFER_TOKENS; 
+            CONS;       
           }
           {
-            SWAP;       # @storage : @parameter%perform_action
-            DUP;        # @storage : @storage : @parameter%perform_action
-            GET 3;      # nat : @storage : @parameter%perform_action
-            PUSH nat 1; # nat : nat : @storage : @parameter%perform_action
-            ADD;        # nat : @storage : @parameter%perform_action
-            UPDATE 3;   # @storage : @parameter%perform_action
-            SWAP;       # @parameter%perform_action : @storage
-            NIL operation; # list operation : @parameter%perform_action : @storage
-            DUP 3;      # @storage : list operation : @parameter%perform_action : @storage
-            CAR;        # pair (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator)) : list operation : @parameter%perform_action : @storage
-            CAR;        # pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address) : list operation : @parameter%perform_action : @storage
-            CAR;        # big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : list operation : @parameter%perform_action : @storage
-            DUP 3;      # @parameter%perform_action : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : list operation : @parameter%perform_action : @storage
-            CAR;        # string : big_map string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : list operation : @parameter%perform_action : @storage
-            GET;        # option (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation))) : list operation : @parameter%perform_action : @storage
+            SWAP;       
+            DUP;        
+            GET 3;      
+            PUSH nat 1; 
+            ADD;        
+            UPDATE 3;   
+            SWAP;       
+            NIL operation; 
+            DUP 3;      
+            CAR;        
+            CAR;        
+            CAR;        
+            DUP 3;      
+            CAR;        
+            GET;        
             IF_NONE
               {
-                PUSH string "ACTION_NOT_SUPPORTED"; # string : list operation : @parameter%perform_action : @storage
-                FAILWITH;   # FAILED
+                PUSH string "ACTION_NOT_SUPPORTED"; 
+                FAILWITH;   
               }
-              {}; # @some : list operation : @parameter%perform_action : @storage
-            DUP 4;      # @storage : @some : list operation : @parameter%perform_action : @storage
-            GET 4;      # big_map (pair address bytes) address : @some : list operation : @parameter%perform_action : @storage
-            DUP 4;      # @parameter%perform_action : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action : @storage
-            CDR;        # bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action : @storage
-            DIG 5;      # @storage : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action
-            DUP;        # @storage : @storage : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action
-            CAR;        # pair (pair (big_map %authorized_actions string (lambda (pair (pair (nat %action_number) (pair (address %merkle_aggregator) (pair (bytes %payload) (big_map %registry (pair address bytes) address)))) (list operation)) (pair (big_map (pair address bytes) address) (list operation)))) (address %governance_address)) (pair (address %merkle_aggregator) (address %proof_validator)) : @storage : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action
-            GET 3;      # address : @storage : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action
-            SWAP;       # @storage : address : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action
-            DUP;        # @storage : @storage : address : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action
-            DUG 7;      # @storage : address : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action : @storage
-            GET 3;      # nat : address : bytes : big_map (pair address bytes) address : @some : list operation : @parameter%perform_action : @storage
-            PAIR 4;     # pair nat (pair address (pair bytes (big_map (pair address bytes) address))) : @some : list operation : @parameter%perform_action : @storage
-            DIG 3;      # @parameter%perform_action : pair nat (pair address (pair bytes (big_map (pair address bytes) address))) : @some : list operation : @storage
-            DROP;       # pair nat (pair address (pair bytes (big_map (pair address bytes) address))) : @some : list operation : @storage
-            SWAP;       # @some : pair nat (pair address (pair bytes (big_map (pair address bytes) address))) : list operation : @storage
-            DUG 2;      # pair nat (pair address (pair bytes (big_map (pair address bytes) address))) : list operation : @some : @storage
-            PAIR;       # pair (pair nat (pair address (pair bytes (big_map (pair address bytes) address)))) (list operation) : @some : @storage
-            EXEC;       # pair (big_map (pair address bytes) address) (list operation) : @storage
-            UNPAIR;     # big_map (pair address bytes) address : list operation : @storage
-            DIG 2;      # @storage : big_map (pair address bytes) address : list operation
-            SWAP;       # big_map (pair address bytes) address : @storage : list operation
-            UPDATE 4;   # @storage : list operation
-            SWAP;       # list operation : @storage
-          }; # list operation : @storage
-      }; # list operation : @storage
-    NIL operation; # list operation : list operation : @storage
-    SWAP;       # list operation : list operation : @storage
+              {}; 
+            CAR;        
+            DUP 4;      
+            CAR;        
+            CAR;        
+            CAR;        
+            DUP 4;      
+            CAR;        
+            GET;        
+            IF_NONE
+              {
+                PUSH string "ACTION_NOT_SUPPORTED"; 
+                FAILWITH;   
+              }
+              {}; 
+            CDR;        
+            DUP 5;      
+            GET 4;      
+            DUP 5;      
+            CDR;        
+            DIG 6;      
+            DUP;        
+            CAR;        
+            GET 3;      
+            SWAP;       
+            DUP;        
+            DUG 8;      
+            GET 3;      
+            PAIR 5;     
+            SWAP;       
+            DUG 2;      
+            PAIR;       
+            EXEC;       
+            UNPAIR;     
+            DUP;        
+            DIG 4;      
+            SWAP;       
+            CDR;        
+            UPDATE 4;   
+            DUP;        
+            CAR;        
+            UNPAIR;     
+            UNPAIR;     
+            DUP;        
+            DIG 7;      
+            CAR;        
+            DUP;        
+            DUG 2;      
+            GET;        
+            IF_NONE
+              {
+                PUSH int 246; 
+                FAILWITH;   
+              }
+              {}; 
+            DIG 6;      
+            CAR;        
+            UPDATE 2;   
+            SOME;       
+            SWAP;       
+            UPDATE;     
+            PAIR;       
+            PAIR;       
+            UPDATE 1;   
+            SWAP;       
+          }; 
+      }; 
+    NIL operation; 
+    SWAP;       
     ITER
       {
-        CONS;       # list operation : @storage
-      }; # list operation : @storage
-    PAIR;       # pair (list operation) @storage
+        CONS;       
+      }; 
+    PAIR;       
   };

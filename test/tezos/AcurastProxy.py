@@ -1,7 +1,7 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
-from contracts.tezos.AcurastProxy import AcurastProxy, ActionLambda, ActionKind
+from contracts.tezos.AcurastProxy import AcurastProxy, ActionLambda, ActionKind, Type
 
 
 def get_nonce(n):
@@ -39,7 +39,14 @@ def test():
                 merkle_aggregator=aggregator.address,
                 proof_validator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
                 authorized_actions=sp.big_map(
-                    {"REGISTER_JOB": ActionLambda.register_job}
+                    {
+                        "REGISTER_JOB": sp.record(
+                            function=ActionLambda.register_job,
+                            storage=sp.record(
+                                version=1, data=sp.pack(sp.record(job_id_seq=0))
+                            ),
+                        ),
+                    }
                 ),
             ),
             outgoing_counter=0,
@@ -48,34 +55,37 @@ def test():
     )
     scenario += acurastProxy
 
-    register_job_payload = sp.record(
-        destination=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-        script=sp.bytes(
-            "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
-        ),
-        allowedSources=sp.none,
-        allowOnlyVerifiedSources=True,
-        schedule=sp.record(
-            duration=30000,
-            startTime=1678266066623,
-            endTime=1678266546623,
-            interval=31000,
-            maxStartDelay=0,
-        ),
-        memory=1,
-        networkRequests=1,
-        storage=1,
-        extra=sp.record(
-            requirements=sp.record(
-                slots=1,
-                reward=sp.bytes(
-                    "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
-                ),
-                minReputation=sp.none,
-                instantMatch=sp.none,
+    register_job_payload = sp.set_type_expr(
+        sp.record(
+            destination=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
+            script=sp.bytes(
+                "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
             ),
-            expectedFulfillmentFee=0,
+            allowedSources=sp.none,
+            allowOnlyVerifiedSources=True,
+            schedule=sp.record(
+                duration=30000,
+                startTime=1678266066623,
+                endTime=1678266546623,
+                interval=31000,
+                maxStartDelay=0,
+            ),
+            memory=1,
+            networkRequests=1,
+            storage=1,
+            extra=sp.record(
+                requirements=sp.record(
+                    slots=1,
+                    reward=sp.bytes(
+                        "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
+                    ),
+                    minReputation=sp.none,
+                    instantMatch=sp.none,
+                ),
+                expectedFulfillmentFee=0,
+            ),
         ),
+        Type.RegisterJobAction,
     )
     register_job_action = sp.record(
         action=ActionKind.REGISTER_JOB, payload=sp.pack(register_job_payload)
