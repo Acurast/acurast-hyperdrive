@@ -24,7 +24,7 @@ class Error:
 class Type:
     # Actions
     RegisterJobAction = sp.TRecord(
-        allowedSources=sp.TOption(sp.TSet(sp.TString)),
+        allowedSources=sp.TOption(sp.TSet(sp.TBytes)),
         allowOnlyVerifiedSources=sp.TBool,
         destination=sp.TAddress,
         extra=sp.TRecord(
@@ -33,7 +33,7 @@ class Type:
                 reward=sp.TBytes,
                 minReputation=sp.TOption(sp.TNat),
                 instantMatch=sp.TOption(
-                    sp.TSet(sp.TRecord(source=sp.TString, startDelay=sp.TNat))
+                    sp.TSet(sp.TRecord(source=sp.TBytes, startDelay=sp.TNat))
                 ),
             ).right_comb(),
             expectedFulfillmentFee=sp.TNat,
@@ -51,7 +51,13 @@ class Type:
         storage=sp.TNat,
     ).right_comb()
     # Storage
-    JobRegistry = sp.TBigMap(sp.TNat, RegisterJobAction)
+    JobRegistry = sp.TBigMap(
+        sp.TNat,
+        sp.TRecord(
+            level = sp.TNat,
+            metadata = RegisterJobAction,
+        ).right_comb()
+    )
     ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
     ActionLambdaArg = sp.TRecord(
         action_number=sp.TNat,
@@ -140,7 +146,10 @@ class ActionLambda:
 
         # Map the fulfillment recipient to the job
         registry = sp.local("registry", arg.registry)
-        registry.value[job_id] = action
+        registry.value[job_id] = sp.record(
+            level = sp.level,
+            metadata = action,
+        )
 
         # Add acurast action to the state merkle tree
         merkle_aggregator_contract = sp.contract(
@@ -162,7 +171,7 @@ class ActionLambda:
             ),
             sp.TRecord(
                 jobId=sp.TNat,
-                allowedSources=sp.TOption(sp.TSet(sp.TString)),
+                allowedSources=sp.TOption(sp.TSet(sp.TBytes)),
                 allowOnlyVerifiedSources=sp.TBool,
                 destination=sp.TAddress,
                 extra=sp.TRecord(
@@ -171,7 +180,7 @@ class ActionLambda:
                         reward=sp.TBytes,
                         minReputation=sp.TOption(sp.TNat),
                         instantMatch=sp.TOption(
-                            sp.TSet(sp.TRecord(source=sp.TString, startDelay=sp.TNat))
+                            sp.TSet(sp.TRecord(source=sp.TBytes, startDelay=sp.TNat))
                         ),
                     ).right_comb(),
                     expectedFulfillmentFee=sp.TNat,
@@ -256,7 +265,7 @@ class AcurastProxy(sp.Contract):
 
         # Pass fulfillment to target contract
         target_contract = sp.contract(
-            sp.TBytes, job_info.destination, "fulfill"
+            sp.TBytes, job_info.metadata.destination, "fulfill"
         ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(args.payload, sp.mutez(0), target_contract)
 

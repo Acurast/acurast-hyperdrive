@@ -1,6 +1,6 @@
 import smartpy as sp
 
-from contracts.tezos.AcurastProxy import AcurastProxy, ActionLambda
+from contracts.tezos.AcurastProxy import AcurastProxy, ActionLambda, Type
 
 sp.add_compilation_target(
     "AcurastProxy",
@@ -24,4 +24,28 @@ sp.add_compilation_target(
         outgoing_counter=0,
         registry=sp.big_map(),
     ),
+)
+
+sp.add_expression_compilation_target(
+    "REGISTER_JOB_LAMBDA", sp.set_type_expr(
+        [
+            sp.variant("update_authorized_actions",
+                [
+                    sp.variant(
+                        "add",
+                        sp.record(
+                            kind="REGISTER_JOB",
+                            function=sp.record(
+                                function=ActionLambda.register_job,
+                                storage=sp.record(
+                                    version=0, data=sp.pack(sp.record(job_id_seq=0))
+                                )
+                            )
+                        ),
+                    )
+                ]
+            )
+        ],
+        Type.ConfigureArgument
+    )
 )

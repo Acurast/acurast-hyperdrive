@@ -61,7 +61,7 @@ def test():
             script=sp.bytes(
                 "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
             ),
-            allowedSources=sp.none,
+            allowedSources=sp.some(sp.set([sp.bytes("0x" + "00"*32)])),
             allowOnlyVerifiedSources=True,
             schedule=sp.record(
                 duration=30000,
@@ -77,16 +77,18 @@ def test():
                 requirements=sp.record(
                     slots=1,
                     reward=sp.bytes(
-                        "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
+                        "0xff"
                     ),
                     minReputation=sp.none,
-                    instantMatch=sp.none,
+                    instantMatch=sp.some(sp.set([sp.record(source=sp.bytes("0x" + "11"*32), startDelay=0)])),
                 ),
                 expectedFulfillmentFee=0,
             ),
         ),
         Type.RegisterJobAction,
     )
+    scenario.show(sp.pack(register_job_payload))
+    scenario.show(sp.pack(sp.record(a=1)))
     register_job_action = sp.record(
         action=ActionKind.REGISTER_JOB, payload=sp.pack(register_job_payload)
     )
@@ -116,3 +118,5 @@ def test():
     )
 
     scenario.show(proof)
+
+    acurastProxy.fulfill(sp.record(jobId=1, payload=sp.bytes("0x")))
