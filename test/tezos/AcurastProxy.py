@@ -63,6 +63,9 @@ def test():
             ),
             allowedSources=sp.some(sp.set([sp.bytes("0x" + "00"*32)])),
             allowOnlyVerifiedSources=True,
+            requiredModules=sp.set([
+                0
+            ]),
             schedule=sp.record(
                 duration=30000,
                 startTime=1678266066623,

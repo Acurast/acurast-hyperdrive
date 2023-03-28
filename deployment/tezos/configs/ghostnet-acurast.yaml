@@ -7,6 +7,7 @@ known_addresses:
   signer_3: tz1XvqmBUa7SkUFRHSygUZsxMwh7i8GpV7iB
   IBCF_Aggragator: "KT1B8F7BhA2EeGQvPFpaVStd99ZDSzwrAcBL"
 actions:
+
   - kind: origination
     contract_kind: AcurastProxy
     name: AcurastProxy
@@ -16,3 +17,8 @@ actions:
       config:
         governance_address: admin_address
         merkle_aggregator: IBCF_Aggragator
+
+  - kind: contract_call
+    contract_address: AcurastProxy
+    entrypoint: configure
+    script: __SNAPSHOTS__/compilation/tezos/AcurastProxy/REGISTER_JOB_LAMBDA/step_000_expression.tz

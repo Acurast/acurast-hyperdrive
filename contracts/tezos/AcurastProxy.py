@@ -38,6 +38,7 @@ class Type:
             ).right_comb(),
             expectedFulfillmentFee=sp.TNat,
         ).right_comb(),
+        requiredModules=sp.TSet(sp.TNat),
         script=sp.TBytes,
         schedule=sp.TRecord(
             duration=sp.TNat,
@@ -160,6 +161,7 @@ class ActionLambda:
             sp.record(
                 jobId=job_id,
                 destination=action.destination,
+                requiredModules=action.requiredModules,
                 script=action.script,
                 allowedSources=action.allowedSources,
                 allowOnlyVerifiedSources=action.allowOnlyVerifiedSources,
@@ -185,6 +187,7 @@ class ActionLambda:
                     ).right_comb(),
                     expectedFulfillmentFee=sp.TNat,
                 ).right_comb(),
+                requiredModules=sp.TSet(sp.TNat),
                 script=sp.TBytes,
                 schedule=sp.TRecord(
                     duration=sp.TNat,
