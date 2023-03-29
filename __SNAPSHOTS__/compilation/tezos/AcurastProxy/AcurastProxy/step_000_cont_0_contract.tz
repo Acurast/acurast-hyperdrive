@@ -151,13 +151,10 @@ code
             GET 4;      
             DUP 5;      
             CDR;        
-            DIG 6;      
-            DUP;        
+            DUP 7;      
             CAR;        
             GET 3;      
-            SWAP;       
-            DUP;        
-            DUG 8;      
+            DUP 8;      
             GET 3;      
             PAIR 5;     
             SWAP;       
@@ -165,9 +162,8 @@ code
             PAIR;       
             EXEC;       
             UNPAIR;     
-            DUP;        
-            DIG 4;      
-            SWAP;       
+            DIG 3;      
+            DUP 2;      
             CDR;        
             UPDATE 4;   
             DUP;        
@@ -182,7 +178,7 @@ code
             GET;        
             IF_NONE
               {
-                PUSH int 258; 
+                PUSH int 256; 
                 FAILWITH;   
               }
               {}; 

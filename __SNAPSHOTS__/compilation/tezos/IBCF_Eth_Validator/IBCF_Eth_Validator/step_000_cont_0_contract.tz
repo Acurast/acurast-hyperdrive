@@ -190,9 +190,7 @@ code
           }; 
         DUP 4;      
         GET 4;      
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
         MEM;        
         IF
           {
@@ -237,9 +235,7 @@ code
           }; 
         DUP 4;      
         GET 4;      
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
         GET;        
         IF_NONE
           {
@@ -257,9 +253,7 @@ code
             DUP 3;      
             ITER
               {
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 PUSH nat 1; 
                 DIG 3;      
                 DUP 4;      
@@ -276,9 +270,8 @@ code
                 CDR;        
                 UPDATE;     
               }; 
-            DUP;        
             PUSH bytes 0x; 
-            SWAP;       
+            DUP 2;      
             ITER
               {
                 CAR;        
@@ -332,8 +325,8 @@ code
                 DROP;       
                 DIG 3;      
                 DROP;       
-                DUP;        
-                DUG 3;      
+                DUG 2;      
+                DUP 3;      
                 GET;        
                 IF_NONE
                   {
@@ -384,14 +377,13 @@ code
             DUP 4;      
             UPDATE;     
             UPDATE 3;   
-            DUP;        
+            DUG 3;      
+            DUP 4;      
             CAR;        
             CAR;        
             CAR;        
             CDR;        
-            SWAP;       
-            DUP;        
-            DUG 5;      
+            DUP 5;      
             GET 3;      
             SIZE;       
             COMPARE;    
@@ -402,18 +394,12 @@ code
                 DROP;       
                 SWAP;       
                 DROP;       
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 GET 3;      
                 ITER
                   {
-                    SWAP;       
-                    DUP;        
-                    DUG 2;      
-                    SWAP;       
-                    DUP;        
-                    DUG 2;      
+                    DUP 2;      
+                    DUP 2;      
                     COMPARE;    
                     LT;         
                     IF
@@ -465,17 +451,14 @@ view
           {
             DUP;        
             UNPAIR;     
-            DUP;        
-            SIZE;       
             LAMBDA
               bytes
               nat
               {
                 DUP;        
                 SIZE;       
-                DUP;        
                 PUSH nat 0; 
-                SWAP;       
+                DUP 2;      
                 PUSH nat 0; 
                 DUP;        
                 DUP 3;      
@@ -510,8 +493,8 @@ view
                     PUSH nat 1; 
                     PUSH nat 16; 
                     DUP 3;      
-                    DUP;        
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
                     LOOP
@@ -532,10 +515,9 @@ view
                         NEQ;        
                         IF
                           {
+                            DIG 2;      
+                            DUP 3;      
                             SWAP;       
-                            DUP;        
-                            DUG 2;      
-                            DIG 3;      
                             MUL;        
                             DUG 2;      
                           }
@@ -547,16 +529,18 @@ view
                         DUP;        
                         MUL;        
                         SWAP;       
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                       }; 
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    DIG 4;      
+                    SWAP;       
                     PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                    DIG 2;      
+                    DIG 3;      
                     PUSH bytes 0x050a00000020; 
                     CONCAT;     
                     CONCAT;     
@@ -576,7 +560,6 @@ view
                       }
                       {}; 
                     MUL;        
-                    DIG 3;      
                     ADD;        
                     DUG 2;      
                     PUSH nat 1; 
@@ -592,25 +575,23 @@ view
                 SWAP;       
                 DROP;       
               }; 
-            SWAP;       
-            DUP;        
+            DUP 2;      
+            SIZE;       
             PUSH nat 0; 
+            DUP 2;      
             COMPARE;    
-            LT;         
+            GT;         
             IF
               {}
               {
                 PUSH string "Empty bytes array"; 
                 FAILWITH;   
               }; 
-            DUP;        
             PUSH nat 2; 
-            SWAP;       
+            DUP 2;      
             MUL;        
             DUP 5;      
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            DUP 2;      
             COMPARE;    
             GE;         
             IF
@@ -619,9 +600,8 @@ view
                 PUSH string "Skip nibbles amount too large"; 
                 FAILWITH;   
               }; 
-            DUP;        
             PUSH bytes 0x; 
-            SWAP;       
+            DUP 2;      
             DUP 7;      
             DUP;        
             DUP 3;      
@@ -651,10 +631,12 @@ view
                   }
                   {}; 
                 EXEC;       
-                PUSH nat 15; 
                 PUSH (map nat nat) {Elt 0 4; Elt 1 0}; 
+                DIG 4;      
+                PUSH nat 15; 
+                DIG 2;      
                 PUSH nat 2; 
-                DUP 5;      
+                DUP 6;      
                 EDIV;       
                 IF_NONE
                   {
@@ -671,7 +653,7 @@ view
                     FAILWITH;   
                   }
                   {}; 
-                DIG 2;      
+                DIG 3;      
                 LSR;        
                 AND;        
                 PACK;       
@@ -684,7 +666,7 @@ view
                     FAILWITH;   
                   }
                   {}; 
-                DIG 3;      
+                SWAP;       
                 CONCAT;     
                 DUG 2;      
                 PUSH nat 1; 
@@ -723,9 +705,7 @@ view
             DUP 3;      
             IF
               {
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 DUP 8;      
                 DUP 6;      
                 ADD;        
@@ -779,17 +759,15 @@ view
                     DUG 2;      
                   }
                   {
+                    DIG 3;      
                     PUSH nat 1; 
-                    DIG 4;      
                     ADD;        
                     DUG 3;      
                   }; 
                 DUP 3;      
                 IF
                   {
-                    SWAP;       
-                    DUP;        
-                    DUG 2;      
+                    DUP 2;      
                     DUP 8;      
                     DUP 6;      
                     ADD;        
@@ -824,11 +802,11 @@ view
           bytes
           bytes
           {
-            DUP;        
-            SIZE;       
             PUSH nat 0; 
+            DUP 2;      
+            SIZE;       
             COMPARE;    
-            LT;         
+            GT;         
             IF
               {}
               {
@@ -841,9 +819,8 @@ view
               {
                 DUP;        
                 SIZE;       
-                DUP;        
                 PUSH nat 0; 
-                SWAP;       
+                DUP 2;      
                 PUSH nat 0; 
                 DUP;        
                 DUP 3;      
@@ -878,8 +855,8 @@ view
                     PUSH nat 1; 
                     PUSH nat 16; 
                     DUP 3;      
-                    DUP;        
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
                     LOOP
@@ -900,10 +877,9 @@ view
                         NEQ;        
                         IF
                           {
+                            DIG 2;      
+                            DUP 3;      
                             SWAP;       
-                            DUP;        
-                            DUG 2;      
-                            DIG 3;      
                             MUL;        
                             DUG 2;      
                           }
@@ -915,16 +891,18 @@ view
                         DUP;        
                         MUL;        
                         SWAP;       
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                       }; 
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    DIG 4;      
+                    SWAP;       
                     PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                    DIG 2;      
+                    DIG 3;      
                     PUSH bytes 0x050a00000020; 
                     CONCAT;     
                     CONCAT;     
@@ -944,7 +922,6 @@ view
                       }
                       {}; 
                     MUL;        
-                    DIG 3;      
                     ADD;        
                     DUG 2;      
                     PUSH nat 1; 
@@ -960,24 +937,20 @@ view
                 SWAP;       
                 DROP;       
               }; 
-            DUP;        
             LAMBDA
               (pair bytes nat)
               bytes
               {
                 DUP;        
                 UNPAIR;     
-                DUP;        
-                SIZE;       
                 LAMBDA
                   bytes
                   nat
                   {
                     DUP;        
                     SIZE;       
-                    DUP;        
                     PUSH nat 0; 
-                    SWAP;       
+                    DUP 2;      
                     PUSH nat 0; 
                     DUP;        
                     DUP 3;      
@@ -1012,8 +985,8 @@ view
                         PUSH nat 1; 
                         PUSH nat 16; 
                         DUP 3;      
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                         LOOP
@@ -1034,10 +1007,9 @@ view
                             NEQ;        
                             IF
                               {
+                                DIG 2;      
+                                DUP 3;      
                                 SWAP;       
-                                DUP;        
-                                DUG 2;      
-                                DIG 3;      
                                 MUL;        
                                 DUG 2;      
                               }
@@ -1049,16 +1021,18 @@ view
                             DUP;        
                             MUL;        
                             SWAP;       
-                            DUP;        
                             PUSH nat 0; 
+                            DUP 2;      
                             COMPARE;    
                             NEQ;        
                           }; 
                         DROP 2;     
                         SWAP;       
                         DROP;       
+                        DIG 4;      
+                        SWAP;       
                         PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                        DIG 2;      
+                        DIG 3;      
                         PUSH bytes 0x050a00000020; 
                         CONCAT;     
                         CONCAT;     
@@ -1078,7 +1052,6 @@ view
                           }
                           {}; 
                         MUL;        
-                        DIG 3;      
                         ADD;        
                         DUG 2;      
                         PUSH nat 1; 
@@ -1094,25 +1067,23 @@ view
                     SWAP;       
                     DROP;       
                   }; 
-                SWAP;       
-                DUP;        
+                DUP 2;      
+                SIZE;       
                 PUSH nat 0; 
+                DUP 2;      
                 COMPARE;    
-                LT;         
+                GT;         
                 IF
                   {}
                   {
                     PUSH string "Empty bytes array"; 
                     FAILWITH;   
                   }; 
-                DUP;        
                 PUSH nat 2; 
-                SWAP;       
+                DUP 2;      
                 MUL;        
                 DUP 5;      
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 COMPARE;    
                 GE;         
                 IF
@@ -1121,9 +1092,8 @@ view
                     PUSH string "Skip nibbles amount too large"; 
                     FAILWITH;   
                   }; 
-                DUP;        
                 PUSH bytes 0x; 
-                SWAP;       
+                DUP 2;      
                 DUP 7;      
                 DUP;        
                 DUP 3;      
@@ -1153,10 +1123,12 @@ view
                       }
                       {}; 
                     EXEC;       
-                    PUSH nat 15; 
                     PUSH (map nat nat) {Elt 0 4; Elt 1 0}; 
+                    DIG 4;      
+                    PUSH nat 15; 
+                    DIG 2;      
                     PUSH nat 2; 
-                    DUP 5;      
+                    DUP 6;      
                     EDIV;       
                     IF_NONE
                       {
@@ -1173,7 +1145,7 @@ view
                         FAILWITH;   
                       }
                       {}; 
-                    DIG 2;      
+                    DIG 3;      
                     LSR;        
                     AND;        
                     PACK;       
@@ -1186,7 +1158,7 @@ view
                         FAILWITH;   
                       }
                       {}; 
-                    DIG 3;      
+                    SWAP;       
                     CONCAT;     
                     DUG 2;      
                     PUSH nat 1; 
@@ -1210,7 +1182,7 @@ view
                 SWAP;       
                 DROP;       
               }; 
-            SWAP;       
+            DUP 2;      
             DUP 4;      
             PUSH nat 1; 
             PUSH nat 0; 
@@ -1222,9 +1194,8 @@ view
               }
               {}; 
             EXEC;       
-            DUP;        
             PUSH nat 4; 
-            SWAP;       
+            DUP 2;      
             LSR;        
             PUSH nat 0; 
             DUP;        
@@ -1300,9 +1271,8 @@ view
               {
                 DUP;        
                 SIZE;       
-                DUP;        
                 PUSH nat 0; 
-                SWAP;       
+                DUP 2;      
                 PUSH nat 0; 
                 DUP;        
                 DUP 3;      
@@ -1337,8 +1307,8 @@ view
                     PUSH nat 1; 
                     PUSH nat 16; 
                     DUP 3;      
-                    DUP;        
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
                     LOOP
@@ -1359,10 +1329,9 @@ view
                         NEQ;        
                         IF
                           {
+                            DIG 2;      
+                            DUP 3;      
                             SWAP;       
-                            DUP;        
-                            DUG 2;      
-                            DIG 3;      
                             MUL;        
                             DUG 2;      
                           }
@@ -1374,16 +1343,18 @@ view
                         DUP;        
                         MUL;        
                         SWAP;       
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                       }; 
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    DIG 4;      
+                    SWAP;       
                     PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                    DIG 2;      
+                    DIG 3;      
                     PUSH bytes 0x050a00000020; 
                     CONCAT;     
                     CONCAT;     
@@ -1403,7 +1374,6 @@ view
                       }
                       {}; 
                     MUL;        
-                    DIG 3;      
                     ADD;        
                     DUG 2;      
                     PUSH nat 1; 
@@ -1522,9 +1492,7 @@ view
             LOOP
               {
                 DUP 10;     
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 GET;        
                 IF_NONE
                   {
@@ -1568,14 +1536,12 @@ view
                       }; 
                     DUP 18;     
                     GET 4;      
-                    SWAP;       
-                    DUP;        
-                    DUG 2;      
+                    DUP 2;      
                     EXEC;       
                     DUP;        
                     SIZE;       
-                    DUP;        
                     PUSH nat 2; 
+                    DUP 2;      
                     COMPARE;    
                     EQ;         
                     IF
@@ -1600,8 +1566,8 @@ view
                         DUP 15;     
                         PAIR 3;     
                         EXEC;       
-                        DUP;        
-                        DIG 11;     
+                        DIG 10;     
+                        DUP 2;      
                         ADD;        
                         DUG 10;     
                         DUP 14;     
@@ -1659,9 +1625,7 @@ view
                               {}; 
                             DUP 17;     
                             CAR;        
-                            SWAP;       
-                            DUP;        
-                            DUG 2;      
+                            DUP 2;      
                             EXEC;       
                             IF
                               {
@@ -1692,8 +1656,8 @@ view
                           }; 
                       }
                       {
-                        DUP;        
                         PUSH nat 17; 
+                        DUP 2;      
                         COMPARE;    
                         EQ;         
                         IF
@@ -1802,15 +1766,13 @@ view
                                 FAILWITH;   
                               }
                               {}; 
+                            DIG 5;      
                             PUSH nat 1; 
-                            DIG 6;      
                             ADD;        
                             DUG 5;      
                             DUP 17;     
                             CAR;        
-                            SWAP;       
-                            DUP;        
-                            DUG 2;      
+                            DUP 2;      
                             EXEC;       
                             IF
                               {
@@ -1896,7 +1858,6 @@ view
         FAILWITH;   
       }
       {}; 
-    DUP;        
     LAMBDA
       (pair nat (map address bytes))
       (option bytes)
@@ -1907,9 +1868,7 @@ view
         DUP 3;      
         ITER
           {
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            DUP 2;      
             PUSH nat 1; 
             DIG 3;      
             DUP 4;      
@@ -1926,9 +1885,8 @@ view
             CDR;        
             UPDATE;     
           }; 
-        DUP;        
         PUSH bytes 0x; 
-        SWAP;       
+        DUP 2;      
         ITER
           {
             CAR;        
@@ -1982,8 +1940,8 @@ view
             DROP;       
             DIG 3;      
             DROP;       
-            DUP;        
-            DUG 3;      
+            DUG 2;      
+            DUP 3;      
             GET;        
             IF_NONE
               {
@@ -2003,7 +1961,7 @@ view
             SOME;       
           }; 
       }; 
-    SWAP;       
+    DUP 2;      
     DUP 11;     
     CAR;        
     CAR;        
@@ -2034,9 +1992,8 @@ view
                   {
                     DUP;        
                     SIZE;       
-                    DUP;        
                     PUSH nat 0; 
-                    SWAP;       
+                    DUP 2;      
                     PUSH nat 0; 
                     DUP;        
                     DUP 3;      
@@ -2071,8 +2028,8 @@ view
                         PUSH nat 1; 
                         PUSH nat 16; 
                         DUP 3;      
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                         LOOP
@@ -2093,10 +2050,9 @@ view
                             NEQ;        
                             IF
                               {
+                                DIG 2;      
+                                DUP 3;      
                                 SWAP;       
-                                DUP;        
-                                DUG 2;      
-                                DIG 3;      
                                 MUL;        
                                 DUG 2;      
                               }
@@ -2108,16 +2064,18 @@ view
                             DUP;        
                             MUL;        
                             SWAP;       
-                            DUP;        
                             PUSH nat 0; 
+                            DUP 2;      
                             COMPARE;    
                             NEQ;        
                           }; 
                         DROP 2;     
                         SWAP;       
                         DROP;       
+                        DIG 4;      
+                        SWAP;       
                         PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                        DIG 2;      
+                        DIG 3;      
                         PUSH bytes 0x050a00000020; 
                         CONCAT;     
                         CONCAT;     
@@ -2137,7 +2095,6 @@ view
                           }
                           {}; 
                         MUL;        
-                        DIG 3;      
                         ADD;        
                         DUG 2;      
                         PUSH nat 1; 
@@ -2165,20 +2122,20 @@ view
                   }
                   {}; 
                 EXEC;       
-                DUP;        
                 PUSH nat 128; 
+                DUP 2;      
                 COMPARE;    
-                GT;         
+                LT;         
                 IF
                   {
                     DROP 3;     
                     PUSH nat 1; 
                   }
                   {
-                    DUP;        
                     PUSH nat 184; 
+                    DUP 2;      
                     COMPARE;    
-                    GT;         
+                    LT;         
                     IF
                       {
                         SWAP;       
@@ -2199,10 +2156,10 @@ view
                           {}; 
                       }
                       {
-                        DUP;        
                         PUSH nat 192; 
+                        DUP 2;      
                         COMPARE;    
-                        GT;         
+                        LT;         
                         IF
                           {
                             PUSH nat 183; 
@@ -2215,9 +2172,8 @@ view
                                 FAILWITH;   
                               }
                               {}; 
-                            DUP;        
                             PUSH nat 1; 
-                            SWAP;       
+                            DUP 2;      
                             DIG 3;      
                             DUP 5;      
                             PUSH nat 1; 
@@ -2253,10 +2209,10 @@ view
                             ADD;        
                           }
                           {
-                            DUP;        
                             PUSH nat 248; 
+                            DUP 2;      
                             COMPARE;    
-                            GT;         
+                            LT;         
                             IF
                               {
                                 SWAP;       
@@ -2287,9 +2243,8 @@ view
                                     FAILWITH;   
                                   }
                                   {}; 
-                                DUP;        
                                 PUSH nat 1; 
-                                SWAP;       
+                                DUP 2;      
                                 DIG 3;      
                                 DUP 5;      
                                 PUSH nat 1; 
@@ -2338,9 +2293,8 @@ view
                   {
                     DUP;        
                     SIZE;       
-                    DUP;        
                     PUSH nat 0; 
-                    SWAP;       
+                    DUP 2;      
                     PUSH nat 0; 
                     DUP;        
                     DUP 3;      
@@ -2375,8 +2329,8 @@ view
                         PUSH nat 1; 
                         PUSH nat 16; 
                         DUP 3;      
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                         LOOP
@@ -2397,10 +2351,9 @@ view
                             NEQ;        
                             IF
                               {
+                                DIG 2;      
+                                DUP 3;      
                                 SWAP;       
-                                DUP;        
-                                DUG 2;      
-                                DIG 3;      
                                 MUL;        
                                 DUG 2;      
                               }
@@ -2412,16 +2365,18 @@ view
                             DUP;        
                             MUL;        
                             SWAP;       
-                            DUP;        
                             PUSH nat 0; 
+                            DUP 2;      
                             COMPARE;    
                             NEQ;        
                           }; 
                         DROP 2;     
                         SWAP;       
                         DROP;       
+                        DIG 4;      
+                        SWAP;       
                         PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                        DIG 2;      
+                        DIG 3;      
                         PUSH bytes 0x050a00000020; 
                         CONCAT;     
                         CONCAT;     
@@ -2441,7 +2396,6 @@ view
                           }
                           {}; 
                         MUL;        
-                        DIG 3;      
                         ADD;        
                         DUG 2;      
                         PUSH nat 1; 
@@ -2468,36 +2422,35 @@ view
                   }
                   {}; 
                 EXEC;       
-                DUP;        
                 PUSH nat 128; 
+                DUP 2;      
                 COMPARE;    
-                GT;         
+                LT;         
                 IF
                   {
                     DROP;       
                     PUSH nat 0; 
                   }
                   {
-                    DUP;        
                     PUSH nat 184; 
+                    DUP 2;      
                     COMPARE;    
-                    GT;         
+                    LT;         
                     IF
                       {
                         PUSH bool True; 
                       }
                       {
-                        DUP;        
                         PUSH nat 192; 
-                        SWAP;       
+                        DUP 2;      
                         COMPARE;    
                         GE;         
                         IF
                           {
-                            DUP;        
                             PUSH nat 248; 
+                            DUP 2;      
                             COMPARE;    
-                            GT;         
+                            LT;         
                           }
                           {
                             PUSH bool False; 
@@ -2509,10 +2462,10 @@ view
                         PUSH nat 1; 
                       }
                       {
-                        DUP;        
                         PUSH nat 192; 
+                        DUP 2;      
                         COMPARE;    
-                        GT;         
+                        LT;         
                         IF
                           {
                             PUSH nat 1; 
@@ -2545,9 +2498,8 @@ view
                       }; 
                   }; 
               }; 
-            DUP;        
             PUSH nat 0; 
-            SWAP;       
+            DUP 2;      
             DUP 5;      
             EXEC;       
             DUP 5;      
@@ -2558,10 +2510,11 @@ view
             LT;         
             LOOP
               {
+                DUP 2;      
+                DUP 6;      
+                DUP 8;      
                 DUP 5;      
-                DUP 7;      
-                DUP 4;      
-                DUP 4;      
+                DUP 5;      
                 SUB;        
                 ISNAT;      
                 IF_NONE
@@ -2570,7 +2523,7 @@ view
                     FAILWITH;   
                   }
                   {}; 
-                DUP 5;      
+                DIG 5;      
                 SLICE;      
                 IF_NONE
                   {
@@ -2579,11 +2532,10 @@ view
                   }
                   {}; 
                 EXEC;       
-                DIG 2;      
                 ADD;        
                 SWAP;       
+                DIG 2;      
                 PUSH nat 1; 
-                DIG 3;      
                 ADD;        
                 DUG 2;      
                 DUP;        
@@ -2609,9 +2561,8 @@ view
               {
                 DUP;        
                 SIZE;       
-                DUP;        
                 PUSH nat 0; 
-                SWAP;       
+                DUP 2;      
                 PUSH nat 0; 
                 DUP;        
                 DUP 3;      
@@ -2646,8 +2597,8 @@ view
                     PUSH nat 1; 
                     PUSH nat 16; 
                     DUP 3;      
-                    DUP;        
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
                     LOOP
@@ -2668,10 +2619,9 @@ view
                         NEQ;        
                         IF
                           {
+                            DIG 2;      
+                            DUP 3;      
                             SWAP;       
-                            DUP;        
-                            DUG 2;      
-                            DIG 3;      
                             MUL;        
                             DUG 2;      
                           }
@@ -2683,16 +2633,18 @@ view
                         DUP;        
                         MUL;        
                         SWAP;       
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                       }; 
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    DIG 4;      
+                    SWAP;       
                     PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                    DIG 2;      
+                    DIG 3;      
                     PUSH bytes 0x050a00000020; 
                     CONCAT;     
                     CONCAT;     
@@ -2712,7 +2664,6 @@ view
                       }
                       {}; 
                     MUL;        
-                    DIG 3;      
                     ADD;        
                     DUG 2;      
                     PUSH nat 1; 
@@ -2740,20 +2691,20 @@ view
               }
               {}; 
             EXEC;       
-            DUP;        
             PUSH nat 128; 
+            DUP 2;      
             COMPARE;    
-            GT;         
+            LT;         
             IF
               {
                 DROP 3;     
                 PUSH nat 1; 
               }
               {
-                DUP;        
                 PUSH nat 184; 
+                DUP 2;      
                 COMPARE;    
-                GT;         
+                LT;         
                 IF
                   {
                     SWAP;       
@@ -2774,10 +2725,10 @@ view
                       {}; 
                   }
                   {
-                    DUP;        
                     PUSH nat 192; 
+                    DUP 2;      
                     COMPARE;    
-                    GT;         
+                    LT;         
                     IF
                       {
                         PUSH nat 183; 
@@ -2790,9 +2741,8 @@ view
                             FAILWITH;   
                           }
                           {}; 
-                        DUP;        
                         PUSH nat 1; 
-                        SWAP;       
+                        DUP 2;      
                         DIG 3;      
                         DUP 5;      
                         PUSH nat 1; 
@@ -2828,10 +2778,10 @@ view
                         ADD;        
                       }
                       {
-                        DUP;        
                         PUSH nat 248; 
+                        DUP 2;      
                         COMPARE;    
-                        GT;         
+                        LT;         
                         IF
                           {
                             SWAP;       
@@ -2862,9 +2812,8 @@ view
                                 FAILWITH;   
                               }
                               {}; 
-                            DUP;        
                             PUSH nat 1; 
-                            SWAP;       
+                            DUP 2;      
                             DIG 3;      
                             DUP 5;      
                             PUSH nat 1; 
@@ -2913,9 +2862,8 @@ view
               {
                 DUP;        
                 SIZE;       
-                DUP;        
                 PUSH nat 0; 
-                SWAP;       
+                DUP 2;      
                 PUSH nat 0; 
                 DUP;        
                 DUP 3;      
@@ -2950,8 +2898,8 @@ view
                     PUSH nat 1; 
                     PUSH nat 16; 
                     DUP 3;      
-                    DUP;        
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
                     LOOP
@@ -2972,10 +2920,9 @@ view
                         NEQ;        
                         IF
                           {
+                            DIG 2;      
+                            DUP 3;      
                             SWAP;       
-                            DUP;        
-                            DUG 2;      
-                            DIG 3;      
                             MUL;        
                             DUG 2;      
                           }
@@ -2987,16 +2934,18 @@ view
                         DUP;        
                         MUL;        
                         SWAP;       
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                       }; 
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    DIG 4;      
+                    SWAP;       
                     PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                    DIG 2;      
+                    DIG 3;      
                     PUSH bytes 0x050a00000020; 
                     CONCAT;     
                     CONCAT;     
@@ -3016,7 +2965,6 @@ view
                       }
                       {}; 
                     MUL;        
-                    DIG 3;      
                     ADD;        
                     DUG 2;      
                     PUSH nat 1; 
@@ -3043,36 +2991,35 @@ view
               }
               {}; 
             EXEC;       
-            DUP;        
             PUSH nat 128; 
+            DUP 2;      
             COMPARE;    
-            GT;         
+            LT;         
             IF
               {
                 DROP;       
                 PUSH nat 0; 
               }
               {
-                DUP;        
                 PUSH nat 184; 
+                DUP 2;      
                 COMPARE;    
-                GT;         
+                LT;         
                 IF
                   {
                     PUSH bool True; 
                   }
                   {
-                    DUP;        
                     PUSH nat 192; 
-                    SWAP;       
+                    DUP 2;      
                     COMPARE;    
                     GE;         
                     IF
                       {
-                        DUP;        
                         PUSH nat 248; 
+                        DUP 2;      
                         COMPARE;    
-                        GT;         
+                        LT;         
                       }
                       {
                         PUSH bool False; 
@@ -3084,10 +3031,10 @@ view
                     PUSH nat 1; 
                   }
                   {
-                    DUP;        
                     PUSH nat 192; 
+                    DUP 2;      
                     COMPARE;    
-                    GT;         
+                    LT;         
                     IF
                       {
                         PUSH nat 1; 
@@ -3248,225 +3195,225 @@ view
       bytes
       bytes
       {
-        DUP;        
         LAMBDA
           bytes
           nat
           {
-            DUP;        
-            SIZE;       
-            DUP;        
-            PUSH nat 0; 
-            SWAP;       
-            PUSH nat 0; 
-            DUP;        
-            DUP 3;      
-            COMPARE;    
-            GT;         
-            LOOP
+            LAMBDA
+              bytes
+              nat
               {
-                DUP 5;      
-                PUSH nat 1; 
-                DUP 3;      
-                SLICE;      
-                IF_NONE
-                  {
-                    PUSH int 126; 
-                    FAILWITH;   
-                  }
-                  {}; 
-                PUSH nat 2; 
-                PUSH nat 1; 
-                DUP 4;      
-                ADD;        
-                DUP 7;      
-                SUB;        
-                ISNAT;      
-                IF_NONE
-                  {
-                    PUSH int 127; 
-                    FAILWITH;   
-                  }
-                  {}; 
-                MUL;        
-                PUSH nat 1; 
-                PUSH nat 16; 
-                DUP 3;      
                 DUP;        
+                SIZE;       
                 PUSH nat 0; 
+                DUP 2;      
+                PUSH nat 0; 
+                DUP;        
+                DUP 3;      
                 COMPARE;    
-                NEQ;        
+                GT;         
                 LOOP
                   {
-                    PUSH nat 0; 
-                    PUSH nat 2; 
+                    DUP 5;      
+                    PUSH nat 1; 
                     DUP 3;      
-                    EDIV;       
+                    SLICE;      
                     IF_NONE
                       {
-                        PUSH int 28; 
+                        PUSH int 126; 
                         FAILWITH;   
                       }
+                      {}; 
+                    PUSH nat 2; 
+                    PUSH nat 1; 
+                    DUP 4;      
+                    ADD;        
+                    DUP 7;      
+                    SUB;        
+                    ISNAT;      
+                    IF_NONE
                       {
-                        CDR;        
-                      }; 
-                    COMPARE;    
-                    NEQ;        
-                    IF
-                      {
-                        SWAP;       
-                        DUP;        
-                        DUG 2;      
-                        DIG 3;      
-                        MUL;        
-                        DUG 2;      
+                        PUSH int 127; 
+                        FAILWITH;   
                       }
                       {}; 
-                    PUSH nat 1; 
-                    SWAP;       
-                    LSR;        
-                    SWAP;       
-                    DUP;        
                     MUL;        
-                    SWAP;       
-                    DUP;        
+                    PUSH nat 1; 
+                    PUSH nat 16; 
+                    DUP 3;      
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
+                    LOOP
+                      {
+                        PUSH nat 0; 
+                        PUSH nat 2; 
+                        DUP 3;      
+                        EDIV;       
+                        IF_NONE
+                          {
+                            PUSH int 28; 
+                            FAILWITH;   
+                          }
+                          {
+                            CDR;        
+                          }; 
+                        COMPARE;    
+                        NEQ;        
+                        IF
+                          {
+                            DIG 2;      
+                            DUP 3;      
+                            SWAP;       
+                            MUL;        
+                            DUG 2;      
+                          }
+                          {}; 
+                        PUSH nat 1; 
+                        SWAP;       
+                        LSR;        
+                        SWAP;       
+                        DUP;        
+                        MUL;        
+                        SWAP;       
+                        PUSH nat 0; 
+                        DUP 2;      
+                        COMPARE;    
+                        NEQ;        
+                      }; 
+                    DROP 2;     
+                    SWAP;       
+                    DROP;       
+                    DIG 4;      
+                    SWAP;       
+                    PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
+                    DIG 3;      
+                    PUSH bytes 0x050a00000020; 
+                    CONCAT;     
+                    CONCAT;     
+                    UNPACK bls12_381_fr; 
+                    IF_NONE
+                      {
+                        PUSH int 134; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    INT;        
+                    ISNAT;      
+                    IF_NONE
+                      {
+                        PUSH int 133; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    MUL;        
+                    ADD;        
+                    DUG 2;      
+                    PUSH nat 1; 
+                    ADD;        
+                    DUP;        
+                    DUP 3;      
+                    COMPARE;    
+                    GT;         
                   }; 
                 DROP 2;     
                 SWAP;       
                 DROP;       
-                PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                DIG 2;      
-                PUSH bytes 0x050a00000020; 
-                CONCAT;     
-                CONCAT;     
-                UNPACK bls12_381_fr; 
-                IF_NONE
-                  {
-                    PUSH int 134; 
-                    FAILWITH;   
-                  }
-                  {}; 
-                INT;        
-                ISNAT;      
-                IF_NONE
-                  {
-                    PUSH int 133; 
-                    FAILWITH;   
-                  }
-                  {}; 
-                MUL;        
-                DIG 3;      
-                ADD;        
-                DUG 2;      
-                PUSH nat 1; 
-                ADD;        
-                DUP;        
-                DUP 3;      
-                COMPARE;    
-                GT;         
-              }; 
-            DROP 2;     
-            SWAP;       
-            DROP;       
-            SWAP;       
-            DROP;       
-          }; 
-        SWAP;       
-        PUSH nat 1; 
-        PUSH nat 0; 
-        SLICE;      
-        IF_NONE
-          {
-            PUSH int 339; 
-            FAILWITH;   
-          }
-          {}; 
-        EXEC;       
-        DUP;        
-        PUSH nat 128; 
-        COMPARE;    
-        GT;         
-        IF
-          {
-            DROP;       
-            PUSH nat 0; 
-          }
-          {
-            DUP;        
-            PUSH nat 184; 
-            COMPARE;    
-            GT;         
-            IF
-              {
-                PUSH bool True; 
-              }
-              {
-                DUP;        
-                PUSH nat 192; 
                 SWAP;       
-                COMPARE;    
-                GE;         
-                IF
-                  {
-                    DUP;        
-                    PUSH nat 248; 
-                    COMPARE;    
-                    GT;         
-                  }
-                  {
-                    PUSH bool False; 
-                  }; 
+                DROP;       
               }; 
+            SWAP;       
+            PUSH nat 1; 
+            PUSH nat 0; 
+            SLICE;      
+            IF_NONE
+              {
+                PUSH int 339; 
+                FAILWITH;   
+              }
+              {}; 
+            EXEC;       
+            PUSH nat 128; 
+            DUP 2;      
+            COMPARE;    
+            LT;         
             IF
               {
                 DROP;       
-                PUSH nat 1; 
+                PUSH nat 0; 
               }
               {
-                DUP;        
-                PUSH nat 192; 
+                PUSH nat 184; 
+                DUP 2;      
                 COMPARE;    
-                GT;         
+                LT;         
                 IF
                   {
-                    PUSH nat 1; 
-                    PUSH nat 183; 
-                    DIG 2;      
-                    SUB;        
-                    ISNAT;      
-                    IF_NONE
-                      {
-                        PUSH int 356; 
-                        FAILWITH;   
-                      }
-                      {}; 
-                    ADD;        
+                    PUSH bool True; 
                   }
                   {
-                    PUSH nat 1; 
-                    PUSH nat 247; 
-                    DIG 2;      
-                    SUB;        
-                    ISNAT;      
-                    IF_NONE
+                    PUSH nat 192; 
+                    DUP 2;      
+                    COMPARE;    
+                    GE;         
+                    IF
                       {
-                        PUSH int 359; 
-                        FAILWITH;   
+                        PUSH nat 248; 
+                        DUP 2;      
+                        COMPARE;    
+                        LT;         
                       }
-                      {}; 
-                    ADD;        
+                      {
+                        PUSH bool False; 
+                      }; 
+                  }; 
+                IF
+                  {
+                    DROP;       
+                    PUSH nat 1; 
+                  }
+                  {
+                    PUSH nat 192; 
+                    DUP 2;      
+                    COMPARE;    
+                    LT;         
+                    IF
+                      {
+                        PUSH nat 1; 
+                        PUSH nat 183; 
+                        DIG 2;      
+                        SUB;        
+                        ISNAT;      
+                        IF_NONE
+                          {
+                            PUSH int 356; 
+                            FAILWITH;   
+                          }
+                          {}; 
+                        ADD;        
+                      }
+                      {
+                        PUSH nat 1; 
+                        PUSH nat 247; 
+                        DIG 2;      
+                        SUB;        
+                        ISNAT;      
+                        IF_NONE
+                          {
+                            PUSH int 359; 
+                            FAILWITH;   
+                          }
+                          {}; 
+                        ADD;        
+                      }; 
                   }; 
               }; 
           }; 
-        SWAP;       
-        DUP;        
-        DUG 2;      
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
+        EXEC;       
+        DUP 2;      
+        DUP 2;      
         DIG 3;      
         SIZE;       
         SUB;        
@@ -3510,9 +3457,7 @@ view
       {}; 
     EXEC;       
     DUP 7;      
-    SWAP;       
-    DUP;        
-    DUG 2;      
+    DUP 2;      
     DUP 6;      
     DUP 5;      
     DUP 7;      

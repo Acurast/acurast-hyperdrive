@@ -8,7 +8,7 @@ def get_nonce(n):
     return sp.bytes("0x{:0>64}".format(hex(n)[2:]))
 
 
-@sp.add_test(name="IBCF_Bridge")
+@sp.add_test(name="AcurastProxy")
 def test():
     scenario = sp.test_scenario()
 
