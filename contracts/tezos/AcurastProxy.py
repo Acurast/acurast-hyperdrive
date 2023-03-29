@@ -160,7 +160,6 @@ class ActionLambda:
         action_with_job_id = sp.set_type_expr(
             sp.record(
                 jobId=job_id,
-                destination=action.destination,
                 requiredModules=action.requiredModules,
                 script=action.script,
                 allowedSources=action.allowedSources,
@@ -175,7 +174,6 @@ class ActionLambda:
                 jobId=sp.TNat,
                 allowedSources=sp.TOption(sp.TSet(sp.TBytes)),
                 allowOnlyVerifiedSources=sp.TBool,
-                destination=sp.TAddress,
                 extra=sp.TRecord(
                     requirements=sp.TRecord(
                         slots=sp.TNat,

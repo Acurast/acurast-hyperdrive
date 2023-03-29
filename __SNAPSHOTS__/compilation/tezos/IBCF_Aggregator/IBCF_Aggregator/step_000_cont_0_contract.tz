@@ -28,13 +28,10 @@ code
           }
           {}; 
         LEVEL;      
-        DIG 3;      
-        DUP;        
+        DUP 4;      
         CAR;        
         GET 4;      
-        SWAP;       
-        DUP;        
-        DUG 5;      
+        DUP 5;      
         GET 8;      
         ADD;        
         COMPARE;    
@@ -98,7 +95,6 @@ code
         UNIT;       
         PAIR 3;     
       }; 
-    SWAP;       
     LAMBDA_REC
       (pair (pair (pair (pair nat nat) bytes) (pair nat nat)) (pair (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (map bytes bytes)))) bytes))
       (pair (pair (map bytes (map int (pair (pair nat nat) bytes))) (pair bytes (pair (pair (pair nat nat) bytes) (map bytes bytes)))) (pair (pair nat nat) bytes))
@@ -113,21 +109,20 @@ code
           (pair nat nat)
           (pair int (pair nat nat))
           {
-            DUP;        
-            CDR;        
             PUSH nat 0; 
+            DUP 2;      
+            CDR;        
             COMPARE;    
-            LT;         
+            GT;         
             IF
               {}
               {
                 PUSH string "EMPTY_KEY"; 
                 FAILWITH;   
               }; 
-            DUP;        
-            CDR;        
             PUSH nat 1; 
-            SWAP;       
+            DUP 2;      
+            CDR;        
             SUB;        
             ISNAT;      
             IF_NONE
@@ -184,8 +179,8 @@ code
           (pair nat nat)
           {
             UNPAIR;     
-            DUP;        
-            DUG 2;      
+            SWAP;       
+            DUP 2;      
             CDR;        
             SUB;        
             ISNAT;      
@@ -195,8 +190,8 @@ code
                 FAILWITH;   
               }
               {}; 
-            DUP;        
             PUSH nat 0; 
+            DUP 2;      
             COMPARE;    
             EQ;         
             IF
@@ -230,13 +225,9 @@ code
           {
             DUP;        
             UNPAIR;     
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            DUP 2;      
             CDR;        
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            DUP 2;      
             CDR;        
             COMPARE;    
             LT;         
@@ -246,9 +237,7 @@ code
                 CDR;        
               }
               {
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 CDR;        
               }; 
             PUSH nat 0; 
@@ -295,8 +284,8 @@ code
                 EQ;         
                 IF
                   {
+                    SWAP;       
                     PUSH nat 1; 
-                    DIG 2;      
                     ADD;        
                     SWAP;       
                   }
@@ -345,9 +334,7 @@ code
                 PUSH string "BAD_POS"; 
                 FAILWITH;   
               }; 
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            DUP 2;      
             PUSH nat 0; 
             PAIR;       
             PUSH nat 0; 
@@ -550,9 +537,7 @@ code
                   }
                   {}; 
                 CDR;        
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 PUSH int 0; 
                 GET;        
                 IF_NONE
@@ -623,9 +608,7 @@ code
                   }
                   {}; 
                 CDR;        
-                SWAP;       
-                DUP;        
-                DUG 2;      
+                DUP 2;      
                 PUSH int 0; 
                 GET;        
                 IF_NONE
@@ -655,7 +638,7 @@ code
         SWAP;       
         PAIR;       
       }; 
-    SWAP;       
+    DIG 2;      
     UNPAIR;     
     IF_LEFT
       {
@@ -681,9 +664,8 @@ code
               {
                 DUP;        
                 SIZE;       
-                DUP;        
                 PUSH nat 0; 
-                SWAP;       
+                DUP 2;      
                 PUSH nat 0; 
                 DUP;        
                 DUP 3;      
@@ -718,8 +700,8 @@ code
                     PUSH nat 1; 
                     PUSH nat 16; 
                     DUP 3;      
-                    DUP;        
                     PUSH nat 0; 
+                    DUP 2;      
                     COMPARE;    
                     NEQ;        
                     LOOP
@@ -740,10 +722,9 @@ code
                         NEQ;        
                         IF
                           {
+                            DIG 2;      
+                            DUP 3;      
                             SWAP;       
-                            DUP;        
-                            DUG 2;      
-                            DIG 3;      
                             MUL;        
                             DUG 2;      
                           }
@@ -755,16 +736,18 @@ code
                         DUP;        
                         MUL;        
                         SWAP;       
-                        DUP;        
                         PUSH nat 0; 
+                        DUP 2;      
                         COMPARE;    
                         NEQ;        
                       }; 
                     DROP 2;     
                     SWAP;       
                     DROP;       
+                    DIG 4;      
+                    SWAP;       
                     PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-                    DIG 2;      
+                    DIG 3;      
                     PUSH bytes 0x050a00000020; 
                     CONCAT;     
                     CONCAT;     
@@ -784,7 +767,6 @@ code
                       }
                       {}; 
                     MUL;        
-                    DIG 3;      
                     ADD;        
                     DUG 2;      
                     PUSH nat 1; 
@@ -1000,21 +982,20 @@ view
       (pair nat nat)
       (pair int (pair nat nat))
       {
-        DUP;        
-        CDR;        
         PUSH nat 0; 
+        DUP 2;      
+        CDR;        
         COMPARE;    
-        LT;         
+        GT;         
         IF
           {}
           {
             PUSH string "EMPTY_KEY"; 
             FAILWITH;   
           }; 
-        DUP;        
-        CDR;        
         PUSH nat 1; 
-        SWAP;       
+        DUP 2;      
+        CDR;        
         SUB;        
         ISNAT;      
         IF_NONE
@@ -1072,13 +1053,9 @@ view
       {
         DUP;        
         UNPAIR;     
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
         CDR;        
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
         CDR;        
         COMPARE;    
         LT;         
@@ -1088,9 +1065,7 @@ view
             CDR;        
           }
           {
-            SWAP;       
-            DUP;        
-            DUG 2;      
+            DUP 2;      
             CDR;        
           }; 
         PUSH nat 0; 
@@ -1137,8 +1112,8 @@ view
             EQ;         
             IF
               {
+                SWAP;       
                 PUSH nat 1; 
-                DIG 2;      
                 ADD;        
                 SWAP;       
               }
@@ -1187,9 +1162,7 @@ view
             PUSH string "BAD_POS"; 
             FAILWITH;   
           }; 
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
         PUSH nat 0; 
         PAIR;       
         PUSH nat 0; 
@@ -1261,9 +1234,8 @@ view
       {
         DUP;        
         SIZE;       
-        DUP;        
         PUSH nat 0; 
-        SWAP;       
+        DUP 2;      
         PUSH nat 0; 
         DUP;        
         DUP 3;      
@@ -1298,8 +1270,8 @@ view
             PUSH nat 1; 
             PUSH nat 16; 
             DUP 3;      
-            DUP;        
             PUSH nat 0; 
+            DUP 2;      
             COMPARE;    
             NEQ;        
             LOOP
@@ -1320,10 +1292,9 @@ view
                 NEQ;        
                 IF
                   {
+                    DIG 2;      
+                    DUP 3;      
                     SWAP;       
-                    DUP;        
-                    DUG 2;      
-                    DIG 3;      
                     MUL;        
                     DUG 2;      
                   }
@@ -1335,16 +1306,18 @@ view
                 DUP;        
                 MUL;        
                 SWAP;       
-                DUP;        
                 PUSH nat 0; 
+                DUP 2;      
                 COMPARE;    
                 NEQ;        
               }; 
             DROP 2;     
             SWAP;       
             DROP;       
+            DIG 4;      
+            SWAP;       
             PUSH bytes 0x00000000000000000000000000000000000000000000000000000000000000; 
-            DIG 2;      
+            DIG 3;      
             PUSH bytes 0x050a00000020; 
             CONCAT;     
             CONCAT;     
@@ -1364,7 +1337,6 @@ view
               }
               {}; 
             MUL;        
-            DIG 3;      
             ADD;        
             DUG 2;      
             PUSH nat 1; 
@@ -1380,12 +1352,9 @@ view
         SWAP;       
         DROP;       
       }; 
-    DIG 3;      
-    DUP;        
+    DUP 4;      
     CAR;        
-    SWAP;       
-    DUP;        
-    DUG 5;      
+    DUP 5;      
     CDR;        
     PACK;       
     CONCAT;     
@@ -1415,9 +1384,7 @@ view
         DUP 5;      
         CAR;        
         CDR;        
-        SWAP;       
-        DUP;        
-        DUG 2;      
+        DUP 2;      
         CDR;        
         COMPARE;    
         EQ;         
@@ -1445,8 +1412,8 @@ view
             SWAP;       
             EXEC;       
             UNPAIR;     
-            DUP;        
             PUSH int 0; 
+            DUP 2;      
             COMPARE;    
             EQ;         
             IF
@@ -1574,19 +1541,14 @@ view
   "verify_proof" (pair (list %path (or (bytes %Left) (bytes %Right))) (pair %state (bytes %key) (pair (address %owner) (bytes %value)))) unit
   {
     UNPAIR;     
-    DUP;        
-    GET 6;      
     NIL bytes;  
-    SWAP;       
+    DUP 2;      
+    GET 6;      
     CONS;       
-    SWAP;       
-    DUP;        
-    DUG 2;      
+    DUP 2;      
     GET 3;      
     CONS;       
-    SWAP;       
-    DUP;        
-    DUG 2;      
+    DUP 2;      
     GET 5;      
     PACK;       
     CONS;       
