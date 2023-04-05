@@ -461,48 +461,50 @@ def test():
         )
     )
 
-    scenario.verify(~sp.is_failing(c1.verify_proof(
-        sp.record(
-            snapshot = 1,
-            proof = [
-                sp.bytes("0xa4a7208a40e95acaf2fe1a3c675b1b5d8c341060e4f179b76ba79493582a95a6"),
-                sp.bytes("0x989a7025bda9312b19569d9e84e33a624e7fc007e54db23b6758d5f819647071"),
-                sp.bytes("0xfc5b56233029d71e7e9aff8e230ff491475dee2d8074b27d5fecf8f5154d7c8d"),
-                sp.bytes("0x37db026959b7bafb26c0d292ecd69c24df5eab845d9625ac5301324402938f25"),
-                sp.bytes("0x754310be011a7a378b07fa7cbac39dbedcadf645c518ddec58deeaa8c29e0634"),
-                sp.bytes("0x06be3c46e5a06d7b3e438a9d698f4319dc628624a63e484d97f00b92d09edce7"),
-                sp.bytes("0x7463c9b814b5d9081938e21346fe8bf81a9a9a0dcfa7bcc03b644a361e395a3b"),
-            ],
-            leaves = [
-                sp.record(
-                    k_index = 2,
-                    mmr_pos = 3,
-                    hash = sp.bytes("0x2b97a4b75a93aa1ac8581fac0f7d4ab42406569409a737bdf9de584903b372c5")
-                ),
-                sp.record(
-                    k_index = 5,
-                    mmr_pos = 8,
-                    hash = sp.bytes("0xd279eb4bf22b2aeded31e65a126516215a9d93f83e3e425fdcd1a05ab347e535")
-                ),
-                sp.record(
-                    k_index = 0,
-                    mmr_pos = 15,
-                    hash = sp.bytes("0x38e18ac9b4d78020e0f164d6da9ea61b962ab1975bcf6e8e80e9a9fc2ae509f8")
-                ),
-                sp.record(
-                    k_index = 2,
-                    mmr_pos = 18,
-                    hash = sp.bytes("0x1a3930f70948f7eb1ceab07ecdb0967986091fd8b4b4f447406045431abd9795")
-                ),
-                sp.record(
-                    k_index = 0,
-                    mmr_pos = 22,
-                    hash = sp.bytes("0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9")
-                )
-            ],
-            mmr_size = 25
-        )
-    )))
+    scenario.verify(
+        c1.verify_proof(
+            sp.record(
+                snapshot = 1,
+                proof = [
+                    sp.bytes("0xa4a7208a40e95acaf2fe1a3c675b1b5d8c341060e4f179b76ba79493582a95a6"),
+                    sp.bytes("0x989a7025bda9312b19569d9e84e33a624e7fc007e54db23b6758d5f819647071"),
+                    sp.bytes("0xfc5b56233029d71e7e9aff8e230ff491475dee2d8074b27d5fecf8f5154d7c8d"),
+                    sp.bytes("0x37db026959b7bafb26c0d292ecd69c24df5eab845d9625ac5301324402938f25"),
+                    sp.bytes("0x754310be011a7a378b07fa7cbac39dbedcadf645c518ddec58deeaa8c29e0634"),
+                    sp.bytes("0x06be3c46e5a06d7b3e438a9d698f4319dc628624a63e484d97f00b92d09edce7"),
+                    sp.bytes("0x7463c9b814b5d9081938e21346fe8bf81a9a9a0dcfa7bcc03b644a361e395a3b"),
+                ],
+                leaves = [
+                    sp.record(
+                        k_index = 2,
+                        mmr_pos = 3,
+                        hash = sp.bytes("0x2b97a4b75a93aa1ac8581fac0f7d4ab42406569409a737bdf9de584903b372c5")
+                    ),
+                    sp.record(
+                        k_index = 5,
+                        mmr_pos = 8,
+                        hash = sp.bytes("0xd279eb4bf22b2aeded31e65a126516215a9d93f83e3e425fdcd1a05ab347e535")
+                    ),
+                    sp.record(
+                        k_index = 0,
+                        mmr_pos = 15,
+                        hash = sp.bytes("0x38e18ac9b4d78020e0f164d6da9ea61b962ab1975bcf6e8e80e9a9fc2ae509f8")
+                    ),
+                    sp.record(
+                        k_index = 2,
+                        mmr_pos = 18,
+                        hash = sp.bytes("0x1a3930f70948f7eb1ceab07ecdb0967986091fd8b4b4f447406045431abd9795")
+                    ),
+                    sp.record(
+                        k_index = 0,
+                        mmr_pos = 22,
+                        hash = sp.bytes("0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9")
+                    )
+                ],
+                mmr_size = 25
+            )
+        ) == True
+    )
 
     return
     c1.receive_message(

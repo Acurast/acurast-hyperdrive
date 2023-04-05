@@ -617,7 +617,6 @@ class Error:
     NOT_VALIDATOR = "NOT_VALIDATOR"
     INVALID_SNAPSHOT = "INVALID_SNAPSHOT"
     UNKNOWN_SNAPSHOT = "UNKNOWN_SNAPSHOT"
-    INVALID_PROOF = "INVALID_PROOF"
 
 class Inlined:
     @staticmethod
@@ -791,7 +790,7 @@ class MMR_Validator(sp.Contract):
         computed_hash = MMR.calculate_root(indexed_proof.value, indexed_leaves.value, arg.mmr_size)
 
         root = self.data.root.get(arg.snapshot, message=Error.UNKNOWN_SNAPSHOT)
-        sp.verify(root == computed_hash, Error.INVALID_PROOF)
+        sp.result(root == computed_hash)
 
     # @sp.entry_point(
     #     parameter_type = sp.TRecord(
