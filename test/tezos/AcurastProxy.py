@@ -2,6 +2,7 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
 from contracts.tezos.AcurastProxy import AcurastProxy, ActionLambda, ActionKind, Type
+from contracts.tezos.MMR_Validator import MMR_Validator
 
 
 def get_nonce(n):
@@ -31,11 +32,27 @@ def test():
     )
     scenario += aggregator
 
+    validator = MMR_Validator()
+    validator.update_initial_storage(
+        config=sp.record(
+            governance=admin.address,
+            validators=sp.set([alice.address, bob.address]),
+            minimum_endorsements=2,
+        ),
+        current_snapshot=2,
+        snapshot_submissions=sp.map(),
+        root=sp.big_map({
+            1: sp.bytes("0x5aac4bad5c6a9014429b7e19ec0e5cd059d28d697c9cdd3f71e78cb6bfbd2600")
+        }),
+    )
+    scenario += validator
+
     acurastProxy = AcurastProxy()
     acurastProxy.update_initial_storage(
         sp.record(
             config=sp.record(
                 governance_address=admin.address,
+                validator_address=validator.address,
                 merkle_aggregator=aggregator.address,
                 proof_validator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
                 authorized_actions=sp.big_map(

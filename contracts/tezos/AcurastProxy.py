@@ -9,17 +9,19 @@ import smartpy as sp
 from contracts.tezos.IBCF_Aggregator import Type as IBCF_Aggregator_Type
 from contracts.tezos.IBCF_Eth_Validator import Type as ValidatorInterface
 from contracts.tezos.libs.utils import RLP, Bytes
+from contracts.tezos.MMR_Validator import Type as MMR_Validator_Type, Error as MMR_Validator_Error
 
 
 class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
+    INVALID_VIEW = "INVALID_VIEW"
     NOT_GOVERNANCE = "NOT_GOVERNANCE"
     ACTION_NOT_SUPPORTED = "ACTION_NOT_SUPPORTED"
     COULD_NOT_UNPACK = "COULD_NOT_UNPACK"
     CANNOT_PARSE_ACTION_STORAGE = "CANNOT_PARSE_ACTION_STORAGE"
     JOB_UNKNOWN = "JOB_UNKNOWN"
     UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
-
+    INVALID_PROOF = "INVALID_PROOF"
 
 class Type:
     # Actions
@@ -82,6 +84,7 @@ class Type:
     ConfigureArgument = sp.TList(
         sp.TVariant(
             update_governance_address=sp.TAddress,
+            update_validator_address=sp.TAddress,
             update_authorized_actions=sp.TList(
                 sp.TVariant(
                     add=sp.TRecord(kind=sp.TString, function=ActionLambda),
@@ -222,10 +225,11 @@ class AcurastProxy(sp.Contract):
             sp.TRecord(
                 config=sp.TRecord(
                     governance_address=sp.TAddress,
+                    validator_address=sp.TAddress,
                     merkle_aggregator=sp.TAddress,
                     proof_validator=sp.TAddress,
                     authorized_actions=sp.TBigMap(sp.TString, Type.ActionLambda),
-                ),
+                ).right_comb(),
                 outgoing_counter=sp.TNat,
                 registry=Type.JobRegistry,
             )
@@ -255,6 +259,33 @@ class AcurastProxy(sp.Contract):
             args.action
         ].storage = result.new_action_storage
 
+    @sp.entry_point(
+        parameter_type = sp.TRecord(
+            messages = sp.TList(sp.TBytes),
+            proof = MMR_Validator_Type.Verify_proof_argument
+        )
+    )
+    def receive_messages(self, arg):
+        message_hashes = sp.local("message_hashes", sp.set())
+        with sp.for_("message", arg.messages) as message:
+            message_hashes.value.add(sp.keccak(message))
+
+        # Ensure every leaf matches with a message hash
+        with sp.for_("leaf", arg.proof.leaves) as leaf:
+            sp.verify(message_hashes.value.contains(leaf.hash), Error.INVALID_PROOF)
+
+        is_valid = sp.view(
+            "verify_proof",
+            self.data.config.validator_address,
+            arg.proof,
+            t=sp.TBool,
+        ).open_some(Error.INVALID_VIEW)
+
+        sp.verify(is_valid, Error.INVALID_PROOF)
+
+        # Proof is valid
+        # TODO: Process arg.messages
+
     @sp.entry_point(parameter_type=Type.FulfillArgument)
     def fulfill(self, args):
         # TODO: Handle fulfillment
@@ -280,6 +311,8 @@ class AcurastProxy(sp.Contract):
             with action.match_cases() as action:
                 with action.match("update_governance_address") as governance_address:
                     self.data.config.governance_address = governance_address
+                with action.match("update_validator_address") as validator_address:
+                    self.data.config.validator_address = validator_address
                 with action.match(
                     "update_authorized_actions"
                 ) as update_authorized_actions:
