@@ -1,30 +1,6 @@
 import smartpy as sp
 
-latest_var_id = 0
-def generate_var(postfix = None):
-    """
-        Generate a variable name
-    """
-    global latest_var_id
-
-    id = "utils_%s%s" % (latest_var_id, ("_" + postfix if postfix is not None else ""))
-    latest_var_id += 1
-
-    return id
-
-
-class Decorator:
-    def generate_lambda(with_operations=False, recursive=False):
-        """
-        A decorator that transforms a function into a Tezos Lambda
-        """
-
-        def transform(f):
-            return sp.build_lambda(
-                f, with_operations=with_operations, recursive=recursive
-            )
-
-        return transform
+from contracts.tezos.libs.utils import generate_var, Decorator
 
 class Type:
     Leaf = sp.TRecord(
@@ -41,12 +17,11 @@ class Type:
         # A hash of the node itself
         hash = sp.TBytes
     ).right_comb()
-    Nodes = sp.TMap(sp.TNat, Node)
 
     # Entry points
     Configure_argument = sp.TList(
         sp.TVariant(
-            update_governance=sp.TAddress,
+            update_governance_address=sp.TAddress,
             update_validators=sp.TSet(
                 sp.TVariant(add=sp.TAddress, remove=sp.TAddress).right_comb()
             ),
@@ -241,6 +216,9 @@ class MultiProof:
         sp.result(next_layer.value[0].hash)
 
 class MMR:
+    def leaf_count_to_mmr_size(leaf_count):
+        return sp.as_nat((2 * leaf_count) - MMR.count_ones(leaf_count))
+
     def calculate_root(proof, leaves, mmr_size):
         """
             Calculate merkle root
@@ -617,6 +595,7 @@ class Error:
     NOT_VALIDATOR = "NOT_VALIDATOR"
     INVALID_SNAPSHOT = "INVALID_SNAPSHOT"
     UNKNOWN_SNAPSHOT = "UNKNOWN_SNAPSHOT"
+    INVALID_PROOF = "INVALID_PROOF"
 
 class Inlined:
     @staticmethod
@@ -624,7 +603,7 @@ class Inlined:
         """
         This method when used, ensures that only the governance address is allowed to call a given entrypoint
         """
-        sp.verify(self.data.config.governance == sp.sender, Error.NOT_GOVERNANCE)
+        sp.verify(self.data.config.governance_address == sp.sender, Error.NOT_GOVERNANCE)
 
     @staticmethod
     def failIfNotValidator(self):
@@ -674,7 +653,7 @@ class MMR_Validator(sp.Contract):
             sp.TRecord(
                 config=sp.TRecord(
                     # Multi-sig address allowed to manage the contract
-                    governance=sp.TAddress,
+                    governance_address=sp.TAddress,
                     # Validators
                     validators=sp.TSet(sp.TAddress),
                     # Minimum expected endorsements for a given state root to be considered valid
@@ -745,8 +724,8 @@ class MMR_Validator(sp.Contract):
                                 self.data.config.validators.add(add)
                             with cases.match("remove") as remove:
                                 self.data.config.validators.remove(remove)
-                with action.match("update_governance") as governance_address:
-                    self.data.config.governance = governance_address
+                with action.match("update_governance_address") as governance_address:
+                    self.data.config.governance_address = governance_address
                 with cases.match("update_minimum_endorsements") as payload:
                     self.data.config.minimum_endorsements = payload
 
@@ -787,9 +766,15 @@ class MMR_Validator(sp.Contract):
             indexed_proof.value[index.value] = node
             index.value += 1
 
+        # Get snapshot root
+        root = sp.compute(self.data.root.get(arg.snapshot, message=Error.UNKNOWN_SNAPSHOT))
+        with sp.for_("proof_node", proof) as proof_node:
+            sp.verify(proof_node != root, Error.INVALID_PROOF)
+
+        # Compute root from proof
         computed_hash = MMR.calculate_root(indexed_proof.value, indexed_leaves.value, arg.mmr_size)
 
-        root = self.data.root.get(arg.snapshot, message=Error.UNKNOWN_SNAPSHOT)
+        # Validate proof result
         sp.result(root == computed_hash)
 
     # @sp.entry_point(
@@ -826,3 +811,20 @@ class MMR_Validator(sp.Contract):
     #                     progress_stack.value[el1_index] = sp.keccak(el1_bytes + el2_bytes)
 
     #     sp.verify(arg.root == progress_stack.value[0], ("PROOF_INVALID", progress_stack.value))
+
+# class MMR_Validator_Proxy(sp.Contract):
+#     class Error:
+#         INVALID_VIEW = "INVALID_VIEW"
+
+#     def __init__(self):
+#         self.init_type(
+#             sp.TRecord(
+#                 validator_address=sp.TAddress,
+#             )
+#         )
+
+#     @sp.onchain_view()
+#     def verify_proof(self, arg):
+#         sp.set_type(arg, Type.Verify_proof_argument)
+#         is_valid = sp.view("verify_proof", self.data.validator_address, arg, t = sp.TBool).open_some(MMR_Validator_Proxy.Error.INVALID_VIEW)
+#         sp.result(is_valid)

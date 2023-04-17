@@ -1,7 +1,8 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
-from contracts.tezos.AcurastProxy import AcurastProxy, ActionLambda, ActionKind, Type
+from contracts.tezos.AcurastProxy import AcurastProxy, OutgoingActionLambda, IngoingActionLambda, OutgoingActionKind, IngoingActionKind, Type
+from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
 
 
@@ -35,14 +36,14 @@ def test():
     validator = MMR_Validator()
     validator.update_initial_storage(
         config=sp.record(
-            governance=admin.address,
+            governance_address=admin.address,
             validators=sp.set([alice.address, bob.address]),
             minimum_endorsements=2,
         ),
         current_snapshot=2,
         snapshot_submissions=sp.map(),
         root=sp.big_map({
-            1: sp.bytes("0x5aac4bad5c6a9014429b7e19ec0e5cd059d28d697c9cdd3f71e78cb6bfbd2600")
+            1: sp.bytes("0xf9ff75def54e55e0e7267f360278c6ced1afc8e5aa3c7ccdbdea92104898642c")
         }),
     )
     scenario += validator
@@ -52,29 +53,51 @@ def test():
         sp.record(
             config=sp.record(
                 governance_address=admin.address,
-                validator_address=validator.address,
                 merkle_aggregator=aggregator.address,
-                proof_validator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-                authorized_actions=sp.big_map(
+                proof_validator=validator.address,
+                outgoing_actions=sp.big_map(
                     {
-                        "REGISTER_JOB": sp.record(
-                            function=ActionLambda.register_job,
+                        OutgoingActionKind.REGISTER_JOB: sp.record(
+                            function=OutgoingActionLambda.register_job,
                             storage=sp.record(
                                 version=1, data=sp.pack(sp.record(job_id_seq=0))
                             ),
                         ),
                     }
                 ),
+                ingoing_actions=sp.big_map(
+                    {
+                        IngoingActionKind.ASSIGN: sp.record(
+                            function=IngoingActionLambda.assign_processor,
+                            storage=sp.record(
+                                version=1, data=sp.bytes("0x")
+                            ),
+                        ),
+                    }
+                ),
             ),
-            outgoing_counter=0,
-            registry=sp.big_map(),
+            outgoing_seq_id=0,
+            ingoing_seq_id=4,
+            job_destination = sp.big_map(),
         )
     )
     scenario += acurastProxy
 
+    consumer = AcurastConsumer()
+    consumer.update_initial_storage(
+        sp.record(
+            config=sp.record(
+                job_id=sp.none,
+                acurast_proxy=acurastProxy.address,
+                acurast_processors=sp.set()
+            )
+        )
+    )
+    scenario += consumer
+
     register_job_payload = sp.set_type_expr(
         sp.record(
-            destination=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
+            destination=consumer.address,
             script=sp.bytes(
                 "0x697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f37414458326364446561"
             ),
@@ -110,33 +133,48 @@ def test():
     scenario.show(sp.pack(register_job_payload))
     scenario.show(sp.pack(sp.record(a=1)))
     register_job_action = sp.record(
-        action=ActionKind.REGISTER_JOB, payload=sp.pack(register_job_payload)
+        kind=OutgoingActionKind.REGISTER_JOB, payload=sp.pack(register_job_payload)
     )
 
-    acurastProxy.perform_action(register_job_action).run(
+    acurastProxy.send_actions(
+        [
+            register_job_action
+        ]
+    ).run(
         sender=alice, level=BLOCK_LEVEL_1
     )
-    acurastProxy.perform_action(register_job_action).run(
-        sender=bob, level=BLOCK_LEVEL_1
-    )
-    acurastProxy.perform_action(register_job_action).run(
-        sender=alice, level=BLOCK_LEVEL_1
-    )
-    acurastProxy.perform_action(register_job_action).run(
-        sender=bob, level=BLOCK_LEVEL_1
-    )
-    acurastProxy.perform_action(register_job_action).run(
-        sender=alice, level=BLOCK_LEVEL_1
-    )
-    acurastProxy.perform_action(register_job_action).run(
-        sender=bob, level=BLOCK_LEVEL_1
-    )
+
+    scenario.verify(consumer.data.config.job_id == sp.some(1))
 
     # Get proof of inclusion
     proof = scenario.compute(
-        aggregator.get_proof(sp.record(owner=acurastProxy.address, key=sp.pack(2)))
+        aggregator.get_proof(sp.record(owner=acurastProxy.address, key=sp.pack(1)))
     )
 
     scenario.show(proof)
 
-    acurastProxy.fulfill(sp.record(jobId=1, payload=sp.bytes("0x")))
+    acurastProxy.receive_actions(
+        sp.record(
+            snapshot = 1,
+            proof = [
+                sp.bytes("0x53db3d426fa99eff2cc6ef1f07a226c2e5b32d9ccc2b67411d52e8d2b0de8d13"),
+                sp.bytes("0xbca5ce83486f6bd8be90523d0e9bcefd812fbd451337b584d32f8203dbf340c7"),
+            ],
+            leaves = [
+                sp.record(
+                    k_index = 1,
+                    mmr_pos = 8,
+                    data = sp.bytes("0x05070700050707010000000641535349474e0a000000460507070a000000100000000000000000000000000000000502000000290a00000024747a316834457347756e48325565315432754e73386d664b5a38585a6f516a693348634b")
+                ),
+                sp.record(
+                    k_index = 0,
+                    mmr_pos = 10,
+                    data = sp.bytes("0x05070700060707010000000641535349474e0a000000460507070a000000100000000000000000000000000000000602000000290a00000024747a316834457347756e48325565315432754e73386d664b5a38585a6f516a693348634b")
+                ),
+            ],
+            mmr_size = 11
+        )
+    )
+
+
+    acurastProxy.fulfill(sp.record(job_id=1, payload=sp.bytes("0x")))
