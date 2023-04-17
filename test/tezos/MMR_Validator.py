@@ -11,18 +11,23 @@ def test():
     c1 = MMR_Validator()
     c1.update_initial_storage(
         config=sp.record(
-            governance=admin.address,
+            governance_address=admin.address,
             validators=sp.set([alice.address, bob.address, claus.address]),
             minimum_endorsements=2,
         ),
         current_snapshot=2,
         snapshot_submissions=sp.map(),
         root=sp.big_map({
-            1: sp.bytes("0x5aac4bad5c6a9014429b7e19ec0e5cd059d28d697c9cdd3f71e78cb6bfbd2600")
+            1: sp.bytes("0x5aac4bad5c6a9014429b7e19ec0e5cd059d28d697c9cdd3f71e78cb6bfbd2600"),
+            2: sp.bytes("0xf9ff75def54e55e0e7267f360278c6ced1afc8e5aa3c7ccdbdea92104898642c")
         }),
     )
     scenario = sp.test_scenario()
     scenario += c1
+
+    scenario.h1("MMR.leaf_count_to_mmr_size")
+    leaf_count_to_mmr_size_lambda = sp.build_lambda(lambda arg: MMR.leaf_count_to_mmr_size(arg))
+    scenario.verify(leaf_count_to_mmr_size_lambda(7) == 11)
 
     scenario.h1("MMR.difference")
     difference_lambda = sp.build_lambda(lambda arg: MMR.difference(arg.one, arg.two))
@@ -461,6 +466,25 @@ def test():
         )
     )
 
+    # 0x5aac4bad5c6a9014429b7e19ec0e5cd059d28d697c9cdd3f71e78cb6bfbd2600
+    # [
+    #     "0xa4a7208a40e95acaf2fe1a3c675b1b5d8c341060e4f179b76ba79493582a95a6",
+    #     "0x989a7025bda9312b19569d9e84e33a624e7fc007e54db23b6758d5f819647071",
+    #     "0xfc5b56233029d71e7e9aff8e230ff491475dee2d8074b27d5fecf8f5154d7c8d",
+    #     "0x37db026959b7bafb26c0d292ecd69c24df5eab845d9625ac5301324402938f25",
+    #     "0x754310be011a7a378b07fa7cbac39dbedcadf645c518ddec58deeaa8c29e0634",
+    #     "0x06be3c46e5a06d7b3e438a9d698f4319dc628624a63e484d97f00b92d09edce7",
+    #     "0x7463c9b814b5d9081938e21346fe8bf81a9a9a0dcfa7bcc03b644a361e395a3b"
+    # ]
+
+    # [
+    #     [2,3,"0x2b97a4b75a93aa1ac8581fac0f7d4ab42406569409a737bdf9de584903b372c5"],
+    #     [5,8,"0xd279eb4bf22b2aeded31e65a126516215a9d93f83e3e425fdcd1a05ab347e535"],
+    #     [0,15,"0x38e18ac9b4d78020e0f164d6da9ea61b962ab1975bcf6e8e80e9a9fc2ae509f8"],
+    #     [2,18,"0x1a3930f70948f7eb1ceab07ecdb0967986091fd8b4b4f447406045431abd9795"],
+    #     [0,22,"0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9"]
+    # ]
+
     scenario.verify(
         c1.verify_proof(
             sp.record(
@@ -502,6 +526,33 @@ def test():
                     )
                 ],
                 mmr_size = 25
+            )
+        ) == True
+    )
+# ["0x53db3d426fa99eff2cc6ef1f07a226c2e5b32d9ccc2b67411d52e8d2b0de8d13", "0xbca5ce83486f6bd8be90523d0e9bcefd812fbd451337b584d32f8203dbf340c7"]
+#     [[1,8,"0x132b4af3fb90dec026d6b676ac53d7560e188fe1b61a3d4ed2a554cc990a6b0e"],[0,10,"0xc994b73af258f7b79aade16663ddb39dc1615c90f05f9f018baa8f9dba14091c"]]
+
+    scenario.verify(
+        c1.verify_proof(
+            sp.record(
+                snapshot = 2,
+                proof = [
+                    sp.bytes("0x53db3d426fa99eff2cc6ef1f07a226c2e5b32d9ccc2b67411d52e8d2b0de8d13"),
+                    sp.bytes("0xbca5ce83486f6bd8be90523d0e9bcefd812fbd451337b584d32f8203dbf340c7"),
+                ],
+                leaves = [
+                    sp.record(
+                        k_index = 1,
+                        mmr_pos = 8,
+                        hash = sp.keccak(sp.bytes("0x05070700050707010000000641535349474e0a000000460507070a000000100000000000000000000000000000000502000000290a00000024747a316834457347756e48325565315432754e73386d664b5a38585a6f516a693348634b"))
+                    ),
+                    sp.record(
+                        k_index = 0,
+                        mmr_pos = 10,
+                        hash = sp.keccak(sp.bytes("0x05070700060707010000000641535349474e0a000000460507070a000000100000000000000000000000000000000602000000290a00000024747a316834457347756e48325565315432754e73386d664b5a38585a6f516a693348634b"))
+                    ),
+                ],
+                mmr_size = 11
             )
         ) == True
     )

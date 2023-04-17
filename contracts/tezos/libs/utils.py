@@ -17,6 +17,19 @@ def generate_var(postfix=None):
     return id
 
 
+class Decorator:
+    def generate_lambda(with_operations=False, recursive=False):
+        """
+        A decorator that transforms a function into a Tezos Lambda
+        """
+
+        def transform(f):
+            return sp.build_lambda(
+                f, with_operations=with_operations, recursive=recursive
+            )
+
+        return transform
+
 class Math:
     @staticmethod
     def pow(n, e):

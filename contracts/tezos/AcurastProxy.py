@@ -7,24 +7,25 @@
 import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type as IBCF_Aggregator_Type
-from contracts.tezos.IBCF_Eth_Validator import Type as ValidatorInterface
-from contracts.tezos.libs.utils import RLP, Bytes
+from contracts.tezos.libs.utils import RLP, Bytes, Decorator
 from contracts.tezos.MMR_Validator import Type as MMR_Validator_Type, Error as MMR_Validator_Error
-
+from contracts.tezos.AcurastConsumer import Type as AcurastConsumer_Type, Entrypoint as AcurastConsumer_Entrypoint
 
 class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
     INVALID_VIEW = "INVALID_VIEW"
     NOT_GOVERNANCE = "NOT_GOVERNANCE"
-    ACTION_NOT_SUPPORTED = "ACTION_NOT_SUPPORTED"
+    OUTGOING_ACTION_NOT_SUPPORTED = "OUTGOING_ACTION_NOT_SUPPORTED"
+    INGOING_ACTION_NOT_SUPPORTED = "INGOING_ACTION_NOT_SUPPORTED"
     COULD_NOT_UNPACK = "COULD_NOT_UNPACK"
+    CANNOT_DECODE_ACTION = "CANNOT_DECODE_ACTION"
     CANNOT_PARSE_ACTION_STORAGE = "CANNOT_PARSE_ACTION_STORAGE"
     JOB_UNKNOWN = "JOB_UNKNOWN"
     UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
     INVALID_PROOF = "INVALID_PROOF"
 
 class Type:
-    # Actions
+    # Outgoing actions
     RegisterJobAction = sp.TRecord(
         allowedSources=sp.TOption(sp.TSet(sp.TBytes)),
         allowOnlyVerifiedSources=sp.TBool,
@@ -53,45 +54,104 @@ class Type:
         networkRequests=sp.TNat,
         storage=sp.TNat,
     ).right_comb()
+
+    # Ingoing actions
+    AssignProcessor = sp.TRecord(
+        job_id=sp.TNat,
+        processor_address=sp.TAddress,
+    ).right_comb()
+
     # Storage
-    JobRegistry = sp.TBigMap(
-        sp.TNat,
+    JobDestination = sp.TBigMap(sp.TNat, sp.TAddress)
+    ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
+
+    OutgoingContext = sp.TRecord(
+        action_id=sp.TNat,
+        job_destination=JobDestination
+    )
+    OutgoingActionLambdaArg = sp.TRecord(
+        merkle_aggregator=sp.TAddress,
+        context=OutgoingContext,
+        payload=sp.TBytes,
+        storage=ActionStorage,
+    ).right_comb()
+    OutgoingActionLambdaReturn = sp.TRecord(
+        context=OutgoingContext,
+        new_action_storage=ActionStorage
+    ).right_comb()
+    OutgoingActionLambda = sp.TRecord(
+        function=sp.TLambda(OutgoingActionLambdaArg, OutgoingActionLambdaReturn, with_operations=True),
+        storage=ActionStorage,
+    ).right_comb()
+
+    IngoingContext = sp.TRecord(
+        action_id=sp.TNat,
+        job_destination=JobDestination
+    )
+    IngoingActionLambdaArg = sp.TRecord(
+        context=IngoingContext,
+        payload=sp.TBytes,
+        storage=ActionStorage,
+    ).right_comb()
+    IngoingActionLambdaReturn = sp.TRecord(
+        context=IngoingContext,
+        new_action_storage=ActionStorage
+    ).right_comb()
+    IngoingActionLambda = sp.TRecord(
+        function=sp.TLambda(IngoingActionLambdaArg, IngoingActionLambdaReturn, with_operations=True),
+        storage=ActionStorage,
+    ).right_comb()
+
+    # Entrypoint
+    SendActionsArgument = sp.TList(
         sp.TRecord(
-            level = sp.TNat,
-            metadata = RegisterJobAction,
+            kind=sp.TString,
+            payload=sp.TBytes
         ).right_comb()
     )
-    ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
-    ActionLambdaArg = sp.TRecord(
-        action_number=sp.TNat,
-        merkle_aggregator=sp.TAddress,
-        payload=sp.TBytes,
-        registry=JobRegistry,
-        storage=ActionStorage,
+
+    ReceiveActionsArgument = sp.TRecord(
+        snapshot = sp.TNat,
+        mmr_size = sp.TNat,
+        leaves = sp.TList(
+            sp.TRecord(
+                # Mountain specific index from top to bottom
+                k_index = sp.TNat,
+                # The general position in the tree
+                mmr_pos = sp.TNat,
+                # Encoded message
+                data = sp.TBytes
+            ).right_comb()
+        ),
+        proof = sp.TList(sp.TBytes)
     ).right_comb()
-    ActionLambdaReturn = sp.TRecord(
-        registry=JobRegistry, new_action_storage=ActionStorage
-    ).right_comb()
-    ActionLambda = sp.TRecord(
-        function=sp.TLambda(ActionLambdaArg, ActionLambdaReturn, with_operations=True),
-        storage=ActionStorage,
-    ).right_comb()
-    # Entrypoint
-    PerformActionArgument = sp.TRecord(
-        action=sp.TString, payload=sp.TBytes
-    ).right_comb()
-    FulfillArgument = sp.TRecord(jobId=sp.TNat, payload=sp.TBytes).right_comb()
+
+    FulfillArgument = sp.TRecord(job_id=sp.TNat, payload=sp.TBytes).right_comb()
+
     ConfigureArgument = sp.TList(
         sp.TVariant(
             update_governance_address=sp.TAddress,
-            update_validator_address=sp.TAddress,
-            update_authorized_actions=sp.TList(
+            update_proof_validator=sp.TAddress,
+            update_merkle_aggregator=sp.TAddress,
+            update_outgoing_actions=sp.TList(
                 sp.TVariant(
-                    add=sp.TRecord(kind=sp.TString, function=ActionLambda),
+                    add=sp.TRecord(kind=sp.TString, function=OutgoingActionLambda),
+                    remove=sp.TString,
+                ).right_comb()
+            ),
+            update_ingoing_actions=sp.TList(
+                sp.TVariant(
+                    add=sp.TRecord(kind=sp.TString, function=IngoingActionLambda),
                     remove=sp.TString,
                 ).right_comb()
             ),
         ).right_comb()
+    )
+
+    AcurastMessage = sp.TRecord(
+        ingoing_action_id = sp.TNat,
+        kind = sp.TString,
+        payload = sp.TBytes
     )
 
 
@@ -106,27 +166,16 @@ class Inlined:
         )
 
 
-class ActionKind:
+class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
 
+class IngoingActionKind:
+    ASSIGN = "ASSIGN"
 
-class ActionLambda:
-    class Decorator:
-        def action_lambda(with_operations=True, recursive=False):
-            """
-            A decorator that transforms a function into a Tezos Lambda
-            """
-
-            def transform(f):
-                return sp.build_lambda(
-                    f, with_operations=with_operations, recursive=recursive
-                )
-
-            return transform
-
-    @Decorator.action_lambda(with_operations=True)
+class OutgoingActionLambda:
+    @Decorator.generate_lambda(with_operations=True)
     def register_job(arg):
-        sp.set_type(arg, Type.ActionLambdaArg)
+        sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
         # This lambda expects the storage to be on version ONE => 1
         sp.verify(arg.storage.version == 1, Error.UNEXPECTED_STORAGE_VERSION)
@@ -145,24 +194,20 @@ class ActionLambda:
             )
         )
 
-        # Get origin
-        origin = sp.compute(sp.sender)
+        # Send job identifier to the consumer contract
+        consumer_contract = sp.contract(
+            AcurastConsumer_Type.SetJobId, action.destination, AcurastConsumer_Entrypoint.SetJobId
+        ).open_some(Error.INVALID_CONTRACT)
+        sp.transfer(job_id, sp.mutez(0), consumer_contract)
 
         # Map the fulfillment recipient to the job
-        registry = sp.local("registry", arg.registry)
-        registry.value[job_id] = sp.record(
-            level = sp.level,
-            metadata = action,
-        )
+        context = sp.local("context", arg.context)
+        context.value.job_destination[job_id] = action.destination
 
-        # Add acurast action to the state merkle tree
-        merkle_aggregator_contract = sp.contract(
-            IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
-        ).open_some(Error.INVALID_CONTRACT)
-        # Emit acurast action
+        # Prepare acurast action
         action_with_job_id = sp.set_type_expr(
             sp.record(
-                jobId=job_id,
+                job_id=job_id,
                 requiredModules=action.requiredModules,
                 script=action.script,
                 allowedSources=action.allowedSources,
@@ -174,7 +219,7 @@ class ActionLambda:
                 extra=action.extra,
             ),
             sp.TRecord(
-                jobId=sp.TNat,
+                job_id=sp.TNat,
                 allowedSources=sp.TOption(sp.TSet(sp.TBytes)),
                 allowOnlyVerifiedSources=sp.TBool,
                 extra=sp.TRecord(
@@ -203,14 +248,21 @@ class ActionLambda:
             ).right_comb(),
         )
 
-        value = sp.pack((ActionKind.REGISTER_JOB, origin, sp.pack(action_with_job_id)))
-        key = sp.pack(arg.action_number)
+        # Get origin
+        origin = sp.compute(sp.sender)
+
+        value = sp.pack((OutgoingActionKind.REGISTER_JOB, origin, sp.pack(action_with_job_id)))
+        key = sp.pack(context.value.action_id)
         state_param = sp.record(key=key, value=value)
+        # Add acurast action to the state merkle tree
+        merkle_aggregator_contract = sp.contract(
+            IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
+        ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
 
         sp.result(
             sp.record(
-                registry=registry.value,
+                context=context.value,
                 new_action_storage=sp.record(
                     version=arg.storage.version,
                     data=sp.pack(sp.record(job_id_seq=job_id)),
@@ -218,6 +270,32 @@ class ActionLambda:
             )
         )
 
+class IngoingActionLambda:
+    @Decorator.generate_lambda(with_operations=True)
+    def assign_processor(arg):
+        sp.set_type(arg, Type.IngoingActionLambdaArg)
+
+        action = sp.compute(
+            sp.unpack(arg.payload, AcurastConsumer_Type.AssignProcessor).open_some(
+                Error.COULD_NOT_UNPACK
+            )
+        )
+
+        # Get consumer contract
+        consumer_address = arg.context.job_destination.get(action.job_id, message = Error.JOB_UNKNOWN)
+        consumer_contract = sp.contract(
+            AcurastConsumer_Type.AssignProcessor,
+            consumer_address,
+            AcurastConsumer_Entrypoint.AssignProcessor
+        ).open_some(Error.INVALID_CONTRACT)
+        sp.transfer(action, sp.mutez(0), consumer_contract)
+
+        sp.result(
+            sp.record(
+                context=arg.context,
+                new_action_storage=arg.storage
+            )
+        )
 
 class AcurastProxy(sp.Contract):
     def __init__(self):
@@ -225,81 +303,119 @@ class AcurastProxy(sp.Contract):
             sp.TRecord(
                 config=sp.TRecord(
                     governance_address=sp.TAddress,
-                    validator_address=sp.TAddress,
                     merkle_aggregator=sp.TAddress,
                     proof_validator=sp.TAddress,
-                    authorized_actions=sp.TBigMap(sp.TString, Type.ActionLambda),
+                    outgoing_actions=sp.TBigMap(sp.TString, Type.OutgoingActionLambda),
+                    ingoing_actions=sp.TBigMap(sp.TString, Type.IngoingActionLambda),
                 ).right_comb(),
-                outgoing_counter=sp.TNat,
-                registry=Type.JobRegistry,
+                outgoing_seq_id = sp.TNat,
+                ingoing_seq_id = sp.TNat,
+                job_destination=Type.JobDestination,
             )
         )
 
-    @sp.entry_point(parameter_type=Type.PerformActionArgument)
-    def perform_action(self, args):
-        # Get action lambda
-        # - Fail with "ACTION_NOT_SUPPORTED" if actions is not known
-        action_lambda = self.data.config.authorized_actions.get(
-            args.action, message=Error.ACTION_NOT_SUPPORTED
-        )
+    @sp.entry_point(parameter_type=Type.SendActionsArgument)
+    def send_actions(self, arg):
+        with sp.for_("action", arg) as action:
+            # Get action lambda
+            # - Fail with "OUTGOING_ACTION_NOT_SUPPORTED" if actions is not known
+            action_lambda = self.data.config.outgoing_actions.get(
+                action.kind, message=Error.OUTGOING_ACTION_NOT_SUPPORTED
+            )
 
-        # Process action
-        self.data.outgoing_counter += 1
-        lambda_argument = sp.record(
-            storage=action_lambda.storage,
-            action_number=self.data.outgoing_counter,
-            merkle_aggregator=self.data.config.merkle_aggregator,
-            registry=self.data.registry,
-            payload=args.payload,
-        )
-        result = sp.compute(action_lambda.function(lambda_argument))
+            # Process action
+            self.data.outgoing_seq_id += 1
+            lambda_argument = sp.record(
+                context=sp.record(
+                    action_id = self.data.outgoing_seq_id,
+                    job_destination = self.data.job_destination,
+                ),
+                merkle_aggregator=self.data.config.merkle_aggregator,
+                payload=action.payload,
+                storage=action_lambda.storage,
+            )
+            result = sp.compute(action_lambda.function(lambda_argument))
 
-        self.data.registry = result.registry
-        self.data.config.authorized_actions[
-            args.action
-        ].storage = result.new_action_storage
+            # Commit storage changes
+            self.data.job_destination = result.context.job_destination
+            self.data.config.outgoing_actions[
+                action.kind
+            ].storage = result.new_action_storage
 
-    @sp.entry_point(
-        parameter_type = sp.TRecord(
-            messages = sp.TList(sp.TBytes),
-            proof = MMR_Validator_Type.Verify_proof_argument
-        )
-    )
-    def receive_messages(self, arg):
-        message_hashes = sp.local("message_hashes", sp.set())
-        with sp.for_("message", arg.messages) as message:
-            message_hashes.value.add(sp.keccak(message))
 
-        # Ensure every leaf matches with a message hash
-        with sp.for_("leaf", arg.proof.leaves) as leaf:
-            sp.verify(message_hashes.value.contains(leaf.hash), Error.INVALID_PROOF)
-
+    @sp.entry_point(parameter_type = Type.ReceiveActionsArgument)
+    def receive_actions(self, arg):
+        # Validate proof
         is_valid = sp.view(
             "verify_proof",
-            self.data.config.validator_address,
-            arg.proof,
+            self.data.config.proof_validator,
+            sp.set_type_expr(
+                sp.record(
+                    snapshot = arg.snapshot,
+                    mmr_size = arg.mmr_size,
+                    leaves = arg.leaves.map(lambda leaf : sp.record(
+                        k_index = leaf.k_index,
+                        mmr_pos = leaf.mmr_pos,
+                        hash = sp.keccak(leaf.data)
+                    )),
+                    proof = arg.proof,
+                ),
+                MMR_Validator_Type.Verify_proof_argument
+            ),
             t=sp.TBool,
         ).open_some(Error.INVALID_VIEW)
 
+        # Fail if proof is invalid
         sp.verify(is_valid, Error.INVALID_PROOF)
 
-        # Proof is valid
-        # TODO: Process arg.messages
+        # Reaching this line, means that the proof is valid
+        # Now, process each action
+        with sp.for_("leaf", arg.leaves) as leaf:
+            # Decode leaf data TO an action
+            action = sp.compute(sp.unpack(leaf.data, t = Type.AcurastMessage).open_some((Error.CANNOT_DECODE_ACTION, leaf.data)))
+
+            # Ensure messages are processed sequentially
+            self.data.ingoing_seq_id += 1
+            sp.verify(action.ingoing_action_id == self.data.ingoing_seq_id)
+
+            # Get ingoing action lambda
+            # - Fail with "INGOING_ACTION_NOT_SUPPORTED" if actions is not known
+            action_lambda = self.data.config.ingoing_actions.get(
+                action.kind, message=Error.INGOING_ACTION_NOT_SUPPORTED
+            )
+
+            lambda_argument = sp.record(
+                context=sp.record(
+                    action_id = self.data.ingoing_seq_id,
+                    job_destination = self.data.job_destination,
+                ),
+                payload=action.payload,
+                storage=action_lambda.storage,
+            )
+            result = sp.compute(action_lambda.function(lambda_argument))
+
+            # Commit storage changes
+            self.data.job_destination = result.context.job_destination
+            self.data.config.ingoing_actions[
+                action.kind
+            ].storage = result.new_action_storage
 
     @sp.entry_point(parameter_type=Type.FulfillArgument)
-    def fulfill(self, args):
+    def fulfill(self, arg):
         # TODO: Handle fulfillment
         # - Maybe report the fulfillment to acurast
         # - Pay processor
 
         # Get target address
-        job_info = self.data.registry.get(args.jobId, message=Error.JOB_UNKNOWN)
+        destination = self.data.job_destination.get(arg.job_id, message=Error.JOB_UNKNOWN)
 
         # Pass fulfillment to target contract
         target_contract = sp.contract(
-            sp.TBytes, job_info.metadata.destination, "fulfill"
+            AcurastConsumer_Type.Fulfill,
+            destination,
+            AcurastConsumer_Entrypoint.Fulfill
         ).open_some(Error.INVALID_CONTRACT)
-        sp.transfer(args.payload, sp.mutez(0), target_contract)
+        sp.transfer(arg, sp.mutez(0), target_contract)
 
     @sp.entry_point(parameter_type=Type.ConfigureArgument)
     def configure(self, actions):
@@ -311,20 +427,33 @@ class AcurastProxy(sp.Contract):
             with action.match_cases() as action:
                 with action.match("update_governance_address") as governance_address:
                     self.data.config.governance_address = governance_address
-                with action.match("update_validator_address") as validator_address:
-                    self.data.config.validator_address = validator_address
-                with action.match(
-                    "update_authorized_actions"
-                ) as update_authorized_actions:
+                with action.match("update_merkle_aggregator") as aggregator_address:
+                    self.data.config.merkle_aggregator = aggregator_address
+                with action.match("update_proof_validator") as validator_address:
+                    self.data.config.proof_validator = validator_address
+                with action.match("update_outgoing_actions") as update_outgoing_actions:
                     with sp.for_(
-                        "update_authorized_action", update_authorized_actions
+                        "updates", update_outgoing_actions
                     ) as updates:
                         with updates.match_cases() as action_kind:
                             with action_kind.match("add") as action_to_add:
-                                self.data.config.authorized_actions[
+                                self.data.config.outgoing_actions[
                                     action_to_add.kind
                                 ] = action_to_add.function
                             with action_kind.match("remove") as action_to_remove:
-                                del self.data.config.authorized_actions[
+                                del self.data.config.outgoing_actions[
+                                    action_to_remove
+                                ]
+                with action.match("update_ingoing_actions") as update_ingoing_actions:
+                    with sp.for_(
+                        "updates", update_ingoing_actions
+                    ) as updates:
+                        with updates.match_cases() as action_kind:
+                            with action_kind.match("add") as action_to_add:
+                                self.data.config.ingoing_actions[
+                                    action_to_add.kind
+                                ] = action_to_add.function
+                            with action_kind.match("remove") as action_to_remove:
+                                del self.data.config.ingoing_actions[
                                     action_to_remove
                                 ]
