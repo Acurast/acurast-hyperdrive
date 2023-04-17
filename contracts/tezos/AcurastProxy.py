@@ -170,7 +170,7 @@ class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
 
 class IngoingActionKind:
-    ASSIGN = "ASSIGN"
+    ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
 
 class OutgoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
