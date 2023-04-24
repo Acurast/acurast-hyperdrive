@@ -5,7 +5,7 @@ PYTHONPATH := $(SMARTPY_CLI_PATH):$(shell pwd)
 FLEXTESA_IMAGE=oxheadalpha/flextesa:latest
 FLEXTESA_SCRIPT=kathmandubox
 CONTAINER_NAME=ibc-tezos-sandbox
-LIGO_VERSION=next
+LIGO_VERSION=0.63.2
 
 HAS_DOCKER := $(shell which docker)
 
