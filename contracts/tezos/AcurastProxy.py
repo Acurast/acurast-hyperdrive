@@ -13,6 +13,8 @@ from contracts.tezos.AcurastConsumer import Type as AcurastConsumer_Type, Entryp
 
 class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
+    INVALID_STATE_CONTRACT = "INVALID_STATE_CONTRACT"
+    INVALID_CONSUMER_CONTRACT = "INVALID_CONSUMER_CONTRACT"
     INVALID_VIEW = "INVALID_VIEW"
     NOT_GOVERNANCE = "NOT_GOVERNANCE"
     OUTGOING_ACTION_NOT_SUPPORTED = "OUTGOING_ACTION_NOT_SUPPORTED"
@@ -23,6 +25,7 @@ class Error:
     JOB_UNKNOWN = "JOB_UNKNOWN"
     UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
     INVALID_PROOF = "INVALID_PROOF"
+    NOT_JOB_PROCESSOR = "NOT_JOB_PROCESSOR"
 
 class Type:
     # Outgoing actions
@@ -62,12 +65,16 @@ class Type:
     ).right_comb()
 
     # Storage
-    JobDestination = sp.TBigMap(sp.TNat, sp.TAddress)
+    JobInformation = sp.TRecord(
+        destination = sp.TAddress,
+        processors = sp.TSet(sp.TAddress)
+    )
+    JobInformationIndex = sp.TBigMap(sp.TNat, JobInformation)
     ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
 
     OutgoingContext = sp.TRecord(
         action_id=sp.TNat,
-        job_destination=JobDestination
+        job_information=JobInformationIndex
     )
     OutgoingActionLambdaArg = sp.TRecord(
         merkle_aggregator=sp.TAddress,
@@ -86,7 +93,7 @@ class Type:
 
     IngoingContext = sp.TRecord(
         action_id=sp.TNat,
-        job_destination=JobDestination
+        job_information=JobInformationIndex
     )
     IngoingActionLambdaArg = sp.TRecord(
         context=IngoingContext,
@@ -194,15 +201,22 @@ class OutgoingActionLambda:
             )
         )
 
-        # Send job identifier to the consumer contract
-        consumer_contract = sp.contract(
-            AcurastConsumer_Type.SetJobId, action.destination, AcurastConsumer_Entrypoint.SetJobId
-        ).open_some(Error.INVALID_CONTRACT)
-        sp.transfer(job_id, sp.mutez(0), consumer_contract)
 
-        # Map the fulfillment recipient to the job
+        # Make sure that the destination is compatible
+        sp.compute(
+            sp.contract(
+                AcurastConsumer_Type.Fulfill,
+                action.destination,
+                AcurastConsumer_Entrypoint.Fulfill
+            ).open_some(Error.INVALID_CONSUMER_CONTRACT)
+        )
+
+        # Index the job information
         context = sp.local("context", arg.context)
-        context.value.job_destination[job_id] = action.destination
+        context.value.job_information[job_id] = sp.record(
+            destination = action.destination,
+            processors = sp.set()
+        )
 
         # Prepare acurast action
         action_with_job_id = sp.set_type_expr(
@@ -257,7 +271,7 @@ class OutgoingActionLambda:
         # Add acurast action to the state merkle tree
         merkle_aggregator_contract = sp.contract(
             IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
-        ).open_some(Error.INVALID_CONTRACT)
+        ).open_some(Error.INVALID_STATE_CONTRACT)
         sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
 
         sp.result(
@@ -275,24 +289,18 @@ class IngoingActionLambda:
     def assign_processor(arg):
         sp.set_type(arg, Type.IngoingActionLambdaArg)
 
-        action = sp.compute(
-            sp.unpack(arg.payload, AcurastConsumer_Type.AssignProcessor).open_some(
-                Error.COULD_NOT_UNPACK
-            )
-        )
+        context = sp.local("context", arg.context)
 
-        # Get consumer contract
-        consumer_address = arg.context.job_destination.get(action.job_id, message = Error.JOB_UNKNOWN)
-        consumer_contract = sp.contract(
-            AcurastConsumer_Type.AssignProcessor,
-            consumer_address,
-            AcurastConsumer_Entrypoint.AssignProcessor
-        ).open_some(Error.INVALID_CONTRACT)
-        sp.transfer(action, sp.mutez(0), consumer_contract)
+        unpack_result = sp.compute(sp.unpack(arg.payload, Type.AssignProcessor))
+        with sp.if_(unpack_result.is_some()):
+            action = sp.compute(unpack_result.open_some(Error.COULD_NOT_UNPACK))
+
+            # Update the processor list for the given job
+            context.value.job_information[action.job_id].processors.add(action.processor_address)
 
         sp.result(
             sp.record(
-                context=arg.context,
+                context=context.value,
                 new_action_storage=arg.storage
             )
         )
@@ -309,8 +317,9 @@ class AcurastProxy(sp.Contract):
                     ingoing_actions=sp.TBigMap(sp.TString, Type.IngoingActionLambda),
                 ).right_comb(),
                 outgoing_seq_id = sp.TNat,
+                outgoing_registry=sp.TBigMap(sp.TNat, sp.TNat),
                 ingoing_seq_id = sp.TNat,
-                job_destination=Type.JobDestination,
+                job_information=Type.JobInformationIndex,
             )
         )
 
@@ -325,10 +334,11 @@ class AcurastProxy(sp.Contract):
 
             # Process action
             self.data.outgoing_seq_id += 1
+            self.data.outgoing_registry[self.data.outgoing_seq_id] = sp.level
             lambda_argument = sp.record(
                 context=sp.record(
                     action_id = self.data.outgoing_seq_id,
-                    job_destination = self.data.job_destination,
+                    job_information = self.data.job_information,
                 ),
                 merkle_aggregator=self.data.config.merkle_aggregator,
                 payload=action.payload,
@@ -337,7 +347,7 @@ class AcurastProxy(sp.Contract):
             result = sp.compute(action_lambda.function(lambda_argument))
 
             # Commit storage changes
-            self.data.job_destination = result.context.job_destination
+            self.data.job_information = result.context.job_information
             self.data.config.outgoing_actions[
                 action.kind
             ].storage = result.new_action_storage
@@ -375,8 +385,9 @@ class AcurastProxy(sp.Contract):
             action = sp.compute(sp.unpack(leaf.data, t = Type.AcurastMessage).open_some((Error.CANNOT_DECODE_ACTION, leaf.data)))
 
             # Ensure messages are processed sequentially
-            self.data.ingoing_seq_id += 1
             sp.verify(action.ingoing_action_id == self.data.ingoing_seq_id)
+            # The id coming from acurast starts on 0
+            self.data.ingoing_seq_id += 1
 
             # Get ingoing action lambda
             # - Fail with "INGOING_ACTION_NOT_SUPPORTED" if actions is not known
@@ -387,7 +398,7 @@ class AcurastProxy(sp.Contract):
             lambda_argument = sp.record(
                 context=sp.record(
                     action_id = self.data.ingoing_seq_id,
-                    job_destination = self.data.job_destination,
+                    job_information = self.data.job_information,
                 ),
                 payload=action.payload,
                 storage=action_lambda.storage,
@@ -395,7 +406,7 @@ class AcurastProxy(sp.Contract):
             result = sp.compute(action_lambda.function(lambda_argument))
 
             # Commit storage changes
-            self.data.job_destination = result.context.job_destination
+            self.data.job_information = result.context.job_information
             self.data.config.ingoing_actions[
                 action.kind
             ].storage = result.new_action_storage
@@ -407,12 +418,14 @@ class AcurastProxy(sp.Contract):
         # - Pay processor
 
         # Get target address
-        destination = self.data.job_destination.get(arg.job_id, message=Error.JOB_UNKNOWN)
+        job_information = self.data.job_information.get(arg.job_id, message=Error.JOB_UNKNOWN)
+
+        sp.verify(job_information.processors.contains(sp.sender), Error.NOT_JOB_PROCESSOR)
 
         # Pass fulfillment to target contract
         target_contract = sp.contract(
             AcurastConsumer_Type.Fulfill,
-            destination,
+            job_information.destination,
             AcurastConsumer_Entrypoint.Fulfill
         ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(arg, sp.mutez(0), target_contract)

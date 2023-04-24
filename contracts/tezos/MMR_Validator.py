@@ -654,14 +654,14 @@ class MMR_Validator(sp.Contract):
                 config=sp.TRecord(
                     # Multi-sig address allowed to manage the contract
                     governance_address=sp.TAddress,
-                    # Validators
-                    validators=sp.TSet(sp.TAddress),
                     # Minimum expected endorsements for a given state root to be considered valid
                     minimum_endorsements=sp.TNat,
+                    # Validators
+                    validators=sp.TSet(sp.TAddress),
                 ),
                 current_snapshot=sp.TNat,
-                snapshot_submissions=sp.TMap(sp.TAddress, sp.TBytes),
                 root=sp.TBigMap(sp.TNat, sp.TBytes),
+                snapshot_submissions=sp.TMap(sp.TAddress, sp.TBytes),
             )
         )
 
@@ -695,8 +695,8 @@ class MMR_Validator(sp.Contract):
         )
 
         with sp.if_(can_finalize_snapshot):
-            self.data.current_snapshot += 1
             self.data.root[self.data.current_snapshot] = root
+            self.data.current_snapshot += 1
             self.data.snapshot_submissions = sp.map()
 
     @sp.entry_point(parameter_type=sp.TRecord(from_ = sp.TNat, to = sp.TNat).layout(("from_ as from", "to")))

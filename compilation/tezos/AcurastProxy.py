@@ -22,7 +22,7 @@ sp.add_compilation_target(
             ),
             ingoing_actions=sp.big_map(
                 {
-                    IngoingActionKind.ASSIGN: sp.record(
+                    IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
                         function=IngoingActionLambda.assign_processor,
                         storage=sp.record(
                             version=1, data=sp.bytes("0x")
@@ -32,13 +32,35 @@ sp.add_compilation_target(
             ),
         ),
         outgoing_seq_id=0,
+        outgoing_registry=sp.big_map(),
         ingoing_seq_id=0,
-        job_destination = sp.big_map()
+        job_information=sp.big_map()
     ),
 )
 
 sp.add_expression_compilation_target(
-    "REGISTER_JOB_LAMBDA", sp.set_type_expr(
+    "REGISTER_JOB",
+    sp.set_type_expr(
+        OutgoingActionLambda.register_job,
+        sp.TLambda(Type.OutgoingActionLambdaArg, Type.OutgoingActionLambdaReturn, with_operations=True)
+    )
+)
+sp.add_expression_compilation_target(
+    "REGISTER_JOB_STORAGE",
+    sp.pack(sp.record(job_id_seq=0))
+)
+
+sp.add_expression_compilation_target(
+    "ASSIGN_PROCESSOR",
+    sp.set_type_expr(
+        IngoingActionLambda.assign_processor,
+        sp.TLambda(Type.IngoingActionLambdaArg, Type.IngoingActionLambdaReturn, with_operations=True)
+    )
+)
+
+sp.add_expression_compilation_target(
+    "CONFIGURE",
+    sp.set_type_expr(
         [
             sp.variant("update_outgoing_actions",
                 [
@@ -49,7 +71,8 @@ sp.add_expression_compilation_target(
                             function=sp.record(
                                 function=OutgoingActionLambda.register_job,
                                 storage=sp.record(
-                                    version=1, data=sp.pack(sp.record(job_id_seq=0))
+                                    version=1,
+                                    data=sp.pack(sp.record(job_id_seq=0))
                                 )
                             )
                         ),

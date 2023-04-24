@@ -21,6 +21,13 @@ def test():
 
     scenario.show(sp.pack((1, "ASSIGN_JOB_PROCESSOR", sp.pack(sp.pair(1, alice.address)))))
     scenario.show(sp.pack((2, "ASSIGN_JOB_PROCESSOR", sp.pack(sp.pair(1, bob.address)))))
+    scenario.show(
+        sp.keccak(
+            sp.pack(sp.address("KT1B71rkEguZr9Zi2P29cV1hn6YdrkNDSCAk")) +
+            sp.bytes("0x050001") +
+            sp.bytes("0x050707010000000c52454749535445525f4a4f4207070a0000001600008a8584be3718453e78923713a6966202b05f99c60a000000ee05070703030707050902000000250a00000020000000000000000000000000000000000000000000000000000000000000000007070707000007070509020000002907070a00000020111111111111111111111111111111111111111111111111111111111111111100000707030607070a00000001ff00010707000107070001070700010707020000000200000707070700b0d403070700b4f292aaf36107070098e4030707000000b4b8dba6f36107070a00000035697066733a2f2f516d64484c6942596174626e6150645573544d4d4746574534326353414a43485937426f374144583263644465610001")
+        )
+    )
 
     aggregator = IBCF_Aggregator()
     aggregator.update_initial_storage(
@@ -46,7 +53,7 @@ def test():
         current_snapshot=2,
         snapshot_submissions=sp.map(),
         root=sp.big_map({
-            1: sp.bytes("0xc003f0e38f6a98618786c3c02590cfbbbda715e4f5f7fb2f2988b59e82a91724")
+            1: sp.bytes("0x00552aff0d1b8a20252c1f06786c93ac171ef13bb46bcd6677ddaccf1d1021c0")
         }),
     )
     scenario += validator
@@ -80,8 +87,9 @@ def test():
                 ),
             ),
             outgoing_seq_id=0,
+            outgoing_registry=sp.big_map(),
             ingoing_seq_id=0,
-            job_destination = sp.big_map(),
+            job_information = sp.big_map(),
         )
     )
     scenario += acurastProxy
@@ -90,9 +98,7 @@ def test():
     consumer.update_initial_storage(
         sp.record(
             config=sp.record(
-                job_id=sp.none,
                 acurast_proxy=acurastProxy.address,
-                acurast_processors=sp.set()
             )
         )
     )
@@ -147,8 +153,6 @@ def test():
         sender=alice, level=BLOCK_LEVEL_1
     )
 
-    scenario.verify(consumer.data.config.job_id == sp.some(1))
-
     # Get proof of inclusion
     proof = scenario.compute(
         aggregator.get_proof(sp.record(owner=acurastProxy.address, key=sp.pack(1)))
@@ -164,19 +168,16 @@ def test():
                 sp.record(
                     k_index = 0,
                     mmr_pos = 0,
-                    data = sp.bytes("0x05070700010707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467")
+                    data = sp.bytes("0x05070700000707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467")
                 ),
                 sp.record(
                     k_index = 1,
                     mmr_pos = 1,
-                    data = sp.bytes("0x05070700020707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000edaa0fa299565241bd285414579f88705568c6b0")
+                    data = sp.bytes("0x05070700010707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000edaa0fa299565241bd285414579f88705568c6b0")
                 ),
             ],
             mmr_size = 3
         )
     )
 
-    scenario.verify(consumer.data.config.acurast_processors.contains(alice.address))
-    scenario.verify(consumer.data.config.acurast_processors.contains(bob.address))
-
-    consumer.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(sender=alice.address)
+    consumer.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(sender=acurastProxy.address)
