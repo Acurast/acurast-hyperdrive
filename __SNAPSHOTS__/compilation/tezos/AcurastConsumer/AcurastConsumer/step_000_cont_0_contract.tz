@@ -1,0 +1,18 @@
+parameter (pair %fulfill (nat %job_id) (bytes %payload));
+storage   address;
+code
+  {
+    CDR;        
+    SENDER;     
+    DUP 2;      
+    COMPARE;    
+    EQ;         
+    IF
+      {}
+      {
+        PUSH string "NOT_ACURAST_PROXY"; 
+        FAILWITH;   
+      }; 
+    NIL operation; 
+    PAIR;       
+  };

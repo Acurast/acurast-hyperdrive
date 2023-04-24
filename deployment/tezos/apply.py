@@ -1,7 +1,7 @@
 import time
 import yaml
 import sys
-from pytezos import ContractInterface, PyTezosClient, pytezos
+from pytezos import ContractInterface, PyTezosClient, michelson, pytezos as PyTezos
 from pytezos.operation.result import OperationResult
 from termcolor import colored
 
@@ -149,16 +149,34 @@ def run_actions(client: PyTezosClient):
                 print(f'\t{action["description"]}')
 
             if "script" in action:
-                Scripts[action["script"]](client, action, wait_applied)
+                using_file = action["script"].endswith(".tz")
+                if using_file:
+                    print(client.contract(action["contract_address"]))
+                else:
+                    Scripts[action["script"]](client, action, wait_applied)
             else:
-                op = (
-                    client.contract(action["contract_address"])
-                    .using(block_id="head")
-                    .parameter(
-                        action["entrypoint"],
-                        action["argument"] if "argument" in action else None,
+                if "micheline" in action:
+                    f = open(action["micheline"], "r")
+                    parser = michelson.parse.MichelsonParser()
+                    micheline = parser.parse(f.read())
+                    ##print(client.contract(action["contract_address"]).parameter(micheline))
+                    op = (
+                        client.contract(action["contract_address"])
+                        .using(block_id="head")
+                        .parameter(
+                            entrypoint = action["entrypoint"],
+                            micheline = micheline,
+                        )
                     )
-                )
+                else:
+                    op = (
+                        client.contract(action["contract_address"])
+                        .using(block_id="head")
+                        .parameter(
+                            action["entrypoint"],
+                            action["argument"] if "argument" in action else None,
+                        )
+                    )
 
                 if "amount" in action:
                     op = op.with_amount(action["amount"])
@@ -168,7 +186,7 @@ def run_actions(client: PyTezosClient):
     return contract_address_map
 
 
-pytezos_client = pytezos.using(
+pytezos_client = PyTezos.using(
     key=deployment["pytezos"]["private_key"],
     shell=deployment["pytezos"]["rpc_endpoint"],
 )

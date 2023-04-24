@@ -19,7 +19,9 @@ def test():
         snapshot_submissions=sp.map(),
         root=sp.big_map({
             1: sp.bytes("0x5aac4bad5c6a9014429b7e19ec0e5cd059d28d697c9cdd3f71e78cb6bfbd2600"),
-            2: sp.bytes("0xf9ff75def54e55e0e7267f360278c6ced1afc8e5aa3c7ccdbdea92104898642c")
+            2: sp.bytes("0xf9ff75def54e55e0e7267f360278c6ced1afc8e5aa3c7ccdbdea92104898642c"),
+            3: sp.bytes("0x35c28b0a4291ceb22f054934109750d531f296271e260819eb41170a34af8b07"),
+            4: sp.bytes("0x6febfc341bd3acea5b8e961dd7ab0c2f71578d34afaf4ca7d84443b32824685b"),
         }),
     )
     scenario = sp.test_scenario()
@@ -557,61 +559,41 @@ def test():
         ) == True
     )
 
-    return
-    c1.receive_message(
-        sp.record(
-            root_state_hash = sp.bytes("0x4675ae398f3103976ea5cf164d0905918da2ae553369f8da48b9e950061884ac"),
-            proof = [
-                sp.variant("message", sp.bytes("0x693880717109924bae62d4144261a2a3afac1ccaa308309fee2938079e99d67d")),
-                sp.variant("message", sp.bytes("0x35cd30aac96257a4872c09cf127de11725619db9b358d278218673d51bcdf41e")),
-                sp.variant("merge_op", True),
-                sp.variant("node", sp.bytes("0x8397260b06b5df993362d69754c7cbb7ef2a276d93eb379fecd7b279db6cd71f")),
-                sp.variant("merge_op", True),
-                sp.variant("node", sp.bytes("0x24bbed227accc2579576b96bf7b85bf5d358c0f97a7eba44202800ef261f8070")),
-                sp.variant("merge_op", False),
-                sp.variant("message", sp.bytes("0x04971f9be3a513c45d3eba8060c498613aa56432858729a63abd54f47fc34b6d")),
-                sp.variant("node", sp.bytes("0x4eaf0939c71305e286db9af111303bdfe5f40df6eba2f9e5baf2dbfeefbfc674")),
-                sp.variant("merge_op", True),
-                sp.variant("node", sp.bytes("0xc2c1b96679f2b218e7b10a418fcdec9915a32d0b7b29601c53e438dbdda3bee3")),
-                sp.variant("merge_op", True),
-                sp.variant("merge_op", True),
-            ]
-        )
+    scenario.verify(
+        c1.verify_proof(
+            sp.record(
+                snapshot = 3,
+                proof = [],
+                leaves = [
+                    sp.record(
+                        k_index = 0,
+                        mmr_pos = 0,
+                        hash = sp.keccak(sp.bytes("0x05070700000707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700000a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"))
+                    ),
+                    sp.record(
+                        k_index = 1,
+                        mmr_pos = 1,
+                        hash = sp.keccak(sp.bytes("0x05070700010707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"))
+                    ),
+                ],
+                mmr_size = 11
+            )
+        ) == True
     )
 
-    c1.receive_message(
-        sp.record(
-            root_state_hash = sp.bytes("0x5a656e4c7c27b1fc8e494bd5192d6fb4d4dbc2f373198f923324798d1c9320b2"),
-            proof = [
-                sp.variant("message", sp.bytes("0x8fbce10127c61db80e947db275ad8df1bddab6287280210533c745d6cf5ed8f4")),
-                sp.variant("message", sp.bytes("0xee9a1c4750224c5ee4d7b54198cab1441b99fab8db79d5d04508320f52cd5afa")),
-                sp.variant("merge_op", True),
-                sp.variant("node", sp.bytes("0x720974feef96c21b8b8ed769d2efb7bf24482758320506dc53b109e1110f9299")),
-                sp.variant("merge_op", False),
-                sp.variant("message", sp.bytes("0x4eb1379c9db1caf818e3bce702f747a8fd0d52180a727de35a3245d609edea21")),
-                sp.variant("message", sp.bytes("0x4e9c4d99df5b8c0add2aa46f69f34fbdee856aacc5f9ea22dcc096e5133c9689")),
-                sp.variant("merge_op", False),
-                sp.variant("node", sp.bytes("0xe5a7d4c147802d338de3f681039a8cc985c872ba4610a50af255812c600a6e0a")),
-                sp.variant("merge_op", True),
-                sp.variant("merge_op", False),
-                sp.variant("message", sp.bytes("0xc2c1b96679f2b218e7b10a418fcdec9915a32d0b7b29601c53e438dbdda3bee3")),
-                sp.variant("message", sp.bytes("0x33675f8b42d4e37481c4eb1f80e3722d18e1cffa68ee0ee6ca6d8bb2292018b8")),
-                sp.variant("merge_op", False),
-                sp.variant("node", sp.bytes("0xa6cd4951c2ec7554885b131bd0fcc02ce4edb2c3d4d806645a0a08dde095a97e")),
-                sp.variant("merge_op", True),
-                sp.variant("message", sp.bytes("0xa34eaa9eb82b4d72e4ec0a11290f822bb198c503d9d693983e0149280d9daea1")),
-                sp.variant("message", sp.bytes("0x03dfa2d3646e11bca34b2f1cfc193bea9401e4a43c867410989066b98aa68f1f")),
-                sp.variant("merge_op", False),
-                sp.variant("node", sp.bytes("0x3ce28c9c0a58eb611441e77d10558c64d35941ff962409c72e847d33cb2dfaa9")),
-                sp.variant("merge_op", False),
-                sp.variant("merge_op", False),
-                sp.variant("merge_op", False),
-                sp.variant("node", sp.bytes("0x28f60a4850763191fa8227431f5ed45c30d251d3d5184b29a1cc2487a976b847")),
-                sp.variant("node", sp.bytes("0x6dd25ab3f046988328e096baf8c0485948f8c9654c766cec25c0b7c8106b4a1e")),
-                sp.variant("node", sp.bytes("0x47176934d576cf91abc518355142a71133c30077fb00207e9748d738fcace535")),
-                sp.variant("merge_op", True),
-                sp.variant("merge_op", True),
-                sp.variant("merge_op", True),
-            ]
-        )
+    scenario.verify(
+        c1.verify_proof(
+            sp.record(
+                snapshot = 4,
+                proof = [sp.bytes("0x93a2f7fc624f598296a71ab13f1d1df71490fe42f2781e25f838023df0de8f88")],
+                leaves = [
+                    sp.record(
+                        k_index = 1,
+                        mmr_pos = 1,
+                        hash = sp.keccak(sp.bytes("0x05070700010707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700020a0000001600020a3b823f37878cbd11aed15191d33a8c8137340b"))
+                    ),
+                ],
+                mmr_size = 3
+            )
+        ) == True
     )
