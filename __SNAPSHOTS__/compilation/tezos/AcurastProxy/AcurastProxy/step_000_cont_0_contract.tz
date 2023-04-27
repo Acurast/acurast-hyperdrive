@@ -347,7 +347,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 412; 
+                    PUSH int 416; 
                     FAILWITH;   
                   }
                   {}; 
@@ -454,7 +454,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 353; 
+                    PUSH int 352; 
                     FAILWITH;   
                   }
                   {}; 

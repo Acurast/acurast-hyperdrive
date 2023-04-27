@@ -7,7 +7,7 @@ sp.add_compilation_target(
     AcurastConsumer(),
     storage=sp.record(
         config=sp.record(
-            acurast_proxy = sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")
+            acurast_proxy=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")
         )
     ),
 )

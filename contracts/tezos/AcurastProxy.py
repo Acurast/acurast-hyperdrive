@@ -8,8 +8,15 @@ import smartpy as sp
 
 from contracts.tezos.IBCF_Aggregator import Type as IBCF_Aggregator_Type
 from contracts.tezos.libs.utils import RLP, Bytes, Decorator
-from contracts.tezos.MMR_Validator import Type as MMR_Validator_Type, Error as MMR_Validator_Error
-from contracts.tezos.AcurastConsumer import Type as AcurastConsumer_Type, Entrypoint as AcurastConsumer_Entrypoint
+from contracts.tezos.MMR_Validator import (
+    Type as MMR_Validator_Type,
+    Error as MMR_Validator_Error,
+)
+from contracts.tezos.AcurastConsumer import (
+    Type as AcurastConsumer_Type,
+    Entrypoint as AcurastConsumer_Entrypoint,
+)
+
 
 class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
@@ -26,6 +33,7 @@ class Error:
     UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
     INVALID_PROOF = "INVALID_PROOF"
     NOT_JOB_PROCESSOR = "NOT_JOB_PROCESSOR"
+
 
 class Type:
     # Outgoing actions
@@ -66,16 +74,12 @@ class Type:
 
     # Storage
     JobInformation = sp.TRecord(
-        destination = sp.TAddress,
-        processors = sp.TSet(sp.TAddress)
+        destination=sp.TAddress, processors=sp.TSet(sp.TAddress)
     )
     JobInformationIndex = sp.TBigMap(sp.TNat, JobInformation)
     ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
 
-    OutgoingContext = sp.TRecord(
-        action_id=sp.TNat,
-        job_information=JobInformationIndex
-    )
+    OutgoingContext = sp.TRecord(action_id=sp.TNat, job_information=JobInformationIndex)
     OutgoingActionLambdaArg = sp.TRecord(
         merkle_aggregator=sp.TAddress,
         context=OutgoingContext,
@@ -83,54 +87,50 @@ class Type:
         storage=ActionStorage,
     ).right_comb()
     OutgoingActionLambdaReturn = sp.TRecord(
-        context=OutgoingContext,
-        new_action_storage=ActionStorage
+        context=OutgoingContext, new_action_storage=ActionStorage
     ).right_comb()
     OutgoingActionLambda = sp.TRecord(
-        function=sp.TLambda(OutgoingActionLambdaArg, OutgoingActionLambdaReturn, with_operations=True),
+        function=sp.TLambda(
+            OutgoingActionLambdaArg, OutgoingActionLambdaReturn, with_operations=True
+        ),
         storage=ActionStorage,
     ).right_comb()
 
-    IngoingContext = sp.TRecord(
-        action_id=sp.TNat,
-        job_information=JobInformationIndex
-    )
+    IngoingContext = sp.TRecord(action_id=sp.TNat, job_information=JobInformationIndex)
     IngoingActionLambdaArg = sp.TRecord(
         context=IngoingContext,
         payload=sp.TBytes,
         storage=ActionStorage,
     ).right_comb()
     IngoingActionLambdaReturn = sp.TRecord(
-        context=IngoingContext,
-        new_action_storage=ActionStorage
+        context=IngoingContext, new_action_storage=ActionStorage
     ).right_comb()
     IngoingActionLambda = sp.TRecord(
-        function=sp.TLambda(IngoingActionLambdaArg, IngoingActionLambdaReturn, with_operations=True),
+        function=sp.TLambda(
+            IngoingActionLambdaArg, IngoingActionLambdaReturn, with_operations=True
+        ),
         storage=ActionStorage,
     ).right_comb()
 
     # Entrypoint
     SendActionsArgument = sp.TList(
-        sp.TRecord(
-            kind=sp.TString,
-            payload=sp.TBytes
-        ).right_comb()
+        sp.TRecord(kind=sp.TString, payload=sp.TBytes).right_comb()
     )
 
     ReceiveActionsArgument = sp.TRecord(
-        snapshot = sp.TNat,
-        mmr_size = sp.TNat,
-        leaves = sp.TList(
+        snapshot=sp.TNat,
+        mmr_size=sp.TNat,
+        leaves=sp.TList(
             sp.TRecord(
                 # Mountain specific index from top to bottom
-                k_index = sp.TNat,
+                k_index=sp.TNat,
                 # The general position in the tree
-                mmr_pos = sp.TNat,
+                mmr_pos=sp.TNat,
                 # Encoded message
-                data = sp.TBytes
+                data=sp.TBytes,
             ).right_comb()
         ),
-        proof = sp.TList(sp.TBytes)
+        proof=sp.TList(sp.TBytes),
     ).right_comb()
 
     FulfillArgument = sp.TRecord(job_id=sp.TNat, payload=sp.TBytes).right_comb()
@@ -156,9 +156,7 @@ class Type:
     )
 
     AcurastMessage = sp.TRecord(
-        ingoing_action_id = sp.TNat,
-        kind = sp.TString,
-        payload = sp.TBytes
+        ingoing_action_id=sp.TNat, kind=sp.TString, payload=sp.TBytes
     )
 
 
@@ -176,8 +174,10 @@ class Inlined:
 class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
 
+
 class IngoingActionKind:
     ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
+
 
 class OutgoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
@@ -201,21 +201,19 @@ class OutgoingActionLambda:
             )
         )
 
-
         # Make sure that the destination is compatible
         sp.compute(
             sp.contract(
                 AcurastConsumer_Type.Fulfill,
                 action.destination,
-                AcurastConsumer_Entrypoint.Fulfill
+                AcurastConsumer_Entrypoint.Fulfill,
             ).open_some(Error.INVALID_CONSUMER_CONTRACT)
         )
 
         # Index the job information
         context = sp.local("context", arg.context)
         context.value.job_information[job_id] = sp.record(
-            destination = action.destination,
-            processors = sp.set()
+            destination=action.destination, processors=sp.set()
         )
 
         # Prepare acurast action
@@ -265,7 +263,9 @@ class OutgoingActionLambda:
         # Get origin
         origin = sp.compute(sp.sender)
 
-        value = sp.pack((OutgoingActionKind.REGISTER_JOB, origin, sp.pack(action_with_job_id)))
+        value = sp.pack(
+            (OutgoingActionKind.REGISTER_JOB, origin, sp.pack(action_with_job_id))
+        )
         key = sp.pack(context.value.action_id)
         state_param = sp.record(key=key, value=value)
         # Add acurast action to the state merkle tree
@@ -284,6 +284,7 @@ class OutgoingActionLambda:
             )
         )
 
+
 class IngoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
     def assign_processor(arg):
@@ -296,14 +297,12 @@ class IngoingActionLambda:
             action = sp.compute(unpack_result.open_some(Error.COULD_NOT_UNPACK))
 
             # Update the processor list for the given job
-            context.value.job_information[action.job_id].processors.add(action.processor_address)
-
-        sp.result(
-            sp.record(
-                context=context.value,
-                new_action_storage=arg.storage
+            context.value.job_information[action.job_id].processors.add(
+                action.processor_address
             )
-        )
+
+        sp.result(sp.record(context=context.value, new_action_storage=arg.storage))
+
 
 class AcurastProxy(sp.Contract):
     def __init__(self):
@@ -316,9 +315,9 @@ class AcurastProxy(sp.Contract):
                     outgoing_actions=sp.TBigMap(sp.TString, Type.OutgoingActionLambda),
                     ingoing_actions=sp.TBigMap(sp.TString, Type.IngoingActionLambda),
                 ).right_comb(),
-                outgoing_seq_id = sp.TNat,
+                outgoing_seq_id=sp.TNat,
                 outgoing_registry=sp.TBigMap(sp.TNat, sp.TNat),
-                ingoing_seq_id = sp.TNat,
+                ingoing_seq_id=sp.TNat,
                 job_information=Type.JobInformationIndex,
             )
         )
@@ -337,8 +336,8 @@ class AcurastProxy(sp.Contract):
             self.data.outgoing_registry[self.data.outgoing_seq_id] = sp.level
             lambda_argument = sp.record(
                 context=sp.record(
-                    action_id = self.data.outgoing_seq_id,
-                    job_information = self.data.job_information,
+                    action_id=self.data.outgoing_seq_id,
+                    job_information=self.data.job_information,
                 ),
                 merkle_aggregator=self.data.config.merkle_aggregator,
                 payload=action.payload,
@@ -352,8 +351,7 @@ class AcurastProxy(sp.Contract):
                 action.kind
             ].storage = result.new_action_storage
 
-
-    @sp.entry_point(parameter_type = Type.ReceiveActionsArgument)
+    @sp.entry_point(parameter_type=Type.ReceiveActionsArgument)
     def receive_actions(self, arg):
         # Validate proof
         is_valid = sp.view(
@@ -361,16 +359,18 @@ class AcurastProxy(sp.Contract):
             self.data.config.proof_validator,
             sp.set_type_expr(
                 sp.record(
-                    snapshot = arg.snapshot,
-                    mmr_size = arg.mmr_size,
-                    leaves = arg.leaves.map(lambda leaf : sp.record(
-                        k_index = leaf.k_index,
-                        mmr_pos = leaf.mmr_pos,
-                        hash = sp.keccak(leaf.data)
-                    )),
-                    proof = arg.proof,
+                    snapshot=arg.snapshot,
+                    mmr_size=arg.mmr_size,
+                    leaves=arg.leaves.map(
+                        lambda leaf: sp.record(
+                            k_index=leaf.k_index,
+                            mmr_pos=leaf.mmr_pos,
+                            hash=sp.keccak(leaf.data),
+                        )
+                    ),
+                    proof=arg.proof,
                 ),
-                MMR_Validator_Type.Verify_proof_argument
+                MMR_Validator_Type.Verify_proof_argument,
             ),
             t=sp.TBool,
         ).open_some(Error.INVALID_VIEW)
@@ -382,7 +382,11 @@ class AcurastProxy(sp.Contract):
         # Now, process each action
         with sp.for_("leaf", arg.leaves) as leaf:
             # Decode leaf data TO an action
-            action = sp.compute(sp.unpack(leaf.data, t = Type.AcurastMessage).open_some((Error.CANNOT_DECODE_ACTION, leaf.data)))
+            action = sp.compute(
+                sp.unpack(leaf.data, t=Type.AcurastMessage).open_some(
+                    (Error.CANNOT_DECODE_ACTION, leaf.data)
+                )
+            )
 
             # Ensure messages are processed sequentially
             sp.verify(action.ingoing_action_id == self.data.ingoing_seq_id)
@@ -397,8 +401,8 @@ class AcurastProxy(sp.Contract):
 
             lambda_argument = sp.record(
                 context=sp.record(
-                    action_id = self.data.ingoing_seq_id,
-                    job_information = self.data.job_information,
+                    action_id=self.data.ingoing_seq_id,
+                    job_information=self.data.job_information,
                 ),
                 payload=action.payload,
                 storage=action_lambda.storage,
@@ -418,15 +422,19 @@ class AcurastProxy(sp.Contract):
         # - Pay processor
 
         # Get target address
-        job_information = self.data.job_information.get(arg.job_id, message=Error.JOB_UNKNOWN)
+        job_information = self.data.job_information.get(
+            arg.job_id, message=Error.JOB_UNKNOWN
+        )
 
-        sp.verify(job_information.processors.contains(sp.sender), Error.NOT_JOB_PROCESSOR)
+        sp.verify(
+            job_information.processors.contains(sp.sender), Error.NOT_JOB_PROCESSOR
+        )
 
         # Pass fulfillment to target contract
         target_contract = sp.contract(
             AcurastConsumer_Type.Fulfill,
             job_information.destination,
-            AcurastConsumer_Entrypoint.Fulfill
+            AcurastConsumer_Entrypoint.Fulfill,
         ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(arg, sp.mutez(0), target_contract)
 
@@ -445,28 +453,20 @@ class AcurastProxy(sp.Contract):
                 with action.match("update_proof_validator") as validator_address:
                     self.data.config.proof_validator = validator_address
                 with action.match("update_outgoing_actions") as update_outgoing_actions:
-                    with sp.for_(
-                        "updates", update_outgoing_actions
-                    ) as updates:
+                    with sp.for_("updates", update_outgoing_actions) as updates:
                         with updates.match_cases() as action_kind:
                             with action_kind.match("add") as action_to_add:
                                 self.data.config.outgoing_actions[
                                     action_to_add.kind
                                 ] = action_to_add.function
                             with action_kind.match("remove") as action_to_remove:
-                                del self.data.config.outgoing_actions[
-                                    action_to_remove
-                                ]
+                                del self.data.config.outgoing_actions[action_to_remove]
                 with action.match("update_ingoing_actions") as update_ingoing_actions:
-                    with sp.for_(
-                        "updates", update_ingoing_actions
-                    ) as updates:
+                    with sp.for_("updates", update_ingoing_actions) as updates:
                         with updates.match_cases() as action_kind:
                             with action_kind.match("add") as action_to_add:
                                 self.data.config.ingoing_actions[
                                     action_to_add.kind
                                 ] = action_to_add.function
                             with action_kind.match("remove") as action_to_remove:
-                                del self.data.config.ingoing_actions[
-                                    action_to_remove
-                                ]
+                                del self.data.config.ingoing_actions[action_to_remove]
