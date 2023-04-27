@@ -30,6 +30,7 @@ class Decorator:
 
         return transform
 
+
 class Math:
     @staticmethod
     def pow(n, e):
@@ -151,33 +152,39 @@ class Nat:
 
 
 class RLP:
-    STRING_SHORT_START = 128  # sp.bytes("0x80")
-    STRING_LONG_START = 184  # sp.bytes("0xb8")
+    STRING_SHORT_START = 128
+    STRING_SHORT_START_BYTES = sp.bytes("0x80")
+    STRING_LONG_START = 183  # sp.bytes("0xb7")
 
     LIST_SHORT_START = 192
     LIST_SHORT_START_BYTES = sp.bytes("0xc0")
-
-    LIST_LONG_START = 248  # sp.bytes("0xf8")
+    LIST_LONG_START = 247  # sp.bytes("0xf7")
 
     class Encoder:
         @staticmethod
         def encode_length(arg):
-            (length, offset) = sp.match_pair(arg)
+            (length, is_list) = sp.match_pair(arg)
 
             bytes_of_nat = sp.build_lambda(Bytes.of_nat)
             bytes_of_nat8 = sp.build_lambda(lambda x: sp.result(Bytes.of_nat8(x)))
 
-            with sp.if_(length < 56):
-                sp.result(bytes_of_nat8(offset + length))
-            with sp.else_():
+            short_offset = sp.local("short_offset", RLP.STRING_SHORT_START)
+            long_offset = sp.local("long_offset", RLP.STRING_LONG_START)
+            with sp.if_(is_list):
+                short_offset.value = RLP.LIST_SHORT_START
+                long_offset.value = RLP.LIST_LONG_START
+
+            with sp.if_(length > 55):
                 with sp.if_(length < 256**8):
-                    encoded_length = sp.compute(bytes_of_nat(offset + length))
+                    encoded_length = sp.compute(bytes_of_nat(length))
                     sp.result(
-                        bytes_of_nat8(sp.len(encoded_length) + 55 + length)
+                        bytes_of_nat8(long_offset.value + sp.len(encoded_length))
                         + encoded_length
                     )
                 with sp.else_():
                     sp.failwith("INVALID_LENGTH")
+            with sp.else_():
+                sp.result(bytes_of_nat8(short_offset.value + length))
 
         @staticmethod
         def encode_nat(n):
@@ -193,17 +200,18 @@ class RLP:
             encode = sp.build_lambda(RLP.Encoder.with_length_prefix)
             bytes_of_string = sp.build_lambda(Bytes.of_string)
             with sp.if_(s == ""):
-                sp.result(sp.bytes("0x80"))
+                sp.result(RLP.STRING_SHORT_START_BYTES)
             with sp.else_():
                 sp.result(encode(bytes_of_string(s)))
 
         @staticmethod
         def with_length_prefix(b):
             encode_length = sp.build_lambda(RLP.Encoder.encode_length)
-            with sp.if_(sp.len(b) == 0):
-                sp.result(sp.bytes("0x80"))
+            length = sp.compute(sp.len(b))
+            with sp.if_(length == 0):
+                sp.result(RLP.STRING_SHORT_START_BYTES)
             with sp.else_():
-                sp.result(encode_length((sp.len(b), RLP.STRING_SHORT_START)) + b)
+                sp.result(encode_length((length, False)) + b)
 
         @staticmethod
         def encode_list(l):
@@ -212,9 +220,8 @@ class RLP:
                 sp.result(RLP.LIST_SHORT_START_BYTES)
             with sp.else_():
                 l_bytes = sp.compute(sp.concat(l))
-                sp.result(
-                    encode_length((sp.len(l_bytes), RLP.LIST_SHORT_START)) + l_bytes
-                )
+                length = sp.compute(sp.len(l_bytes))
+                sp.result(encode_length((length, True)) + l_bytes)
 
     class Decoder:
         @staticmethod
@@ -312,12 +319,13 @@ class RLP:
             with sp.if_(byte0 < RLP.STRING_SHORT_START):
                 sp.result(1)
             with sp.else_():
-                with sp.if_(byte0 < RLP.STRING_LONG_START):
+                with sp.if_(byte0 <= RLP.STRING_LONG_START):
                     sp.result(sp.as_nat((byte0 - RLP.STRING_SHORT_START) + 1))
                 with sp.else_():
                     with sp.if_(byte0 < RLP.LIST_SHORT_START):
-                        # 183 = STRING_LONG_START - 1
-                        bytes_length = sp.compute(sp.as_nat(byte0 - 183))
+                        bytes_length = sp.compute(
+                            sp.as_nat(byte0 - RLP.STRING_LONG_START)
+                        )
                         # skip over the first byte
                         _item = sp.slice(
                             item, 1, sp.as_nat(sp.len(item) - 1)
@@ -328,11 +336,12 @@ class RLP:
                         )
                         sp.result(data_length + bytes_length + 1)
                     with sp.else_():
-                        with sp.if_(byte0 < RLP.LIST_LONG_START):
+                        with sp.if_(byte0 <= RLP.LIST_LONG_START):
                             sp.result(sp.as_nat((byte0 - RLP.LIST_SHORT_START) + 1))
                         with sp.else_():
-                            # 247 = LIST_LONG_START - 1
-                            bytes_length = sp.compute(sp.as_nat(byte0 - 247))
+                            bytes_length = sp.compute(
+                                sp.as_nat(byte0 - RLP.LIST_LONG_START)
+                            )
                             # skip over the first byte
                             _item = sp.slice(
                                 item, 1, sp.as_nat(sp.len(item) - 1)
@@ -356,20 +365,18 @@ class RLP:
                     sp.result(0)
                 with sp.else_():
                     with sp.if_(
-                        (byte0 < RLP.STRING_LONG_START)
+                        (byte0 <= RLP.STRING_LONG_START)
                         | (
                             (byte0 >= RLP.LIST_SHORT_START)
-                            & (byte0 < RLP.LIST_LONG_START)
+                            & (byte0 <= RLP.LIST_LONG_START)
                         )
                     ):
                         sp.result(1)
                     with sp.else_():
                         with sp.if_(byte0 < RLP.LIST_SHORT_START):
-                            # 183 = STRING_LONG_START - 1
-                            sp.result(sp.as_nat(byte0 - 183) + 1)
+                            sp.result(sp.as_nat(byte0 - RLP.STRING_LONG_START) + 1)
                         with sp.else_():
-                            # 247 = LIST_LONG_START - 1
-                            sp.result(sp.as_nat(byte0 - 247) + 1)
+                            sp.result(sp.as_nat(byte0 - RLP.LIST_LONG_START) + 1)
 
     class Lambda:
         # Encoding

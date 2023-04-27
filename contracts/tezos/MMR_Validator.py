@@ -2,20 +2,21 @@ import smartpy as sp
 
 from contracts.tezos.libs.utils import generate_var, Decorator
 
+
 class Type:
     Leaf = sp.TRecord(
         # the leftmost index of a node
-        k_index = sp.TNat,
+        k_index=sp.TNat,
         # The position in the tree
-        mmr_pos = sp.TNat,
+        mmr_pos=sp.TNat,
         # The hash of the position in the tree
-        hash = sp.TBytes
+        hash=sp.TBytes,
     ).right_comb()
     Node = sp.TRecord(
         # Distance of the node to the leftmost node
-        k_index = sp.TNat,
+        k_index=sp.TNat,
         # A hash of the node itself
-        hash = sp.TBytes
+        hash=sp.TBytes,
     ).right_comb()
 
     # Entry points
@@ -36,26 +37,27 @@ class Type:
 
     # Views
     Verify_proof_argument = sp.TRecord(
-        snapshot = sp.TNat,
-        mmr_size = sp.TNat,
-        leaves = sp.TList(Leaf),
-        proof = sp.TList(sp.TBytes)
+        snapshot=sp.TNat,
+        mmr_size=sp.TNat,
+        leaves=sp.TList(Leaf),
+        proof=sp.TList(sp.TBytes),
     ).right_comb()
+
 
 class Iterator:
     def new(offset, stack):
         return sp.local(
             generate_var("iter"),
             sp.record(
-                offset = offset,
-                data = stack,
-            )
+                offset=offset,
+                data=stack,
+            ),
         )
 
     def type(t):
         return sp.TRecord(
-            offset = sp.TInt,
-            data = sp.Map(tkey = sp.TNat, tvalue = t),
+            offset=sp.TInt,
+            data=sp.Map(tkey=sp.TNat, tvalue=t),
         ).right_comb()
 
     def push(iterator, data):
@@ -76,6 +78,7 @@ class Iterator:
 
         return value
 
+
 @Decorator.generate_lambda()
 def merge_maps(arg):
     (l1, l2) = sp.match_pair(arg)
@@ -91,10 +94,13 @@ def merge_maps(arg):
 
     sp.result(result.value)
 
+
 @Decorator.generate_lambda()
 def merge(arg):
     (left, right) = sp.match_pair(arg)
-    sorted = sp.local(generate_var("sorted"), sp.map(tkey=sp.TIntOrNat, tvalue=Type.Node))
+    sorted = sp.local(
+        generate_var("sorted"), sp.map(tkey=sp.TIntOrNat, tvalue=Type.Node)
+    )
     sorted_index = sp.local(generate_var("sorted_index"), 0)
 
     left_i = sp.local(generate_var("left_i"), 0)
@@ -102,7 +108,9 @@ def merge(arg):
     left_size = sp.local(generate_var("left_size"), sp.len(left))
     right_size = sp.local(generate_var("right_size"), sp.len(right))
 
-    with sp.while_((left_size.value > left_i.value) & (right_size.value > right_i.value)):
+    with sp.while_(
+        (left_size.value > left_i.value) & (right_size.value > right_i.value)
+    ):
         left_el = left[left_i.value]
         right_el = right[right_i.value]
         with sp.if_(left_el.k_index < right_el.k_index):
@@ -125,6 +133,7 @@ def merge(arg):
         sorted_index.value += 1
 
     sp.result(sorted.value)
+
 
 @Decorator.generate_lambda(with_operations=False, recursive=True)
 def merge_sort(indexed_list, merge_sort):
@@ -156,15 +165,16 @@ def merge_sort(indexed_list, merge_sort):
     with sp.else_():
         sp.result(indexed_list)
 
+
 class MultiProof:
     @Decorator.generate_lambda()
     def calculate_root(arg):
         """
-            Calculate the hash of the root node
+        Calculate the hash of the root node
 
-            @param proof A list of the merkle nodes along with their k-indices that are needed to re-calculate root node
-            @param leaves A list of the along with their k-indices to prove
-            @return Hash of root node
+        @param proof A list of the merkle nodes along with their k-indices that are needed to re-calculate root node
+        @param leaves A list of the along with their k-indices to prove
+        @return Hash of root node
         """
 
         # Add lambdas to the stack
@@ -174,7 +184,9 @@ class MultiProof:
         (proof, leaves) = sp.match_pair(arg)
 
         # Holds the output from hashing a previous layer
-        next_layer = sp.local(generate_var("next_layer"), sp.map(tkey=sp.TIntOrNat, tvalue=Type.Node))
+        next_layer = sp.local(
+            generate_var("next_layer"), sp.map(tkey=sp.TIntOrNat, tvalue=Type.Node)
+        )
 
         # Merge leaves
         dyn_proof = sp.local(generate_var("dyn_proof"), proof)
@@ -183,12 +195,17 @@ class MultiProof:
         proof_length = sp.compute(sp.to_int(sp.len(dyn_proof.value)))
         height = sp.local(generate_var("height"), sp.int(0))
         with sp.while_(height.value < proof_length):
-            current_layer = sp.local(generate_var("current_layer"), sp.map(tkey=sp.TIntOrNat, tvalue=Type.Node))
+            current_layer = sp.local(
+                generate_var("current_layer"),
+                sp.map(tkey=sp.TIntOrNat, tvalue=Type.Node),
+            )
             height_proof = sp.compute(dyn_proof.value[height.value])
             with sp.if_(sp.len(next_layer.value) == 0):
                 current_layer.value = height_proof
             with sp.else_():
-                current_layer.value = merge_sort_f(merge_maps_f((height_proof, next_layer.value)))
+                current_layer.value = merge_sort_f(
+                    merge_maps_f((height_proof, next_layer.value))
+                )
 
             next_layer.value = sp.map()
             next_layer_index = sp.local(generate_var("next_layer_index"), 0)
@@ -215,20 +232,23 @@ class MultiProof:
 
         sp.result(next_layer.value[0].hash)
 
+
 class MMR:
     def leaf_count_to_mmr_size(leaf_count):
         return sp.as_nat((2 * leaf_count) - MMR.count_ones(leaf_count))
 
     def calculate_root(proof, leaves, mmr_size):
         """
-            Calculate merkle root
+        Calculate merkle root
 
-            @param proof A list of the merkle nodes that are needed to re-calculate root node
-            @param leaves a list of mmr leaves to prove
-            @param mmr_size the size of the merkle tree
-            @return Hash of root node
+        @param proof A list of the merkle nodes that are needed to re-calculate root node
+        @param leaves a list of mmr leaves to prove
+        @param mmr_size the size of the merkle tree
+        @return Hash of root node
         """
-        peaks = sp.compute(sp.build_lambda(lambda x : sp.result(MMR.get_peaks(x)))(mmr_size))
+        peaks = sp.compute(
+            sp.build_lambda(lambda x: sp.result(MMR.get_peaks(x)))(mmr_size)
+        )
         peak_roots = Iterator.new(0, sp.map())
         proof_iter = Iterator.new(0, proof)
 
@@ -246,15 +266,23 @@ class MMR:
 
                 peak_leaves_length = sp.compute(sp.len(peak_leaves.value))
                 with sp.if_(peak_leaves_length == 0):
-                    with sp.if_(sp.to_int(sp.len(proof_iter.value.data)) == proof_iter.value.offset):
+                    with sp.if_(
+                        sp.to_int(sp.len(proof_iter.value.data))
+                        == proof_iter.value.offset
+                    ):
                         in_loop.value = False
                     with sp.else_():
                         Iterator.push(peak_roots, Iterator.next(proof_iter))
                 with sp.else_():
-                    with sp.if_((peak_leaves_length == 1) & (peak_leaves.value[0].mmr_pos == peak)):
+                    with sp.if_(
+                        (peak_leaves_length == 1)
+                        & (peak_leaves.value[0].mmr_pos == peak)
+                    ):
                         Iterator.push(peak_roots, peak_leaves.value[0].hash)
                     with sp.else_():
-                        peak_root = MMR.calculate_peak_root(peak_leaves.value, proof_iter, peak)
+                        peak_root = MMR.calculate_peak_root(
+                            peak_leaves.value, proof_iter, peak
+                        )
                         Iterator.push(peak_roots, peak_root)
 
         peak_roots.value.offset -= 1
@@ -271,19 +299,22 @@ class MMR:
 
     def calculate_peak_root(peak_leaves, proof_iter, peak):
         """
-            Calculate root hash of a sub peak of the merkle mountain
+        Calculate root hash of a sub peak of the merkle mountain
 
-            @param peak_leaves : A list of nodes to provide proof for
-            @param proof_iter  : A list of node hashes to traverse to compute the peak root hash
-            @param peak        : The index of the peak node
-            @return A tuple containing the peak root hash, and the peak root position in the merkle
+        @param peak_leaves : A list of nodes to provide proof for
+        @param proof_iter  : A list of node hashes to traverse to compute the peak root hash
+        @param peak        : The index of the peak node
+        @return A tuple containing the peak root hash, and the peak root position in the merkle
         """
         res = sp.compute(MMR.mmr_leaf_to_node(peak_leaves))
         leaves = sp.local(generate_var("leaves"), sp.fst(res))
         current_layer = sp.local(generate_var("current_layer"), sp.snd(res))
 
         height = sp.compute(MMR.pos_to_height(peak))
-        layers = sp.local(generate_var("layers"), sp.map(tkey=sp.TIntOrNat, tvalue=sp.TMap(sp.TIntOrNat, Type.Node)))
+        layers = sp.local(
+            generate_var("layers"),
+            sp.map(tkey=sp.TIntOrNat, tvalue=sp.TMap(sp.TIntOrNat, Type.Node)),
+        )
 
         i = sp.local(generate_var("i"), 0)
         in_loop = sp.local(generate_var("in_loop"), True)
@@ -300,8 +331,7 @@ class MMR:
                 j = sp.local(generate_var("j"), 0)
                 with sp.for_("el", diff.elements()) as el:
                     layers.value[i.value][j.value] = sp.record(
-                        k_index = el,
-                        hash = Iterator.next(proof_iter)
+                        k_index=el, hash=Iterator.next(proof_iter)
                     )
                     j.value += 1
 
@@ -343,10 +373,10 @@ class MMR:
 
     def sibling_indices(indices):
         """
-            Calculates the index of each sibling index of the proof nodes
+        Calculates the index of each sibling index of the proof nodes
 
-            @param indices : A list of proof nodes indices
-            @return a list of sibling indices
+        @param indices : A list of proof nodes indices
+        @return a list of sibling indices
         """
         siblings = sp.local(generate_var("siblings"), sp.map())
 
@@ -365,10 +395,10 @@ class MMR:
 
     def parent_indices(indices):
         """
-            Compute Parent Indices
+        Compute Parent Indices
 
-            @param indices : A list of indices of proof nodes in a merkle mountain
-            @return a list of parent indices for each index provided
+        @param indices : A list of indices of proof nodes in a merkle mountain
+        @return a list of parent indices for each index provided
         """
         parents = sp.local(generate_var("parents"), sp.map())
 
@@ -383,10 +413,10 @@ class MMR:
 
     def mmr_leaf_to_node(leaves):
         """
-            Convert Merkle mountain leaf to a Merkle node
+        Convert Merkle mountain leaf to a Merkle node
 
-            @param leaves : A list of merkle mountain range leaves
-            @return a tuple with the list of merkle nodes and the list of nodes at 0 and 1 respectively
+        @param leaves : A list of merkle mountain range leaves
+        @return a tuple with the list of merkle nodes and the list of nodes at 0 and 1 respectively
         """
         nodes = sp.local(generate_var("parents"), sp.map())
         indices = sp.local(generate_var("indices"), sp.map())
@@ -395,7 +425,7 @@ class MMR:
         length = sp.compute(sp.len(leaves))
         with sp.while_(index.value < length):
             leaf = sp.compute(leaves[index.value])
-            nodes.value[index.value] = sp.record(k_index = leaf.k_index, hash = leaf.hash)
+            nodes.value[index.value] = sp.record(k_index=leaf.k_index, hash=leaf.hash)
             indices.value[index.value] = leaf.k_index
             index.value += 1
 
@@ -403,12 +433,12 @@ class MMR:
 
     def leaves_for_peak(leaves, peak):
         """
-            Get the mountain peak leaves, splits the leaves into either side of the peak [left & right]
+        Get the mountain peak leaves, splits the leaves into either side of the peak [left & right]
 
-            @param leaves a list of mountain merkle leaves, for a subtree
-            @param peak the peak index of the root of the subtree
+        @param leaves a list of mountain merkle leaves, for a subtree
+        @param peak the peak index of the root of the subtree
 
-            @return A tuple that represents the left and right sides of the peak respectively
+        @return A tuple that represents the left and right sides of the peak respectively
         """
 
         left = sp.local(generate_var("left"), sp.map())
@@ -430,10 +460,10 @@ class MMR:
 
     def get_peaks(mmr_size):
         """
-            Merkle mountain peaks computer
+        Merkle mountain peaks computer
 
-            @param mmr_size : The size of the merkle mountain range, or the height of the tree
-            @return a list of the peak positions
+        @param mmr_size : The size of the merkle mountain range, or the height of the tree
+        @return a list of the peak positions
         """
         (height, pos) = sp.match_pair(MMR.left_peak_height_pos(mmr_size))
         positions = sp.local(generate_var("positions"), sp.list([pos]))
@@ -442,7 +472,9 @@ class MMR:
 
         in_loop = sp.local(generate_var("in_loop"), True)
         with sp.while_(in_loop.value & (dyn_height.value > 0)):
-            (_height, _pos) = sp.match_pair(MMR.get_right_peak(dyn_height.value, dyn_pos.value, mmr_size))
+            (_height, _pos) = sp.match_pair(
+                MMR.get_right_peak(dyn_height.value, dyn_pos.value, mmr_size)
+            )
             with sp.if_((_height == 0) & (_pos == 0)):
                 in_loop.value = False
             with sp.else_():
@@ -462,7 +494,9 @@ class MMR:
                 result.value = sp.some((0, 0))
             with sp.else_():
                 dyn_height.value = sp.as_nat(dyn_height.value - 1)
-                dyn_pos.value = sp.as_nat(dyn_pos.value - MMR.parent_offset(dyn_height.value))
+                dyn_pos.value = sp.as_nat(
+                    dyn_pos.value - MMR.parent_offset(dyn_height.value)
+                )
 
         with sp.if_(result.value.is_none()):
             result.value = sp.some((dyn_height.value, dyn_pos.value))
@@ -474,7 +508,9 @@ class MMR:
 
     def left_peak_height_pos(mmrSize):
         # Lambdas
-        getPeakPosByHeight = sp.compute(sp.build_lambda(lambda h: sp.result(MMR.get_peak_pos_by_height(h))))
+        getPeakPosByHeight = sp.compute(
+            sp.build_lambda(lambda h: sp.result(MMR.get_peak_pos_by_height(h)))
+        )
 
         height = sp.local(generate_var("height"), 1)
         pos = sp.local(generate_var("pos"), getPeakPosByHeight(height.value))
@@ -494,15 +530,13 @@ class MMR:
             dyn_pos.value = MMR.jump_left(dyn_pos.value)
             in_loop.value = MMR.all_ones(dyn_pos.value)
 
-
-        return (64 - MMR.count_leading_zeros(dyn_pos.value) - 1)
+        return 64 - MMR.count_leading_zeros(dyn_pos.value) - 1
 
     def parent_offset(height):
         return 2 << height
 
     def sibling_offset(height):
         return sp.as_nat(MMR.parent_offset(height) - 1)
-
 
     def count_ones(num):
         counter = sp.local(generate_var("counter"), 0)
@@ -590,6 +624,7 @@ class MMR:
 
         return sp.as_nat((2 * leaves_count) - peak_count, "NEGATIVE_RESULT")
 
+
 class Error:
     NOT_GOVERNANCE = "NOT_GOVERNANCE_ADDRESS"
     NOT_VALIDATOR = "NOT_VALIDATOR"
@@ -597,13 +632,16 @@ class Error:
     UNKNOWN_SNAPSHOT = "UNKNOWN_SNAPSHOT"
     INVALID_PROOF = "INVALID_PROOF"
 
+
 class Inlined:
     @staticmethod
     def failIfNotGovernance(self):
         """
         This method when used, ensures that only the governance address is allowed to call a given entrypoint
         """
-        sp.verify(self.data.config.governance_address == sp.sender, Error.NOT_GOVERNANCE)
+        sp.verify(
+            self.data.config.governance_address == sp.sender, Error.NOT_GOVERNANCE
+        )
 
     @staticmethod
     def failIfNotValidator(self):
@@ -647,6 +685,7 @@ class Lambdas:
         with sp.else_():
             sp.result(sp.some(state_root.value))
 
+
 class MMR_Validator(sp.Contract):
     def __init__(self):
         self.init_type(
@@ -677,9 +716,7 @@ class MMR_Validator(sp.Contract):
         Inlined.failIfNotValidator(self)
 
         # Make sure the snapshots are submitted sequencially
-        sp.verify(
-            self.data.current_snapshot == snapshot, Error.INVALID_SNAPSHOT
-        )
+        sp.verify(self.data.current_snapshot == snapshot, Error.INVALID_SNAPSHOT)
 
         # Store the root per validator
         self.data.snapshot_submissions[sp.sender] = root
@@ -699,7 +736,11 @@ class MMR_Validator(sp.Contract):
             self.data.current_snapshot += 1
             self.data.snapshot_submissions = sp.map()
 
-    @sp.entry_point(parameter_type=sp.TRecord(from_ = sp.TNat, to = sp.TNat).layout(("from_ as from", "to")))
+    @sp.entry_point(
+        parameter_type=sp.TRecord(from_=sp.TNat, to=sp.TNat).layout(
+            ("from_ as from", "to")
+        )
+    )
     def remove_old_roots(self, arg):
         # Only the governance address can call this entry point
         Inlined.failIfNotGovernance(self)
@@ -732,18 +773,13 @@ class MMR_Validator(sp.Contract):
     @sp.onchain_view()
     def verify_proof(self, arg):
         """
-            Verify that MMR proof is valid against a given snapshot
-            @param snapshot : The snapshot where the proof was generated
-            @param proof : A proof of the authenticity of the `leaves`
-            @param leaves : A list of states (leaves)
-            @return `True` if the calculated root matches the provided snapshot root hash, `False` otherwise
+        Verify that MMR proof is valid against a given snapshot
+        @param snapshot : The snapshot where the proof was generated
+        @param proof : A proof of the authenticity of the `leaves`
+        @param leaves : A list of states (leaves)
+        @return `True` if the calculated root matches the provided snapshot root hash, `False` otherwise
         """
-        (
-            leaves,
-            mmr_size,
-            proof,
-            snapshot,
-        ) = sp.match_record(
+        (leaves, mmr_size, proof, snapshot,) = sp.match_record(
             sp.set_type_expr(
                 arg,
                 Type.Verify_proof_argument,
@@ -767,12 +803,16 @@ class MMR_Validator(sp.Contract):
             index.value += 1
 
         # Get snapshot root
-        root = sp.compute(self.data.root.get(arg.snapshot, message=Error.UNKNOWN_SNAPSHOT))
+        root = sp.compute(
+            self.data.root.get(arg.snapshot, message=Error.UNKNOWN_SNAPSHOT)
+        )
         with sp.for_("proof_node", proof) as proof_node:
             sp.verify(proof_node != root, Error.INVALID_PROOF)
 
         # Compute root from proof
-        computed_hash = MMR.calculate_root(indexed_proof.value, indexed_leaves.value, arg.mmr_size)
+        computed_hash = MMR.calculate_root(
+            indexed_proof.value, indexed_leaves.value, arg.mmr_size
+        )
 
         # Validate proof result
         sp.result(root == computed_hash)
@@ -811,6 +851,7 @@ class MMR_Validator(sp.Contract):
     #                     progress_stack.value[el1_index] = sp.keccak(el1_bytes + el2_bytes)
 
     #     sp.verify(arg.root == progress_stack.value[0], ("PROOF_INVALID", progress_stack.value))
+
 
 # class MMR_Validator_Proxy(sp.Contract):
 #     class Error:

@@ -74,7 +74,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 139; 
+                            PUSH int 140; 
                             FAILWITH;   
                           }
                           {}; 
@@ -87,7 +87,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 140; 
+                            PUSH int 141; 
                             FAILWITH;   
                           }
                           {}; 
@@ -107,7 +107,7 @@ code
                             EDIV;       
                             IF_NONE
                               {
-                                PUSH int 41; 
+                                PUSH int 42; 
                                 FAILWITH;   
                               }
                               {
@@ -149,7 +149,7 @@ code
                         UNPACK bls12_381_fr; 
                         IF_NONE
                           {
-                            PUSH int 147; 
+                            PUSH int 148; 
                             FAILWITH;   
                           }
                           {}; 
@@ -157,7 +157,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 146; 
+                            PUSH int 147; 
                             FAILWITH;   
                           }
                           {}; 
@@ -206,7 +206,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 139; 
+                                    PUSH int 140; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -219,7 +219,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 140; 
+                                    PUSH int 141; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -239,7 +239,7 @@ code
                                     EDIV;       
                                     IF_NONE
                                       {
-                                        PUSH int 41; 
+                                        PUSH int 42; 
                                         FAILWITH;   
                                       }
                                       {
@@ -281,7 +281,7 @@ code
                                 UNPACK bls12_381_fr; 
                                 IF_NONE
                                   {
-                                    PUSH int 147; 
+                                    PUSH int 148; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -289,7 +289,7 @@ code
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 146; 
+                                    PUSH int 147; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -315,7 +315,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 352; 
+                            PUSH int 361; 
                             FAILWITH;   
                           }
                           {}; 
@@ -330,10 +330,10 @@ code
                             PUSH nat 0; 
                           }
                           {
-                            PUSH nat 184; 
+                            PUSH nat 183; 
                             DUP 2;      
                             COMPARE;    
-                            LT;         
+                            LE;         
                             IF
                               {
                                 PUSH bool True; 
@@ -345,10 +345,10 @@ code
                                 GE;         
                                 IF
                                   {
-                                    PUSH nat 248; 
+                                    PUSH nat 247; 
                                     DUP 2;      
                                     COMPARE;    
-                                    LT;         
+                                    LE;         
                                   }
                                   {
                                     PUSH bool False; 
@@ -373,7 +373,7 @@ code
                                     ISNAT;      
                                     IF_NONE
                                       {
-                                        PUSH int 369; 
+                                        PUSH int 377; 
                                         FAILWITH;   
                                       }
                                       {}; 
@@ -387,7 +387,7 @@ code
                                     ISNAT;      
                                     IF_NONE
                                       {
-                                        PUSH int 372; 
+                                        PUSH int 379; 
                                         FAILWITH;   
                                       }
                                       {}; 
@@ -406,7 +406,7 @@ code
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 233; 
+                        PUSH int 240; 
                         FAILWITH;   
                       }
                       {}; 
@@ -414,7 +414,7 @@ code
                     SLICE;      
                     IF_NONE
                       {
-                        PUSH int 235; 
+                        PUSH int 242; 
                         FAILWITH;   
                       }
                       {}; 
@@ -453,7 +453,7 @@ code
                         SLICE;      
                         IF_NONE
                           {
-                            PUSH int 139; 
+                            PUSH int 140; 
                             FAILWITH;   
                           }
                           {}; 
@@ -466,7 +466,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 140; 
+                            PUSH int 141; 
                             FAILWITH;   
                           }
                           {}; 
@@ -486,7 +486,7 @@ code
                             EDIV;       
                             IF_NONE
                               {
-                                PUSH int 41; 
+                                PUSH int 42; 
                                 FAILWITH;   
                               }
                               {
@@ -528,7 +528,7 @@ code
                         UNPACK bls12_381_fr; 
                         IF_NONE
                           {
-                            PUSH int 147; 
+                            PUSH int 148; 
                             FAILWITH;   
                           }
                           {}; 
@@ -536,7 +536,7 @@ code
                         ISNAT;      
                         IF_NONE
                           {
-                            PUSH int 146; 
+                            PUSH int 147; 
                             FAILWITH;   
                           }
                           {}; 
@@ -562,7 +562,7 @@ code
                 SLICE;      
                 IF_NONE
                   {
-                    PUSH int 352; 
+                    PUSH int 361; 
                     FAILWITH;   
                   }
                   {}; 
@@ -577,10 +577,10 @@ code
                     PUSH nat 0; 
                   }
                   {
-                    PUSH nat 184; 
+                    PUSH nat 183; 
                     DUP 2;      
                     COMPARE;    
-                    LT;         
+                    LE;         
                     IF
                       {
                         PUSH bool True; 
@@ -592,10 +592,10 @@ code
                         GE;         
                         IF
                           {
-                            PUSH nat 248; 
+                            PUSH nat 247; 
                             DUP 2;      
                             COMPARE;    
-                            LT;         
+                            LE;         
                           }
                           {
                             PUSH bool False; 
@@ -620,7 +620,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 369; 
+                                PUSH int 377; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -634,7 +634,7 @@ code
                             ISNAT;      
                             IF_NONE
                               {
-                                PUSH int 372; 
+                                PUSH int 379; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -653,7 +653,7 @@ code
             ISNAT;      
             IF_NONE
               {
-                PUSH int 233; 
+                PUSH int 240; 
                 FAILWITH;   
               }
               {}; 
@@ -661,7 +661,7 @@ code
             SLICE;      
             IF_NONE
               {
-                PUSH int 235; 
+                PUSH int 242; 
                 FAILWITH;   
               }
               {}; 
@@ -683,7 +683,7 @@ code
                 ISNAT;      
                 IF_NONE
                   {
-                    PUSH int 54; 
+                    PUSH int 55; 
                     FAILWITH;   
                   }
                   {}; 
@@ -746,7 +746,7 @@ code
                             EDIV;       
                             IF_NONE
                               {
-                                PUSH int 93; 
+                                PUSH int 94; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -797,7 +797,7 @@ code
                                 SLICE;      
                                 IF_NONE
                                   {
-                                    PUSH int 81; 
+                                    PUSH int 82; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -846,7 +846,7 @@ code
                             SLICE;      
                             IF_NONE
                               {
-                                PUSH int 81; 
+                                PUSH int 82; 
                                 FAILWITH;   
                               }
                               {}; 
@@ -864,66 +864,49 @@ code
                 IF
                   {}
                   {
+                    DUP;        
+                    SIZE;       
                     PUSH nat 0; 
                     DUP 2;      
-                    SIZE;       
                     COMPARE;    
                     EQ;         
                     IF
                       {
-                        DROP;       
+                        DROP 2;     
                         PUSH bytes 0x80; 
                       }
                       {
-                        DUP;        
+                        SWAP;       
                         LAMBDA
-                          (pair nat nat)
+                          (pair nat bool)
                           bytes
                           {
+                            DUP;        
                             UNPAIR;     
-                            PUSH nat 56; 
-                            DUP 2;      
-                            COMPARE;    
-                            LT;         
+                            PUSH nat 128; 
+                            PUSH nat 183; 
+                            DUP 4;      
                             IF
                               {
-                                LAMBDA
-                                  nat
-                                  bytes
-                                  {
-                                    PUSH nat 256; 
-                                    DUP 2;      
-                                    COMPARE;    
-                                    LT;         
-                                    IF
-                                      {}
-                                      {
-                                        PUSH string "NUMBER_TOO_BIG"; 
-                                        FAILWITH;   
-                                      }; 
-                                    INT;        
-                                    PUSH bls12_381_fr 0x01; 
-                                    SWAP;       
-                                    MUL;        
-                                    PACK;       
-                                    PUSH nat 1; 
-                                    PUSH nat 6; 
-                                    SLICE;      
-                                    IF_NONE
-                                      {
-                                        PUSH int 81; 
-                                        FAILWITH;   
-                                      }
-                                      {}; 
-                                  }; 
-                                SWAP;       
-                                DIG 2;      
-                                ADD;        
-                                EXEC;       
+                                DROP 2;     
+                                PUSH nat 192; 
+                                PUSH nat 247; 
                               }
+                              {}; 
+                            PUSH nat 55; 
+                            DUP 4;      
+                            COMPARE;    
+                            GT;         
+                            IF
                               {
+                                SWAP;       
+                                DROP;       
+                                DIG 2;      
+                                DROP;       
+                                DIG 2;      
+                                DROP;       
                                 PUSH nat 18446744073709551616; 
-                                DUP 2;      
+                                DUP 3;      
                                 COMPARE;    
                                 LT;         
                                 IF
@@ -956,7 +939,7 @@ code
                                                 EDIV;       
                                                 IF_NONE
                                                   {
-                                                    PUSH int 93; 
+                                                    PUSH int 94; 
                                                     FAILWITH;   
                                                   }
                                                   {}; 
@@ -1007,7 +990,7 @@ code
                                                     SLICE;      
                                                     IF_NONE
                                                       {
-                                                        PUSH int 81; 
+                                                        PUSH int 82; 
                                                         FAILWITH;   
                                                       }
                                                       {}; 
@@ -1056,7 +1039,7 @@ code
                                                 SLICE;      
                                                 IF_NONE
                                                   {
-                                                    PUSH int 81; 
+                                                    PUSH int 82; 
                                                     FAILWITH;   
                                                   }
                                                   {}; 
@@ -1065,9 +1048,7 @@ code
                                             CONCAT;     
                                           }; 
                                       }; 
-                                    DUP 2;      
-                                    DIG 3;      
-                                    ADD;        
+                                    DIG 2;      
                                     EXEC;       
                                     DUP;        
                                     LAMBDA
@@ -1094,16 +1075,14 @@ code
                                         SLICE;      
                                         IF_NONE
                                           {
-                                            PUSH int 81; 
+                                            PUSH int 82; 
                                             FAILWITH;   
                                           }
                                           {}; 
                                       }; 
-                                    DIG 3;      
-                                    PUSH nat 55; 
-                                    DIG 4;      
+                                    DIG 2;      
                                     SIZE;       
-                                    ADD;        
+                                    DIG 3;      
                                     ADD;        
                                     EXEC;       
                                     CONCAT;     
@@ -1112,11 +1091,49 @@ code
                                     PUSH string "INVALID_LENGTH"; 
                                     FAILWITH;   
                                   }; 
+                              }
+                              {
+                                DROP;       
+                                DIG 2;      
+                                DROP;       
+                                DIG 2;      
+                                DROP;       
+                                LAMBDA
+                                  nat
+                                  bytes
+                                  {
+                                    PUSH nat 256; 
+                                    DUP 2;      
+                                    COMPARE;    
+                                    LT;         
+                                    IF
+                                      {}
+                                      {
+                                        PUSH string "NUMBER_TOO_BIG"; 
+                                        FAILWITH;   
+                                      }; 
+                                    INT;        
+                                    PUSH bls12_381_fr 0x01; 
+                                    SWAP;       
+                                    MUL;        
+                                    PACK;       
+                                    PUSH nat 1; 
+                                    PUSH nat 6; 
+                                    SLICE;      
+                                    IF_NONE
+                                      {
+                                        PUSH int 82; 
+                                        FAILWITH;   
+                                      }
+                                      {}; 
+                                  }; 
+                                DUG 2;      
+                                ADD;        
+                                EXEC;       
                               }; 
                           }; 
-                        PUSH nat 128; 
+                        PUSH bool False; 
                         DIG 3;      
-                        SIZE;       
                         PAIR;       
                         EXEC;       
                         CONCAT;     

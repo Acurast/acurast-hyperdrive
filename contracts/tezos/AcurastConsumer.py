@@ -6,11 +6,14 @@
 
 import smartpy as sp
 
+
 class Entrypoint:
     Fulfill = "fulfill"
 
+
 class Type:
     Fulfill = sp.TRecord(job_id=sp.TNat, payload=sp.TBytes).right_comb()
+
 
 class Inlined:
     @staticmethod
@@ -18,16 +21,15 @@ class Inlined:
         """
         This method when used, ensures that only the acurast contract is allowed to call a given entrypoint
         """
-        sp.verify(
-            self.data.config.acurast_proxy == sp.sender, "NOT_ACURAST_PROXY"
-        )
+        sp.verify(self.data.config.acurast_proxy == sp.sender, "NOT_ACURAST_PROXY")
+
 
 class AcurastConsumer(sp.Contract):
     def __init__(self):
         self.init_type(
             sp.TRecord(
-                config = sp.TRecord(
-                    acurast_proxy = sp.TAddress,
+                config=sp.TRecord(
+                    acurast_proxy=sp.TAddress,
                 )
                 # Add custom storage here ...
             )
