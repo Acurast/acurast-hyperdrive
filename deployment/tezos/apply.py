@@ -109,7 +109,9 @@ def run_actions(client: PyTezosClient):
                 def merge(storage, overrides):
                     if type(overrides) is dict:
                         for key in overrides.keys():
-                            storage[key] = merge(storage[key] if key in storage else {}, overrides[key])
+                            storage[key] = merge(
+                                storage[key] if key in storage else {}, overrides[key]
+                            )
                     elif storage is not None:
                         storage = overrides
 
@@ -164,8 +166,8 @@ def run_actions(client: PyTezosClient):
                         client.contract(action["contract_address"])
                         .using(block_id="head")
                         .parameter(
-                            entrypoint = action["entrypoint"],
-                            micheline = micheline,
+                            entrypoint=action["entrypoint"],
+                            micheline=micheline,
                         )
                     )
                 else:

@@ -69,6 +69,17 @@ sp.add_expression_compilation_target(
         ),
     ),
 )
+sp.add_expression_compilation_target(
+    "NOOP",
+    sp.set_type_expr(
+        IngoingActionLambda.noop,
+        sp.TLambda(
+            Type.IngoingActionLambdaArg,
+            Type.IngoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
 
 sp.add_expression_compilation_target(
     "CONFIGURE",

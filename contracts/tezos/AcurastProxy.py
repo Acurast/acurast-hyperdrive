@@ -287,6 +287,12 @@ class OutgoingActionLambda:
 
 class IngoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
+    def noop(arg):
+        sp.set_type(arg, Type.IngoingActionLambdaArg)
+
+        sp.result(sp.record(context=arg.context, new_action_storage=arg.storage))
+
+    @Decorator.generate_lambda(with_operations=True)
     def assign_processor(arg):
         sp.set_type(arg, Type.IngoingActionLambdaArg)
 

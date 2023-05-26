@@ -1,0 +1,43 @@
+parameter (list %configure address);
+storage   (pair (address %governance_address) (address %validator_address));
+code
+  {
+    UNPAIR;     
+    SENDER;     
+    DUP 3;      
+    CAR;        
+    COMPARE;    
+    EQ;         
+    IF
+      {}
+      {
+        PUSH string "NOT_GOVERNANCE_ADDRESS"; 
+        FAILWITH;   
+      }; 
+    DUP;        
+    ITER
+      {
+        DIG 2;      
+        SWAP;       
+        UPDATE 2;   
+        SWAP;       
+      }; 
+    DROP;       
+    NIL operation; 
+    PAIR;       
+  };
+view
+  "verify_proof" (pair (list %leaves (pair (bytes %hash) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) bool
+  {
+    UNPAIR;     
+    SWAP;       
+    CDR;        
+    SWAP;       
+    VIEW "verify_proof" bool; 
+    IF_NONE
+      {
+        PUSH string "INVALID_VIEW"; 
+        FAILWITH;   
+      }
+      {}; 
+  };
