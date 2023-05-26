@@ -6,6 +6,8 @@
 // ---------------------------------------------------------------------------
 pragma solidity ^0.8.17;
 
+bytes32 constant empty_hash = 0x0000000000000000000000000000000000000000000000000000000000000001;
+
 library Err {
     string constant NOT_ADMIN = "NOT_ADMIN";
     string constant PROOF_INVALID = "PROOF_INVALID";
@@ -13,6 +15,7 @@ library Err {
     string constant VALIDATOR_EXISTS = "VALIDATOR_EXISTS";
     string constant INVALID_SNAPSHOT = "INVALID_SNAPSHOT";
     string constant SNAPSHOT_NOT_FINALIZED = "SNAPSHOT_NOT_FINALIZED";
+    string constant EMPTY_SNAPSHOT = "EMPTY_SNAPSHOT";
 }
 
 struct StateRootSubmission {
@@ -153,6 +156,9 @@ contract IBCF_Validator {
         bytes memory value,
         bytes32[2][] memory proof
     ) public view {
+        bytes32 snapshot_root = get_state_root(snapshot_number);
+        require(snapshot_root != empty_hash, Err.EMPTY_SNAPSHOT);
+
         bytes32 hash = keccak256(abi.encodePacked(owner, key, value)); // starts with state_hash
         for (uint i=0; i<proof.length; i++) {
             if(proof[i][0] == 0x0) {
@@ -161,7 +167,7 @@ contract IBCF_Validator {
                 hash = keccak256(abi.encodePacked(proof[i][0], hash));
             }
         }
-        require(get_state_root(snapshot_number) == hash, Err.PROOF_INVALID);
+        require(snapshot_root == hash, Err.PROOF_INVALID);
     }
 
     /**
