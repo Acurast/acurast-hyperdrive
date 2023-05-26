@@ -52,6 +52,38 @@ contract("IBCF_Validator", async ([alice, primary]) => {
     assert(state_root == state_root_1);
   });
 
+  it("Call verify_proof (invalid - empty snapshot)", async function () {
+    const snapshot = 1;
+    const state_root =
+      "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+    await instance.submit_state_root(snapshot, state_root, { from: primary });
+    await instance.submit_state_root(snapshot, state_root, { from: alice });
+
+    const proof = [
+      [
+        "0x77e9d904a5433b61e7b2eb1f0f271cc24492acb00f8c19a642a27f7c126ddfa1",
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+      ],
+      [
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "0xc332e8089ae5a06975fafe0a4d4c495679e1f1fb4089e2257f7a59bcaca2ffaa",
+      ],
+      [
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "0xcdbacddfed638c93aaa8c21658fcfa67823c997174ee6110212c2a0f8d0b589c",
+      ],
+    ];
+
+    const owner = "0x050a0000001600008a8584be3718453e78923713a6966202b05f99c6";
+    const key = "0x05";
+    const value = "0xffffffffff";
+    await expectsFailure(
+      async () => await instance.verify_proof.call(snapshot, owner, key, value, proof),
+      "Snapshot should be empty"
+    );
+  });
+
   it("Call verify_proof (Valid proof)", async function () {
     const snapshot = 1;
 
