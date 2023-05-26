@@ -109,8 +109,8 @@ def run_actions(client: PyTezosClient):
                 def merge(storage, overrides):
                     if type(overrides) is dict:
                         for key in overrides.keys():
-                            storage[key] = merge(storage[key], overrides[key])
-                    else:
+                            storage[key] = merge(storage[key] if key in storage else {}, overrides[key])
+                    elif storage is not None:
                         storage = overrides
 
                     return storage
