@@ -853,19 +853,33 @@ class MMR_Validator(sp.Contract):
     #     sp.verify(arg.root == progress_stack.value[0], ("PROOF_INVALID", progress_stack.value))
 
 
-# class MMR_Validator_Proxy(sp.Contract):
-#     class Error:
-#         INVALID_VIEW = "INVALID_VIEW"
+class MMR_Validator_Proxy(sp.Contract):
+    class Error:
+        INVALID_VIEW = "INVALID_VIEW"
 
-#     def __init__(self):
-#         self.init_type(
-#             sp.TRecord(
-#                 validator_address=sp.TAddress,
-#             )
-#         )
+    def __init__(self):
+        self.init_type(
+            sp.TRecord(
+                # Multi-sig address allowed to manage the contract
+                governance_address=sp.TAddress,
+                validator_address=sp.TAddress,
+            )
+        )
 
-#     @sp.onchain_view()
-#     def verify_proof(self, arg):
-#         sp.set_type(arg, Type.Verify_proof_argument)
-#         is_valid = sp.view("verify_proof", self.data.validator_address, arg, t = sp.TBool).open_some(MMR_Validator_Proxy.Error.INVALID_VIEW)
-#         sp.result(is_valid)
+    @sp.entry_point()
+    def configure(self, actions):
+        # Only allowed addresses can call this entry point
+        sp.verify(self.data.governance_address == sp.sender, Error.NOT_GOVERNANCE)
+
+        with sp.for_("action", actions) as action:
+            with action.match_cases() as action:
+                with action.match("update_validator_address") as validator_address:
+                    self.data.validator_address = validator_address
+
+    @sp.onchain_view()
+    def verify_proof(self, arg):
+        sp.set_type(arg, Type.Verify_proof_argument)
+        is_valid = sp.view(
+            "verify_proof", self.data.validator_address, arg, t=sp.TBool
+        ).open_some(MMR_Validator_Proxy.Error.INVALID_VIEW)
+        sp.result(is_valid)

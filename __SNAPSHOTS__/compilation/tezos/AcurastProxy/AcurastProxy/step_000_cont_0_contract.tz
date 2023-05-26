@@ -270,7 +270,7 @@ code
                 IF
                   {}
                   {
-                    PUSH string "WrongCondition: compute_AcurastProxy_385.value.ingoing_action_id == self.data.ingoing_seq_id"; 
+                    PUSH string "WrongCondition: compute_AcurastProxy_391.value.ingoing_action_id == self.data.ingoing_seq_id"; 
                     FAILWITH;   
                   }; 
                 DIG 3;      
@@ -347,7 +347,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 416; 
+                    PUSH int 422; 
                     FAILWITH;   
                   }
                   {}; 
@@ -454,7 +454,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 352; 
+                    PUSH int 358; 
                     FAILWITH;   
                   }
                   {}; 
