@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Setup
         uses: actions/setup-node@v3
