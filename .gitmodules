@@ -1,0 +1,3 @@
+[submodule "ligo-smart-contracts"]
+	path = ligo-smart-contracts
+	url = https://github.com/oxheadalpha/smart-contracts.git
