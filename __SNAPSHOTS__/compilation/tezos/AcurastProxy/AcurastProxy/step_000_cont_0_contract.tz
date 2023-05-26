@@ -1,5 +1,5 @@
-parameter (or (or (list %configure (or (address %update_governance_address) (or (list %update_ingoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (or (address %update_merkle_aggregator) (or (list %update_outgoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_proof_validator)))))) (pair %fulfill (nat %job_id) (bytes %payload))) (or (pair %receive_actions (list %leaves (pair (bytes %data) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) (list %send_actions (pair (string %kind) (bytes %payload)))));
-storage   (pair (pair (pair %config (address %governance_address) (pair (big_map %ingoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (address %merkle_aggregator) (pair (big_map %outgoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (address %destination) (set %processors address)))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (address %proof_validator))))) (nat %ingoing_seq_id)) (pair (big_map %job_information nat (pair (address %destination) (set %processors address))) (pair (big_map %outgoing_registry nat nat) (nat %outgoing_seq_id))));
+parameter (or (or (list %configure (or (address %update_governance_address) (or (list %update_ingoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (or (address %update_merkle_aggregator) (or (list %update_outgoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_proof_validator)))))) (pair %fulfill (nat %job_id) (bytes %payload))) (or (pair %receive_actions (list %leaves (pair (bytes %data) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) (list %send_actions (pair (string %kind) (bytes %payload)))));
+storage   (pair (pair (pair %config (address %governance_address) (pair (big_map %ingoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (address %merkle_aggregator) (pair (big_map %outgoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (address %proof_validator))))) (nat %ingoing_seq_id)) (pair (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots))))) (pair (big_map %outgoing_registry nat nat) (nat %outgoing_seq_id))));
 code
   {
     UNPAIR;     
@@ -67,7 +67,7 @@ code
                                 UNPAIR;     
                                 DUP;        
                                 GET 3;      
-                                NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair address (set address)))) (pair bytes (pair bytes nat))) (list operation)) (pair (pair (pair nat (big_map nat (pair address (set address)))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
+                                NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair bytes (pair bytes nat))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
                                 DIG 5;      
                                 UPDATE;     
                                 UPDATE 3;   
@@ -122,7 +122,7 @@ code
                                         UNPAIR;     
                                         DUP;        
                                         GET 7;      
-                                        NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair address (set address)))) (pair address (pair bytes (pair bytes nat)))) (list operation)) (pair (pair (pair nat (big_map nat (pair address (set address)))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
+                                        NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair address (pair bytes (pair bytes nat)))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
                                         DIG 5;      
                                         UPDATE;     
                                         UPDATE 7;   
@@ -164,7 +164,36 @@ code
                 FAILWITH;   
               }
               {}; 
-            CDR;        
+            DUP;        
+            DUP;        
+            GET 5;      
+            DIG 2;      
+            GET 5;      
+            SWAP;       
+            SUB_MUTEZ;  
+            IF_NONE
+              {
+                PUSH int 463; 
+                FAILWITH;   
+              }
+              {}; 
+            UPDATE 5;   
+            NIL operation; 
+            SENDER;     
+            CONTRACT unit; 
+            IF_NONE
+              {
+                PUSH string "INVALID_CONTRACT"; 
+                FAILWITH;   
+              }
+              {}; 
+            DUP 3;      
+            GET 5;      
+            UNIT;       
+            TRANSFER_TOKENS; 
+            CONS;       
+            DUP 2;      
+            GET 3;      
             SENDER;     
             MEM;        
             IF
@@ -173,18 +202,8 @@ code
                 PUSH string "NOT_JOB_PROCESSOR"; 
                 FAILWITH;   
               }; 
-            NIL operation; 
-            DUP 3;      
-            GET 3;      
-            DUP 3;      
+            DUP 2;      
             CAR;        
-            GET;        
-            IF_NONE
-              {
-                PUSH string "JOB_UNKNOWN"; 
-                FAILWITH;   
-              }
-              {}; 
             CAR;        
             CONTRACT %fulfill (pair (nat %job_id) (bytes %payload)); 
             IF_NONE
@@ -194,9 +213,19 @@ code
               }
               {}; 
             PUSH mutez 0; 
-            DIG 3;      
+            DUP 5;      
             TRANSFER_TOKENS; 
             CONS;       
+            DIG 3;      
+            DUP;        
+            GET 3;      
+            DIG 3;      
+            SOME;       
+            DIG 4;      
+            CAR;        
+            UPDATE;     
+            UPDATE 3;   
+            SWAP;       
           }; 
       }
       {
@@ -270,7 +299,7 @@ code
                 IF
                   {}
                   {
-                    PUSH string "WrongCondition: compute_AcurastProxy_391.value.ingoing_action_id == self.data.ingoing_seq_id"; 
+                    PUSH string "WrongCondition: compute_AcurastProxy_421.value.ingoing_action_id == self.data.ingoing_seq_id"; 
                     FAILWITH;   
                   }; 
                 DIG 3;      
@@ -347,7 +376,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 422; 
+                    PUSH int 452; 
                     FAILWITH;   
                   }
                   {}; 
@@ -454,7 +483,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 358; 
+                    PUSH int 388; 
                     FAILWITH;   
                   }
                   {}; 
