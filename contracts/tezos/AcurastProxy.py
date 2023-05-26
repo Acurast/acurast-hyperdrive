@@ -18,6 +18,10 @@ from contracts.tezos.AcurastConsumer import (
 )
 
 
+class Constants:
+    REVEAL_COST = sp.mutez(370)
+
+
 class Error:
     INVALID_CONTRACT = "INVALID_CONTRACT"
     INVALID_STATE_CONTRACT = "INVALID_STATE_CONTRACT"
@@ -50,7 +54,7 @@ class Type:
                     sp.TSet(sp.TRecord(source=sp.TBytes, startDelay=sp.TNat))
                 ),
             ).right_comb(),
-            expectedFulfillmentFee=sp.TNat,
+            expectedFulfillmentFee=sp.TMutez,
         ).right_comb(),
         requiredModules=sp.TSet(sp.TNat),
         script=sp.TBytes,
@@ -74,7 +78,12 @@ class Type:
 
     # Storage
     JobInformation = sp.TRecord(
-        destination=sp.TAddress, processors=sp.TSet(sp.TAddress)
+        creator=sp.TAddress,
+        destination=sp.TAddress,
+        processors=sp.TSet(sp.TAddress),
+        expected_fullfilment_fee=sp.TMutez,
+        remaining_fee=sp.TMutez,
+        slots=sp.TNat,
     )
     JobInformationIndex = sp.TBigMap(sp.TNat, JobInformation)
     ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
@@ -170,6 +179,19 @@ class Inlined:
             self.data.config.governance_address == sp.sender, Error.NOT_GOVERNANCE
         )
 
+    @staticmethod
+    def computed_expected_fees(
+        startTime, endTime, interval, slots, expected_fullfilment_fee
+    ):
+        execution_count = sp.compute(
+            sp.as_nat(endTime - startTime, message="INVALID_SCHEDULE") / interval
+        )
+        expected_fee = sp.compute(
+            sp.mul(slots * execution_count, expected_fullfilment_fee)
+            + sp.mul(slots, Constants.REVEAL_COST)
+        )
+        return expected_fee
+
 
 class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
@@ -210,10 +232,32 @@ class OutgoingActionLambda:
             ).open_some(Error.INVALID_CONSUMER_CONTRACT)
         )
 
+        # Calculate the fee required for all job executions
+        startTime = sp.compute(action.schedule.startTime)
+        endTime = sp.compute(action.schedule.endTime)
+        interval = sp.compute(action.schedule.interval)
+        slots = sp.compute(action.extra.requirements.slots)
+        expected_fullfilment_fee = sp.compute(action.extra.expectedFulfillmentFee)
+        expected_fee = sp.compute(
+            Inlined.computed_expected_fees(
+                startTime,
+                endTime,
+                interval,
+                slots,
+                expected_fullfilment_fee,
+            )
+        )
+        sp.verify(sp.amount == expected_fee, message="INVALID_FEE_AMOUNT")
+
         # Index the job information
         context = sp.local("context", arg.context)
         context.value.job_information[job_id] = sp.record(
-            destination=action.destination, processors=sp.set()
+            creator=sp.sender,
+            destination=action.destination,
+            expected_fullfilment_fee=expected_fullfilment_fee,
+            processors=sp.set(),
+            remaining_fee=expected_fee,
+            slots=slots,
         )
 
         # Prepare acurast action
@@ -243,7 +287,7 @@ class OutgoingActionLambda:
                             sp.TSet(sp.TRecord(source=sp.TBytes, startDelay=sp.TNat))
                         ),
                     ).right_comb(),
-                    expectedFulfillmentFee=sp.TNat,
+                    expectedFulfillmentFee=sp.TMutez,
                 ).right_comb(),
                 requiredModules=sp.TSet(sp.TNat),
                 script=sp.TBytes,
@@ -301,11 +345,26 @@ class IngoingActionLambda:
         unpack_result = sp.compute(sp.unpack(arg.payload, Type.AssignProcessor))
         with sp.if_(unpack_result.is_some()):
             action = sp.compute(unpack_result.open_some(Error.COULD_NOT_UNPACK))
+            job_information = sp.local(
+                "job_information", context.value.job_information[action.job_id]
+            )
 
             # Update the processor list for the given job
-            context.value.job_information[action.job_id].processors.add(
-                action.processor_address
+            job_information.value.processors.add(action.processor_address)
+
+            # Send initial fees to the processor (the processor may need a reveal)
+            initial_fee = sp.compute(
+                job_information.value.expected_fullfilment_fee + Constants.REVEAL_COST
             )
+            job_information.value.remaining_fee = (
+                job_information.value.remaining_fee - initial_fee
+            )
+            sp.send(
+                action.processor_address, initial_fee, message=Error.INVALID_CONTRACT
+            )
+
+            # Update job information
+            context.value.job_information[action.job_id] = job_information.value
 
         sp.result(sp.record(context=context.value, new_action_storage=arg.storage))
 
@@ -423,26 +482,36 @@ class AcurastProxy(sp.Contract):
 
     @sp.entry_point(parameter_type=Type.FulfillArgument)
     def fulfill(self, arg):
-        # TODO: Handle fulfillment
-        # - Maybe report the fulfillment to acurast
-        # - Pay processor
+        # Get job information
+        job_information = sp.local(
+            "job_information",
+            self.data.job_information.get(arg.job_id, message=Error.JOB_UNKNOWN),
+        )
 
-        # Get target address
-        job_information = self.data.job_information.get(
-            arg.job_id, message=Error.JOB_UNKNOWN
+        # Re-fill processor fees
+        job_information.value.remaining_fee = (
+            job_information.value.remaining_fee - job_information.value.remaining_fee
+        )
+        sp.send(
+            sp.sender,
+            job_information.value.remaining_fee,
+            message=Error.INVALID_CONTRACT,
         )
 
         sp.verify(
-            job_information.processors.contains(sp.sender), Error.NOT_JOB_PROCESSOR
+            job_information.value.processors.contains(sp.sender),
+            Error.NOT_JOB_PROCESSOR,
         )
 
         # Pass fulfillment to target contract
         target_contract = sp.contract(
             AcurastConsumer_Type.Fulfill,
-            job_information.destination,
+            job_information.value.destination,
             AcurastConsumer_Entrypoint.Fulfill,
         ).open_some(Error.INVALID_CONTRACT)
         sp.transfer(arg, sp.mutez(0), target_contract)
+
+        self.data.job_information[arg.job_id] = job_information.value
 
     @sp.entry_point(parameter_type=Type.ConfigureArgument)
     def configure(self, actions):

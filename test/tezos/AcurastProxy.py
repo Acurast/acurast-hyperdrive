@@ -8,6 +8,7 @@ from contracts.tezos.AcurastProxy import (
     OutgoingActionKind,
     IngoingActionKind,
     Type,
+    Inlined as AcurastProxyInlined,
 )
 from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
@@ -149,7 +150,7 @@ def test():
                         )
                     ),
                 ),
-                expectedFulfillmentFee=0,
+                expectedFulfillmentFee=sp.mutez(1000),
             ),
         ),
         Type.RegisterJobAction,
@@ -160,9 +161,33 @@ def test():
         kind=OutgoingActionKind.REGISTER_JOB, payload=sp.pack(register_job_payload)
     )
 
-    acurastProxy.send_actions([register_job_action]).run(
-        sender=alice, level=BLOCK_LEVEL_1
+    expected_fee = scenario.compute(
+        sp.build_lambda(
+            lambda arg: sp.set_type_expr(
+                AcurastProxyInlined.computed_expected_fees(
+                    arg.startTime,
+                    arg.endTime,
+                    arg.interval,
+                    arg.slots,
+                    arg.expectedFulfillmentFee,
+                ),
+                sp.TMutez,
+            )
+        )(
+            sp.record(
+                startTime=register_job_payload.schedule.startTime,
+                endTime=register_job_payload.schedule.endTime,
+                interval=register_job_payload.schedule.interval,
+                slots=register_job_payload.extra.requirements.slots,
+                expectedFulfillmentFee=register_job_payload.extra.expectedFulfillmentFee,
+            )
+        )
     )
+    acurastProxy.send_actions([register_job_action]).run(
+        sender=alice, level=BLOCK_LEVEL_1, amount=expected_fee
+    )
+    # The contract balance should now be equal to the expected fee (only one job added yet)
+    scenario.verify(acurastProxy.balance == expected_fee)
 
     # Get proof of inclusion
     proof = scenario.compute(
