@@ -1,5 +1,5 @@
-parameter (or (or (list %configure (or (address %update_governance_address) (or (list %update_ingoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (or (address %update_merkle_aggregator) (or (list %update_outgoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_proof_validator)))))) (pair %fulfill (nat %job_id) (bytes %payload))) (or (pair %receive_actions (list %leaves (pair (bytes %data) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) (list %send_actions (pair (string %kind) (bytes %payload)))));
-storage   (pair (pair (pair %config (address %governance_address) (pair (big_map %ingoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (address %merkle_aggregator) (pair (big_map %outgoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots)))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (address %proof_validator))))) (nat %ingoing_seq_id)) (pair (big_map %job_information nat (pair (pair (address %destination) (mutez %expected_fullfilment_fee)) (pair (set %processors address) (pair (mutez %remaining_fee) (nat %slots))))) (pair (big_map %outgoing_registry nat nat) (nat %outgoing_seq_id))));
+parameter (or (or (list %configure (or (address %update_governance_address) (or (list %update_ingoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (or (address %update_merkle_aggregator) (or (list %update_outgoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_proof_validator)))))) (pair %fulfill (nat %job_id) (bytes %payload))) (or (pair %receive_actions (list %leaves (pair (bytes %data) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) (or (list %send_actions (pair (string %kind) (bytes %payload))) (nat %withdraw_remaining_fee))));
+storage   (pair (pair (pair %config (address %governance_address) (pair (big_map %ingoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (address %merkle_aggregator) (pair (big_map %outgoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (address %proof_validator))))) (nat %ingoing_seq_id)) (pair (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status)))))) (pair (big_map %outgoing_registry nat nat) (nat %outgoing_seq_id))));
 code
   {
     UNPAIR;     
@@ -67,7 +67,7 @@ code
                                 UNPAIR;     
                                 DUP;        
                                 GET 3;      
-                                NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair bytes (pair bytes nat))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
+                                NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes (pair bytes nat))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
                                 DIG 5;      
                                 UPDATE;     
                                 UPDATE 3;   
@@ -122,7 +122,7 @@ code
                                         UNPAIR;     
                                         DUP;        
                                         GET 7;      
-                                        NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair address (pair bytes (pair bytes nat)))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair address mutez) (pair (set address) (pair mutez nat))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
+                                        NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair address (pair bytes (pair bytes nat)))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
                                         DIG 5;      
                                         UPDATE;     
                                         UPDATE 7;   
@@ -165,34 +165,7 @@ code
               }
               {}; 
             DUP;        
-            DUP;        
-            GET 5;      
-            DIG 2;      
-            GET 5;      
-            SWAP;       
-            SUB_MUTEZ;  
-            IF_NONE
-              {
-                PUSH int 463; 
-                FAILWITH;   
-              }
-              {}; 
-            UPDATE 5;   
-            NIL operation; 
-            SENDER;     
-            CONTRACT unit; 
-            IF_NONE
-              {
-                PUSH string "INVALID_CONTRACT"; 
-                FAILWITH;   
-              }
-              {}; 
-            DUP 3;      
-            GET 5;      
-            UNIT;       
-            TRANSFER_TOKENS; 
-            CONS;       
-            DUP 2;      
+            GET 3;      
             GET 3;      
             SENDER;     
             MEM;        
@@ -202,9 +175,62 @@ code
                 PUSH string "NOT_JOB_PROCESSOR"; 
                 FAILWITH;   
               }; 
+            DUP;        
+            UNPAIR;     
+            SWAP;       
+            UNPAIR;     
+            UNPAIR;     
+            SWAP;       
+            UNPAIR;     
+            SWAP;       
+            DIG 5;      
+            CAR;        
+            GET 6;      
+            SWAP;       
+            SUB_MUTEZ;  
+            IF_NONE
+              {
+                PUSH int 512; 
+                FAILWITH;   
+              }
+              {}; 
+            SWAP;       
+            PAIR;       
+            SWAP;       
+            PAIR;       
+            PAIR;       
+            SWAP;       
+            PAIR;       
+            PUSH mutez 0; 
             DUP 2;      
             CAR;        
+            GET 6;      
+            COMPARE;    
+            GT;         
+            IF
+              {
+                NIL operation; 
+                SENDER;     
+                CONTRACT unit; 
+                IF_NONE
+                  {
+                    PUSH string "INVALID_CONTRACT"; 
+                    FAILWITH;   
+                  }
+                  {}; 
+                DUP 3;      
+                CAR;        
+                GET 6;      
+                UNIT;       
+                TRANSFER_TOKENS; 
+                CONS;       
+              }
+              {
+                NIL operation; 
+              }; 
+            DUP 2;      
             CAR;        
+            GET 3;      
             CONTRACT %fulfill (pair (nat %job_id) (bytes %payload)); 
             IF_NONE
               {
@@ -299,7 +325,7 @@ code
                 IF
                   {}
                   {
-                    PUSH string "WrongCondition: compute_AcurastProxy_421.value.ingoing_action_id == self.data.ingoing_seq_id"; 
+                    PUSH string "WrongCondition: compute_AcurastProxy_464.value.ingoing_action_id == self.data.ingoing_seq_id"; 
                     FAILWITH;   
                   }; 
                 DIG 3;      
@@ -376,7 +402,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 452; 
+                    PUSH int 495; 
                     FAILWITH;   
                   }
                   {}; 
@@ -395,111 +421,196 @@ code
             DROP;       
           }
           {
-            NIL operation; 
-            DUP 2;      
-            ITER
+            IF_LEFT
               {
-                DIG 3;      
-                DUP;        
-                GET 6;      
-                PUSH nat 1; 
-                ADD;        
-                UPDATE 6;   
-                DUG 3;      
-                DUP 4;      
-                DUP;        
-                GET 5;      
-                LEVEL;      
-                SOME;       
-                DIG 6;      
-                GET 6;      
-                UPDATE;     
-                UPDATE 5;   
-                DUG 3;      
-                DUP 4;      
-                CAR;        
-                CAR;        
-                GET 7;      
+                NIL operation; 
                 DUP 2;      
-                CAR;        
-                GET;        
-                IF_NONE
+                ITER
                   {
-                    PUSH string "OUTGOING_ACTION_NOT_SUPPORTED"; 
-                    FAILWITH;   
-                  }
-                  {}; 
-                CAR;        
-                DUP 5;      
-                CAR;        
-                CAR;        
-                GET 7;      
-                DUP 3;      
-                CAR;        
-                GET;        
-                IF_NONE
-                  {
-                    PUSH string "OUTGOING_ACTION_NOT_SUPPORTED"; 
-                    FAILWITH;   
-                  }
-                  {}; 
-                CDR;        
-                DUP 3;      
-                CDR;        
-                DUP 7;      
-                CAR;        
-                CAR;        
-                GET 5;      
-                DUP 8;      
+                    DIG 3;      
+                    DUP;        
+                    GET 6;      
+                    PUSH nat 1; 
+                    ADD;        
+                    UPDATE 6;   
+                    DUG 3;      
+                    DUP 4;      
+                    DUP;        
+                    GET 5;      
+                    LEVEL;      
+                    SOME;       
+                    DIG 6;      
+                    GET 6;      
+                    UPDATE;     
+                    UPDATE 5;   
+                    DUG 3;      
+                    DUP 4;      
+                    CAR;        
+                    CAR;        
+                    GET 7;      
+                    DUP 2;      
+                    CAR;        
+                    GET;        
+                    IF_NONE
+                      {
+                        PUSH string "OUTGOING_ACTION_NOT_SUPPORTED"; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    CAR;        
+                    DUP 5;      
+                    CAR;        
+                    CAR;        
+                    GET 7;      
+                    DUP 3;      
+                    CAR;        
+                    GET;        
+                    IF_NONE
+                      {
+                        PUSH string "OUTGOING_ACTION_NOT_SUPPORTED"; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    CDR;        
+                    DUP 3;      
+                    CDR;        
+                    DUP 7;      
+                    CAR;        
+                    CAR;        
+                    GET 5;      
+                    DUP 8;      
+                    GET 3;      
+                    DUP 9;      
+                    GET 6;      
+                    PAIR;       
+                    PAIR 4;     
+                    SWAP;       
+                    DIG 3;      
+                    DIG 2;      
+                    PAIR;       
+                    EXEC;       
+                    UNPAIR;     
+                    DIG 4;      
+                    DIG 4;      
+                    DIG 3;      
+                    DUG 4;      
+                    DUG 4;      
+                    DUP 2;      
+                    CAR;        
+                    CDR;        
+                    UPDATE 3;   
+                    UNPAIR;     
+                    UNPAIR;     
+                    DUP;        
+                    GET 7;      
+                    DUP;        
+                    DIG 6;      
+                    CAR;        
+                    DUP;        
+                    DUG 2;      
+                    GET;        
+                    IF_NONE
+                      {
+                        PUSH int 431; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    DIG 6;      
+                    CDR;        
+                    UPDATE 2;   
+                    SOME;       
+                    SWAP;       
+                    UPDATE;     
+                    UPDATE 7;   
+                    PAIR;       
+                    PAIR;       
+                    DUG 2;      
+                  }; 
+                SWAP;       
+                DROP;       
+              }
+              {
+                DUP 2;      
                 GET 3;      
-                DUP 9;      
-                GET 6;      
-                PAIR;       
-                PAIR 4;     
-                SWAP;       
-                DIG 3;      
-                DIG 2;      
-                PAIR;       
-                EXEC;       
-                UNPAIR;     
-                DIG 4;      
-                DIG 4;      
-                DIG 3;      
-                DUG 4;      
-                DUG 4;      
                 DUP 2;      
-                CAR;        
-                CDR;        
-                UPDATE 3;   
-                UNPAIR;     
-                UNPAIR;     
-                DUP;        
-                GET 7;      
-                DUP;        
-                DIG 6;      
-                CAR;        
-                DUP;        
-                DUG 2;      
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 388; 
+                    PUSH string "JOB_UNKNOWN"; 
                     FAILWITH;   
                   }
                   {}; 
-                DIG 6;      
-                CDR;        
-                UPDATE 2;   
+                PUSH nat 2; 
+                DUP 2;      
+                GET 8;      
+                COMPARE;    
+                EQ;         
+                IF
+                  {
+                    PUSH bool True; 
+                  }
+                  {
+                    PUSH timestamp "1970-01-01T00:00:00Z"; 
+                    NOW;        
+                    SUB;        
+                    PUSH int 0; 
+                    DUP 3;      
+                    CAR;        
+                    GET 5;      
+                    MUL;        
+                    COMPARE;    
+                    LT;         
+                  }; 
+                IF
+                  {
+                    NIL operation; 
+                    DUP 2;      
+                    CAR;        
+                    CAR;        
+                    CDR;        
+                    CONTRACT unit; 
+                    IF_NONE
+                      {
+                        PUSH string "INVALID_CONTRACT"; 
+                        FAILWITH;   
+                      }
+                      {}; 
+                    DUP 3;      
+                    GET 3;      
+                    GET 4;      
+                    UNIT;       
+                    TRANSFER_TOKENS; 
+                    CONS;       
+                    SWAP;       
+                    UNPAIR;     
+                    SWAP;       
+                    UNPAIR;     
+                    UNPAIR;     
+                    SWAP;       
+                    CAR;        
+                    PUSH mutez 0; 
+                    SWAP;       
+                    PAIR;       
+                    SWAP;       
+                    PAIR;       
+                    PAIR;       
+                    SWAP;       
+                    PAIR;       
+                    SWAP;       
+                  }
+                  {
+                    NIL operation; 
+                  }; 
+                DIG 3;      
+                DUP;        
+                GET 3;      
+                DIG 3;      
                 SOME;       
-                SWAP;       
+                DIG 4;      
                 UPDATE;     
-                UPDATE 7;   
-                PAIR;       
-                PAIR;       
-                DUG 2;      
+                UPDATE 3;   
+                SWAP;       
               }; 
-            SWAP;       
-            DROP;       
           }; 
       }; 
     NIL operation; 

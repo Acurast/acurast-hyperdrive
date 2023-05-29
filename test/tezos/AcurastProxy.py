@@ -14,9 +14,10 @@ from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
 
 
-def get_nonce(n):
-    return sp.bytes("0x{:0>64}".format(hex(n)[2:]))
-
+class ImplicitInterface(sp.Contract):
+    @sp.entrypoint()
+    def default(self):
+        pass
 
 @sp.add_test(name="AcurastProxy")
 def test():
@@ -25,13 +26,12 @@ def test():
     BLOCK_LEVEL_1 = 1
     admin = sp.test_account("admin")
     alice = sp.test_account("alice")
-    bob = sp.test_account("bob")
+    job_creator = ImplicitInterface()
+
+    scenario += job_creator
 
     scenario.show(
         sp.pack((1, "ASSIGN_JOB_PROCESSOR", sp.pack(sp.pair(1, alice.address))))
-    )
-    scenario.show(
-        sp.pack((2, "ASSIGN_JOB_PROCESSOR", sp.pack(sp.pair(1, bob.address))))
     )
     scenario.show(
         sp.keccak(
@@ -61,7 +61,7 @@ def test():
     validator.update_initial_storage(
         config=sp.record(
             governance_address=admin.address,
-            validators=sp.set([alice.address, bob.address]),
+            validators=sp.set([alice.address]),
             minimum_endorsements=2,
         ),
         current_snapshot=2,
@@ -155,10 +155,9 @@ def test():
         ),
         Type.RegisterJobAction,
     )
-    scenario.show(sp.pack(register_job_payload))
-    scenario.show(sp.pack(sp.record(a=1)))
+    register_job_bytes = scenario.compute(sp.pack(register_job_payload))
     register_job_action = sp.record(
-        kind=OutgoingActionKind.REGISTER_JOB, payload=sp.pack(register_job_payload)
+        kind=OutgoingActionKind.REGISTER_JOB, payload=register_job_bytes
     )
 
     expected_fee = scenario.compute(
@@ -184,7 +183,7 @@ def test():
         )
     )
     acurastProxy.send_actions([register_job_action]).run(
-        sender=alice, level=BLOCK_LEVEL_1, amount=expected_fee
+        sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )
     # The contract balance should now be equal to the expected fee (only one job added yet)
     scenario.verify(acurastProxy.balance == expected_fee)
@@ -220,6 +219,11 @@ def test():
         )
     )
 
-    consumer.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(
-        sender=acurastProxy.address
+    acurastProxy.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(
+        sender=sp.address("tz1h4EsGunH2Ue1T2uNs8mfKZ8XZoQji3HcK")
     )
+
+    # Allow job creators to withdraw remaining fee
+    scenario.verify(job_creator.balance == sp.mutez(0))
+    acurastProxy.withdraw_remaining_fee(1).run(now = sp.timestamp(1678266546624))
+    scenario.verify(job_creator.balance == sp.mutez(11630))
