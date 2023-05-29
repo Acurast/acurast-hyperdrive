@@ -8,6 +8,27 @@ known_addresses:
 actions:
 
   - kind: origination
+    contract_kind: Acurast_FA2_Token
+    name: Acurast_FA2_Token
+    code_path: __SNAPSHOTS__/compilation/tezos/ligo/fa2_single_asset_contract.tz
+    overrides:
+      admin:
+          admin: admin_address
+          paused: true
+      assets:
+        token_metadata:
+          0:
+            token_id: 0
+            token_info:
+              symbol: "0x4143525354"
+              name: "0x4163757261737420546f6b656e"
+              decimals: "0x3138"
+        total_supply: 0
+      metadata:
+        "": "0x74657a6f732d73746f726167653a636f6e74656e74"
+        "content": "0x"
+
+  - kind: origination
     contract_kind: IBCF_Aggragator
     name: IBCF_Aggragator
     code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
@@ -34,6 +55,15 @@ actions:
       root: {}
 
   - kind: origination
+    contract_kind: MMR_Validator_Proxy
+    name: MMR_Validator_Proxy
+    code_path: __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator_Proxy/step_000_cont_0_contract.tz
+    storage: __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator_Proxy/step_000_cont_0_storage.tz
+    overrides:
+      governance_address: admin_address
+      validator_address: MMR_Validator
+
+  - kind: origination
     contract_kind: AcurastProxy
     name: AcurastProxy
     code_path: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_contract.tz
@@ -42,7 +72,7 @@ actions:
       config:
         governance_address: admin_address
         merkle_aggregator: IBCF_Aggragator
-        proof_validator: MMR_Validator
+        proof_validator: MMR_Validator_Proxy
       outgoing_seq_id: 0
       ingoing_seq_id: 0
       job_information: {}
