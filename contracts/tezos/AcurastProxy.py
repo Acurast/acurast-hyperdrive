@@ -84,6 +84,11 @@ class Type:
         expected_fullfilment_fee=sp.TMutez,
         remaining_fee=sp.TMutez,
         slots=sp.TNat,
+        status=sp.TNat,  # 0 - submitted, 1 - Assigned, 2 - Finalized/Cancelled,
+        startTime=sp.TNat,
+        endTime=sp.TNat,
+        interval=sp.TNat,
+        abstract=sp.TBytes,  # Abstract data, this field can be used to add new fields to the job information structure after the contract has been deployed.
     )
     JobInformationIndex = sp.TBigMap(sp.TNat, JobInformation)
     ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
@@ -258,6 +263,11 @@ class OutgoingActionLambda:
             processors=sp.set(),
             remaining_fee=expected_fee,
             slots=slots,
+            status=0,  # Submitted
+            startTime=startTime,
+            endTime=endTime,
+            interval=interval,
+            abstract=sp.bytes("0x"),
         )
 
         # Prepare acurast action
@@ -362,6 +372,10 @@ class IngoingActionLambda:
             sp.send(
                 action.processor_address, initial_fee, message=Error.INVALID_CONTRACT
             )
+
+            # Updated job status
+            with sp.if_(job_information.value.status == 0):
+                job_information.value.status = 1  # Assigned
 
             # Update job information
             context.value.job_information[action.job_id] = job_information.value
@@ -488,20 +502,23 @@ class AcurastProxy(sp.Contract):
             self.data.job_information.get(arg.job_id, message=Error.JOB_UNKNOWN),
         )
 
-        # Re-fill processor fees
-        job_information.value.remaining_fee = (
-            job_information.value.remaining_fee - job_information.value.remaining_fee
-        )
-        sp.send(
-            sp.sender,
-            job_information.value.remaining_fee,
-            message=Error.INVALID_CONTRACT,
-        )
-
+        # Verify if sender is assigned to the job
         sp.verify(
             job_information.value.processors.contains(sp.sender),
             Error.NOT_JOB_PROCESSOR,
         )
+
+        # Re-fill processor fees
+        job_information.value.remaining_fee -= (
+            job_information.value.expected_fullfilment_fee
+        )
+        # Forbidden to credit 0ꜩ to a contract without code.
+        with sp.if_(job_information.value.expected_fullfilment_fee > sp.mutez(0)):
+            sp.send(
+                sp.sender,
+                job_information.value.expected_fullfilment_fee,
+                message=Error.INVALID_CONTRACT,
+            )
 
         # Pass fulfillment to target contract
         target_contract = sp.contract(
@@ -512,6 +529,32 @@ class AcurastProxy(sp.Contract):
         sp.transfer(arg, sp.mutez(0), target_contract)
 
         self.data.job_information[arg.job_id] = job_information.value
+
+    @sp.entry_point()
+    def withdraw_remaining_fee(self, job_id):
+        # Get job information
+        job_information = sp.local(
+            "job_information",
+            self.data.job_information.get(job_id, message=Error.JOB_UNKNOWN),
+        )
+
+        # For some reason smartpy interpreter is converting timestamps to a 32 bit integers when packing the data
+        # As a workaround we use (nat to represent timestamps)
+        with sp.if_(
+            (job_information.value.status == 2)
+            | (
+                sp.mul(job_information.value.endTime, sp.int(0))
+                < sp.now - sp.timestamp(0)
+            )
+        ):
+            sp.send(
+                job_information.value.creator,
+                job_information.value.remaining_fee,
+                message=Error.INVALID_CONTRACT,
+            )
+            job_information.value.remaining_fee = sp.mutez(0)
+
+        self.data.job_information[job_id] = job_information.value
 
     @sp.entry_point(parameter_type=Type.ConfigureArgument)
     def configure(self, actions):
