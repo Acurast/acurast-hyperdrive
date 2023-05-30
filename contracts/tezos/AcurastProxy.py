@@ -38,6 +38,8 @@ class Error:
     INVALID_PROOF = "INVALID_PROOF"
     NOT_JOB_PROCESSOR = "NOT_JOB_PROCESSOR"
     PAUSED = "CONTRACT_PAUSED"
+    CANNOT_DEREGISTER_JOB = "CANNOT_DEREGISTER_JOB"
+    NOT_JOB_CREATOR = "NOT_JOB_CREATOR"
 
 
 class Acurast_Token_Interface:
@@ -221,12 +223,14 @@ class Inlined:
 
 class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
+    DEREGISTER_JOB = "DEREGISTER_JOB"
     TELEPORT_ACRST = "TELEPORT_ACRST"
 
 
 class IngoingActionKind:
     ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
-
+    FINALIZE_JOB = "FINALIZE_JOB"
+    CANCELLED_JOB = "CANCELLED_JOB"
 
 class OutgoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
@@ -359,6 +363,46 @@ class OutgoingActionLambda:
             sp.record(
                 context=context.value,
                 new_action_storage=sp.pack(job_id_seq.value),
+            )
+        )
+
+    @Decorator.generate_lambda(with_operations=True)
+    def deregister_job(arg):
+        sp.set_type(arg, Type.OutgoingActionLambdaArg)
+
+        job_id = sp.compute(
+            sp.unpack(arg.payload, sp.TNat).open_some(
+                Error.COULD_NOT_UNPACK
+            )
+        )
+
+        # Get job information
+        job_information = sp.compute(
+            arg.context.job_information.get(job_id, message=Error.JOB_UNKNOWN),
+        )
+
+        # Verify if job can be deregistered
+        sp.verify(job_information.status == 0, Error.CANNOT_DEREGISTER_JOB)
+
+        # Only the job creator can deregister the job
+        origin = sp.compute(sp.sender)
+        sp.verify(job_information.creator == origin, Error.NOT_JOB_CREATOR)
+
+        value = sp.pack(
+            (OutgoingActionKind.DEREGISTER_JOB, origin, sp.pack(job_id))
+        )
+        key = sp.pack(arg.context.action_id)
+        state_param = sp.record(key=key, value=value)
+        # Add acurast action to the state merkle tree
+        merkle_aggregator_contract = sp.contract(
+            IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
+        ).open_some(Error.INVALID_STATE_CONTRACT)
+        sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
+
+        sp.result(
+            sp.record(
+                context=arg.context,
+                new_action_storage=arg.storage,
             )
         )
 
