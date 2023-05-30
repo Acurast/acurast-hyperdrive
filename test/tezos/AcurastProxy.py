@@ -89,9 +89,7 @@ def test():
                     {
                         OutgoingActionKind.REGISTER_JOB: sp.record(
                             function=OutgoingActionLambda.register_job,
-                            storage=sp.record(
-                                version=1, data=sp.pack(sp.record(job_id_seq=0))
-                            ),
+                            storage=sp.pack(sp.nat(0)),
                         ),
                     }
                 ),
@@ -99,7 +97,7 @@ def test():
                     {
                         IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
                             function=IngoingActionLambda.assign_processor,
-                            storage=sp.record(version=1, data=sp.bytes("0x")),
+                            storage=sp.bytes("0x"),
                         ),
                     }
                 ),
