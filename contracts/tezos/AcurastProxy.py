@@ -40,6 +40,14 @@ class Error:
     PAUSED = "CONTRACT_PAUSED"
 
 
+class Acurast_Token_Interface:
+    BurnMintTokens = sp.TList(
+        sp.TRecord(
+            owner=sp.TAddress,
+            amount=sp.TNat,
+        ).right_comb()
+    )
+
 class Type:
     # Outgoing actions
     RegisterJobAction = sp.TRecord(
@@ -92,7 +100,7 @@ class Type:
         abstract=sp.TBytes,  # Abstract data, this field can be used to add new parameters to the job information structure after the contract has been deployed.
     )
     JobInformationIndex = sp.TBigMap(sp.TNat, JobInformation)
-    ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
+    ActionStorage = sp.TBytes
 
     OutgoingContext = sp.TRecord(action_id=sp.TNat, job_information=JobInformationIndex)
     OutgoingActionLambdaArg = sp.TRecord(
@@ -213,6 +221,7 @@ class Inlined:
 
 class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
+    TELEPORT_ACRST = "TELEPORT_ACRST"
 
 
 class IngoingActionKind:
@@ -224,16 +233,14 @@ class OutgoingActionLambda:
     def register_job(arg):
         sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
-        # This lambda expects the storage to be on version ONE => 1
-        sp.verify(arg.storage.version == 1, Error.UNEXPECTED_STORAGE_VERSION)
-
-        StorageType = sp.TRecord(job_id_seq=sp.TNat)
-        storage = sp.compute(
-            sp.unpack(arg.storage.data, StorageType).open_some(
+        StorageType = sp.TNat
+        job_id_seq = sp.local(
+            "action_storage",
+            sp.unpack(arg.storage, StorageType).open_some(
                 Error.CANNOT_PARSE_ACTION_STORAGE
             )
         )
-        job_id = sp.compute(storage.job_id_seq + 1)
+        job_id_seq.value += 1
 
         action = sp.compute(
             sp.unpack(arg.payload, Type.RegisterJobAction).open_some(
@@ -274,12 +281,9 @@ class OutgoingActionLambda:
             reward_per_execution,
         )
 
-        # Verify if job creator has enough acurast tokens
-
-
         # Index the job information
         context = sp.local("context", arg.context)
-        context.value.job_information[job_id] = sp.record(
+        context.value.job_information[job_id_seq.value] = sp.record(
             creator=sp.sender,
             destination=action.destination,
             expected_fullfilment_fee=expected_fullfilment_fee,
@@ -296,7 +300,7 @@ class OutgoingActionLambda:
         # Prepare acurast action
         action_with_job_id = sp.set_type_expr(
             sp.record(
-                job_id=job_id,
+                job_id=job_id_seq.value,
                 requiredModules=action.requiredModules,
                 script=action.script,
                 allowedSources=action.allowedSources,
@@ -354,13 +358,64 @@ class OutgoingActionLambda:
         sp.result(
             sp.record(
                 context=context.value,
-                new_action_storage=sp.record(
-                    version=arg.storage.version,
-                    data=sp.pack(sp.record(job_id_seq=job_id)),
-                ),
+                new_action_storage=sp.pack(job_id_seq.value),
             )
         )
 
+    @Decorator.generate_lambda(with_operations=True)
+    def teleport_acrst(arg):
+        sp.set_type(arg, Type.OutgoingActionLambdaArg)
+
+        StorageType = sp.TAddress
+        acurast_token_address = sp.compute(
+            sp.unpack(arg.storage, StorageType).open_some(
+                Error.CANNOT_PARSE_ACTION_STORAGE
+            )
+        )
+
+        amount = sp.compute(
+            sp.unpack(arg.payload, sp.TNat).open_some(
+                Error.COULD_NOT_UNPACK
+            )
+        )
+
+        # Get origin
+        origin = sp.compute(sp.sender)
+
+        # Prepare action
+        action_payload = sp.record(
+            amount=amount,
+            owner=origin,
+        )
+
+        ## Burn reward on Tezos chain
+        acurast_token_contract = sp.contract(
+            Acurast_Token_Interface.BurnMintTokens,
+            acurast_token_address,
+            "burn_tokens",
+        ).open_some(Error.INVALID_CONTRACT)
+        call_argument = [ action_payload ]
+        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
+
+        ## Emit TELEPORT_ACRST action
+
+        value = sp.pack(
+            (OutgoingActionKind.TELEPORT_ACRST, origin, sp.pack(action_payload))
+        )
+        key = sp.pack(arg.context.action_id)
+        state_param = sp.record(key=key, value=value)
+        # Add acurast action to the state merkle tree
+        merkle_aggregator_contract = sp.contract(
+            IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
+        ).open_some(Error.INVALID_STATE_CONTRACT)
+        sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
+
+        sp.result(
+            sp.record(
+                context=arg.context,
+                new_action_storage=arg.storage,
+            )
+        )
 
 class IngoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
