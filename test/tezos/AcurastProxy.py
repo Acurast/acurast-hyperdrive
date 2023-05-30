@@ -83,6 +83,7 @@ def test():
                 governance_address=admin.address,
                 merkle_aggregator=aggregator.address,
                 proof_validator=validator.address,
+                acurast_token=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
                 outgoing_actions=sp.big_map(
                     {
                         OutgoingActionKind.REGISTER_JOB: sp.record(
@@ -101,6 +102,7 @@ def test():
                         ),
                     }
                 ),
+                paused=False,
             ),
             outgoing_seq_id=0,
             outgoing_registry=sp.big_map(),
