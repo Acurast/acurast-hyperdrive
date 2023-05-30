@@ -49,7 +49,7 @@ class Type:
         extra=sp.TRecord(
             requirements=sp.TRecord(
                 slots=sp.TNat,
-                reward=sp.TBytes,
+                reward=sp.TNat,
                 minReputation=sp.TOption(sp.TNat),
                 instantMatch=sp.TOption(
                     sp.TSet(sp.TRecord(source=sp.TBytes, startDelay=sp.TNat))
@@ -89,7 +89,7 @@ class Type:
         startTime=sp.TNat,
         endTime=sp.TNat,
         interval=sp.TNat,
-        abstract=sp.TBytes,  # Abstract data, this field can be used to add new fields to the job information structure after the contract has been deployed.
+        abstract=sp.TBytes,  # Abstract data, this field can be used to add new parameters to the job information structure after the contract has been deployed.
     )
     JobInformationIndex = sp.TBigMap(sp.TNat, JobInformation)
     ActionStorage = sp.TRecord(data=sp.TBytes, version=sp.TNat).right_comb()
@@ -195,17 +195,17 @@ class Inlined:
         sp.verify(~self.data.config.paused, Error.PAUSED)
 
     @staticmethod
-    def computed_expected_fees(
-        startTime, endTime, interval, slots, expected_fullfilment_fee
-    ):
-        execution_count = sp.compute(
+    def compute_execution_count(startTime, endTime, interval):
+        return sp.compute(
             sp.as_nat(endTime - startTime, message="INVALID_SCHEDULE") / interval
         )
-        expected_fee = sp.compute(
+
+    @staticmethod
+    def compute_expected_fees(execution_count, slots, expected_fullfilment_fee):
+        return sp.compute(
             sp.mul(slots * execution_count, expected_fullfilment_fee)
             + sp.mul(slots, Constants.REVEAL_COST)
         )
-        return expected_fee
 
 
 class OutgoingActionKind:
@@ -253,14 +253,11 @@ class OutgoingActionLambda:
         interval = sp.compute(action.schedule.interval)
         slots = sp.compute(action.extra.requirements.slots)
         expected_fullfilment_fee = sp.compute(action.extra.expectedFulfillmentFee)
-        expected_fee = sp.compute(
-            Inlined.computed_expected_fees(
-                startTime,
-                endTime,
-                interval,
-                slots,
-                expected_fullfilment_fee,
-            )
+        execution_count = Inlined.compute_execution_count(startTime, endTime, interval)
+        expected_fee = Inlined.compute_expected_fees(
+            execution_count,
+            slots,
+            expected_fullfilment_fee,
         )
         sp.verify(sp.amount == expected_fee, message="INVALID_FEE_AMOUNT")
 
@@ -301,7 +298,7 @@ class OutgoingActionLambda:
                 extra=sp.TRecord(
                     requirements=sp.TRecord(
                         slots=sp.TNat,
-                        reward=sp.TBytes,
+                        reward=sp.TNat,
                         minReputation=sp.TOption(sp.TNat),
                         instantMatch=sp.TOption(
                             sp.TSet(sp.TRecord(source=sp.TBytes, startDelay=sp.TNat))

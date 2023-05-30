@@ -19,6 +19,7 @@ class ImplicitInterface(sp.Contract):
     def default(self):
         pass
 
+
 @sp.add_test(name="AcurastProxy")
 def test():
     scenario = sp.test_scenario()
@@ -144,7 +145,7 @@ def test():
             extra=sp.record(
                 requirements=sp.record(
                     slots=1,
-                    reward=sp.bytes("0xff"),
+                    reward=1000,
                     minReputation=sp.none,
                     instantMatch=sp.some(
                         sp.set(
@@ -165,10 +166,10 @@ def test():
     expected_fee = scenario.compute(
         sp.build_lambda(
             lambda arg: sp.set_type_expr(
-                AcurastProxyInlined.computed_expected_fees(
-                    arg.startTime,
-                    arg.endTime,
-                    arg.interval,
+                AcurastProxyInlined.compute_expected_fees(
+                    AcurastProxyInlined.compute_execution_count(
+                        arg.startTime, arg.endTime, arg.interval
+                    ),
                     arg.slots,
                     arg.expectedFulfillmentFee,
                 ),
@@ -227,5 +228,5 @@ def test():
 
     # Allow job creators to withdraw remaining fee
     scenario.verify(job_creator.balance == sp.mutez(0))
-    acurastProxy.withdraw_remaining_fee(1).run(now = sp.timestamp(1678266546624))
+    acurastProxy.withdraw_remaining_fee(1).run(now=sp.timestamp(1678266546624))
     scenario.verify(job_creator.balance == sp.mutez(11630))
