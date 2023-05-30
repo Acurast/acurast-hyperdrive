@@ -9,9 +9,16 @@ from contracts.tezos.AcurastProxy import (
     IngoingActionKind,
     Type,
     Inlined as AcurastProxyInlined,
+    Acurast_Token_Interface
 )
 from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
+
+class AcurastTokenInterface(sp.Contract):
+    @sp.entrypoint()
+    def burn_tokens(self, arg):
+        sp.set_type(arg, Acurast_Token_Interface.BurnMintTokens)
+        pass
 
 
 class ImplicitInterface(sp.Contract):
@@ -77,6 +84,9 @@ def test():
     )
     scenario += validator
 
+    acurastToken = AcurastTokenInterface()
+    scenario += acurastToken
+
     acurastProxy = AcurastProxy()
     acurastProxy.update_initial_storage(
         sp.record(
@@ -90,6 +100,10 @@ def test():
                         OutgoingActionKind.REGISTER_JOB: sp.record(
                             function=OutgoingActionLambda.register_job,
                             storage=sp.pack(sp.nat(0)),
+                        ),
+                        OutgoingActionKind.TELEPORT_ACRST: sp.record(
+                            function=OutgoingActionLambda.teleport_acrst,
+                            storage=sp.pack(acurastToken.address),
                         ),
                     }
                 ),
@@ -120,6 +134,12 @@ def test():
         )
     )
     scenario += consumer
+
+    teleport_acrst_payload = sp.nat(1000)
+    teleport_acrst_action = sp.record(
+        kind=OutgoingActionKind.TELEPORT_ACRST,
+        payload=sp.pack(teleport_acrst_payload)
+    )
 
     register_job_payload = sp.set_type_expr(
         sp.record(
@@ -183,7 +203,11 @@ def test():
             )
         )
     )
-    acurastProxy.send_actions([register_job_action]).run(
+    actions = [
+        teleport_acrst_action,
+        register_job_action
+    ]
+    acurastProxy.send_actions(actions).run(
         sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )
     # The contract balance should now be equal to the expected fee (only one job added yet)
