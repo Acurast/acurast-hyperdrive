@@ -37,6 +37,7 @@ class Error:
     UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
     INVALID_PROOF = "INVALID_PROOF"
     NOT_JOB_PROCESSOR = "NOT_JOB_PROCESSOR"
+    PAUSED = "CONTRACT_PAUSED"
 
 
 class Type:
@@ -154,6 +155,7 @@ class Type:
             update_governance_address=sp.TAddress,
             update_proof_validator=sp.TAddress,
             update_merkle_aggregator=sp.TAddress,
+            update_acurast_token=sp.TAddress,
             update_outgoing_actions=sp.TList(
                 sp.TVariant(
                     add=sp.TRecord(kind=sp.TString, function=OutgoingActionLambda),
@@ -166,6 +168,7 @@ class Type:
                     remove=sp.TString,
                 ).right_comb()
             ),
+            set_paused=sp.TBool,
         ).right_comb()
     )
 
@@ -183,6 +186,13 @@ class Inlined:
         sp.verify(
             self.data.config.governance_address == sp.sender, Error.NOT_GOVERNANCE
         )
+
+    @staticmethod
+    def failIfPaused(self):
+        """
+        This method when used, ensures that a given entrypoint can only be called when the contract is not paused
+        """
+        sp.verify(~self.data.config.paused, Error.PAUSED)
 
     @staticmethod
     def computed_expected_fees(
@@ -391,8 +401,10 @@ class AcurastProxy(sp.Contract):
                     governance_address=sp.TAddress,
                     merkle_aggregator=sp.TAddress,
                     proof_validator=sp.TAddress,
+                    acurast_token=sp.TAddress,
                     outgoing_actions=sp.TBigMap(sp.TString, Type.OutgoingActionLambda),
                     ingoing_actions=sp.TBigMap(sp.TString, Type.IngoingActionLambda),
+                    paused=sp.TBool,
                 ).right_comb(),
                 outgoing_seq_id=sp.TNat,
                 outgoing_registry=sp.TBigMap(sp.TNat, sp.TNat),
@@ -403,6 +415,8 @@ class AcurastProxy(sp.Contract):
 
     @sp.entry_point(parameter_type=Type.SendActionsArgument)
     def send_actions(self, arg):
+        Inlined.failIfPaused(self)
+
         with sp.for_("action", arg) as action:
             # Get action lambda
             # - Fail with "OUTGOING_ACTION_NOT_SUPPORTED" if actions is not known
@@ -570,6 +584,8 @@ class AcurastProxy(sp.Contract):
                     self.data.config.merkle_aggregator = aggregator_address
                 with action.match("update_proof_validator") as validator_address:
                     self.data.config.proof_validator = validator_address
+                with action.match("update_acurast_token") as token_address:
+                    self.data.config.acurast_token = token_address
                 with action.match("update_outgoing_actions") as update_outgoing_actions:
                     with sp.for_("updates", update_outgoing_actions) as updates:
                         with updates.match_cases() as action_kind:
@@ -588,3 +604,5 @@ class AcurastProxy(sp.Contract):
                                 ] = action_to_add.function
                             with action_kind.match("remove") as action_to_remove:
                                 del self.data.config.ingoing_actions[action_to_remove]
+                with action.match("set_paused") as paused:
+                    self.data.config.paused = paused

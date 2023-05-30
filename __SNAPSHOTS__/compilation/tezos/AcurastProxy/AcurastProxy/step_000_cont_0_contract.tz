@@ -1,5 +1,5 @@
-parameter (or (or (list %configure (or (address %update_governance_address) (or (list %update_ingoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (or (address %update_merkle_aggregator) (or (list %update_outgoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_proof_validator)))))) (pair %fulfill (nat %job_id) (bytes %payload))) (or (pair %receive_actions (list %leaves (pair (bytes %data) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) (or (list %send_actions (pair (string %kind) (bytes %payload))) (nat %withdraw_remaining_fee))));
-storage   (pair (pair (pair %config (address %governance_address) (pair (big_map %ingoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (address %merkle_aggregator) (pair (big_map %outgoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (address %proof_validator))))) (nat %ingoing_seq_id)) (pair (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status)))))) (pair (big_map %outgoing_registry nat nat) (nat %outgoing_seq_id))));
+parameter (or (or (list %configure (or (bool %set_paused) (or (address %update_acurast_token) (or (address %update_governance_address) (or (list %update_ingoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (or (address %update_merkle_aggregator) (or (list %update_outgoing_actions (or (pair %add (pair %function (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version))) (string %kind)) (string %remove))) (address %update_proof_validator)))))))) (pair %fulfill (nat %job_id) (bytes %payload))) (or (pair %receive_actions (list %leaves (pair (bytes %data) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) (or (list %send_actions (pair (string %kind) (bytes %payload))) (nat %withdraw_remaining_fee))));
+storage   (pair (pair (pair %config (address %acurast_token) (pair (address %governance_address) (pair (big_map %ingoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version)))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (address %merkle_aggregator) (pair (big_map %outgoing_actions string (pair (lambda %function (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair (address %merkle_aggregator) (pair (bytes %payload) (pair %storage (bytes %data) (nat %version))))) (list operation)) (pair (pair (pair %context (nat %action_id) (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status))))))) (pair %new_action_storage (bytes %data) (nat %version))) (list operation))) (pair %storage (bytes %data) (nat %version)))) (pair (bool %paused) (address %proof_validator))))))) (nat %ingoing_seq_id)) (pair (big_map %job_information nat (pair (pair (pair (bytes %abstract) (address %creator)) (pair (address %destination) (pair (nat %endTime) (mutez %expected_fullfilment_fee)))) (pair (pair (nat %interval) (pair (set %processors address) (mutez %remaining_fee))) (pair (nat %slots) (pair (nat %startTime) (nat %status)))))) (pair (big_map %outgoing_registry nat nat) (nat %outgoing_seq_id))));
 code
   {
     UNPAIR;     
@@ -11,7 +11,7 @@ code
             DUP 3;      
             CAR;        
             CAR;        
-            CAR;        
+            GET 3;      
             COMPARE;    
             EQ;         
             IF
@@ -32,7 +32,7 @@ code
                     UNPAIR;     
                     UNPAIR;     
                     DIG 3;      
-                    UPDATE 1;   
+                    UPDATE 11;  
                     PAIR;       
                     PAIR;       
                     SWAP;       
@@ -40,43 +40,16 @@ code
                   {
                     IF_LEFT
                       {
-                        DUP;        
-                        ITER
-                          {
-                            IF_LEFT
-                              {
-                                DIG 4;      
-                                UNPAIR;     
-                                UNPAIR;     
-                                DUP;        
-                                GET 3;      
-                                DUP 5;      
-                                CAR;        
-                                SOME;       
-                                DIG 5;      
-                                CDR;        
-                                UPDATE;     
-                                UPDATE 3;   
-                                PAIR;       
-                                PAIR;       
-                                DUG 3;      
-                              }
-                              {
-                                DIG 4;      
-                                UNPAIR;     
-                                UNPAIR;     
-                                DUP;        
-                                GET 3;      
-                                NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes (pair bytes nat))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
-                                DIG 5;      
-                                UPDATE;     
-                                UPDATE 3;   
-                                PAIR;       
-                                PAIR;       
-                                DUG 3;      
-                              }; 
-                          }; 
-                        DROP 2;     
+                        SWAP;       
+                        DROP;       
+                        DIG 2;      
+                        UNPAIR;     
+                        UNPAIR;     
+                        DIG 3;      
+                        UPDATE 1;   
+                        PAIR;       
+                        PAIR;       
+                        SWAP;       
                       }
                       {
                         IF_LEFT
@@ -87,7 +60,7 @@ code
                             UNPAIR;     
                             UNPAIR;     
                             DIG 3;      
-                            UPDATE 5;   
+                            UPDATE 3;   
                             PAIR;       
                             PAIR;       
                             SWAP;       
@@ -104,14 +77,14 @@ code
                                         UNPAIR;     
                                         UNPAIR;     
                                         DUP;        
-                                        GET 7;      
+                                        GET 5;      
                                         DUP 5;      
                                         CAR;        
                                         SOME;       
                                         DIG 5;      
                                         CDR;        
                                         UPDATE;     
-                                        UPDATE 7;   
+                                        UPDATE 5;   
                                         PAIR;       
                                         PAIR;       
                                         DUG 3;      
@@ -121,11 +94,11 @@ code
                                         UNPAIR;     
                                         UNPAIR;     
                                         DUP;        
-                                        GET 7;      
-                                        NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair address (pair bytes (pair bytes nat)))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
+                                        GET 5;      
+                                        NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes (pair bytes nat))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
                                         DIG 5;      
                                         UPDATE;     
-                                        UPDATE 7;   
+                                        UPDATE 5;   
                                         PAIR;       
                                         PAIR;       
                                         DUG 3;      
@@ -134,16 +107,73 @@ code
                                 DROP 2;     
                               }
                               {
-                                SWAP;       
-                                DROP;       
-                                DIG 2;      
-                                UNPAIR;     
-                                UNPAIR;     
-                                DIG 3;      
-                                UPDATE 8;   
-                                PAIR;       
-                                PAIR;       
-                                SWAP;       
+                                IF_LEFT
+                                  {
+                                    SWAP;       
+                                    DROP;       
+                                    DIG 2;      
+                                    UNPAIR;     
+                                    UNPAIR;     
+                                    DIG 3;      
+                                    UPDATE 7;   
+                                    PAIR;       
+                                    PAIR;       
+                                    SWAP;       
+                                  }
+                                  {
+                                    IF_LEFT
+                                      {
+                                        DUP;        
+                                        ITER
+                                          {
+                                            IF_LEFT
+                                              {
+                                                DIG 4;      
+                                                UNPAIR;     
+                                                UNPAIR;     
+                                                DUP;        
+                                                GET 9;      
+                                                DUP 5;      
+                                                CAR;        
+                                                SOME;       
+                                                DIG 5;      
+                                                CDR;        
+                                                UPDATE;     
+                                                UPDATE 9;   
+                                                PAIR;       
+                                                PAIR;       
+                                                DUG 3;      
+                                              }
+                                              {
+                                                DIG 4;      
+                                                UNPAIR;     
+                                                UNPAIR;     
+                                                DUP;        
+                                                GET 9;      
+                                                NONE (pair (lambda (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair address (pair bytes (pair bytes nat)))) (list operation)) (pair (pair (pair nat (big_map nat (pair (pair (pair bytes address) (pair address (pair nat mutez))) (pair (pair nat (pair (set address) mutez)) (pair nat (pair nat nat)))))) (pair bytes nat)) (list operation))) (pair bytes nat)); 
+                                                DIG 5;      
+                                                UPDATE;     
+                                                UPDATE 9;   
+                                                PAIR;       
+                                                PAIR;       
+                                                DUG 3;      
+                                              }; 
+                                          }; 
+                                        DROP 2;     
+                                      }
+                                      {
+                                        SWAP;       
+                                        DROP;       
+                                        DIG 2;      
+                                        UNPAIR;     
+                                        UNPAIR;     
+                                        DIG 3;      
+                                        UPDATE 12;  
+                                        PAIR;       
+                                        PAIR;       
+                                        SWAP;       
+                                      }; 
+                                  }; 
                               }; 
                           }; 
                       }; 
@@ -190,7 +220,7 @@ code
             SUB_MUTEZ;  
             IF_NONE
               {
-                PUSH int 512; 
+                PUSH int 526; 
                 FAILWITH;   
               }
               {}; 
@@ -260,7 +290,7 @@ code
             DUP 2;      
             CAR;        
             CAR;        
-            GET 8;      
+            GET 12;     
             DUP 2;      
             GET 6;      
             DUP 3;      
@@ -325,7 +355,7 @@ code
                 IF
                   {}
                   {
-                    PUSH string "WrongCondition: compute_AcurastProxy_464.value.ingoing_action_id == self.data.ingoing_seq_id"; 
+                    PUSH string "WrongCondition: compute_AcurastProxy_478.value.ingoing_action_id == self.data.ingoing_seq_id"; 
                     FAILWITH;   
                   }; 
                 DIG 3;      
@@ -341,7 +371,7 @@ code
                 DUP 4;      
                 CAR;        
                 CAR;        
-                GET 3;      
+                GET 5;      
                 DUP 2;      
                 GET 3;      
                 GET;        
@@ -355,7 +385,7 @@ code
                 DUP 5;      
                 CAR;        
                 CAR;        
-                GET 3;      
+                GET 5;      
                 DUP 3;      
                 GET 3;      
                 GET;        
@@ -393,7 +423,7 @@ code
                 UNPAIR;     
                 UNPAIR;     
                 DUP;        
-                GET 3;      
+                GET 5;      
                 DUP;        
                 DIG 6;      
                 GET 3;      
@@ -402,7 +432,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 495; 
+                    PUSH int 509; 
                     FAILWITH;   
                   }
                   {}; 
@@ -412,7 +442,7 @@ code
                 SOME;       
                 SWAP;       
                 UPDATE;     
-                UPDATE 3;   
+                UPDATE 5;   
                 PAIR;       
                 PAIR;       
                 DUG 2;      
@@ -423,6 +453,16 @@ code
           {
             IF_LEFT
               {
+                DUP 2;      
+                CAR;        
+                CAR;        
+                GET 11;     
+                IF
+                  {
+                    PUSH string "CONTRACT_PAUSED"; 
+                    FAILWITH;   
+                  }
+                  {}; 
                 NIL operation; 
                 DUP 2;      
                 ITER
@@ -447,7 +487,7 @@ code
                     DUP 4;      
                     CAR;        
                     CAR;        
-                    GET 7;      
+                    GET 9;      
                     DUP 2;      
                     CAR;        
                     GET;        
@@ -461,7 +501,7 @@ code
                     DUP 5;      
                     CAR;        
                     CAR;        
-                    GET 7;      
+                    GET 9;      
                     DUP 3;      
                     CAR;        
                     GET;        
@@ -477,7 +517,7 @@ code
                     DUP 7;      
                     CAR;        
                     CAR;        
-                    GET 5;      
+                    GET 7;      
                     DUP 8;      
                     GET 3;      
                     DUP 9;      
@@ -502,7 +542,7 @@ code
                     UNPAIR;     
                     UNPAIR;     
                     DUP;        
-                    GET 7;      
+                    GET 9;      
                     DUP;        
                     DIG 6;      
                     CAR;        
@@ -511,7 +551,7 @@ code
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 431; 
+                        PUSH int 445; 
                         FAILWITH;   
                       }
                       {}; 
@@ -521,7 +561,7 @@ code
                     SOME;       
                     SWAP;       
                     UPDATE;     
-                    UPDATE 7;   
+                    UPDATE 9;   
                     PAIR;       
                     PAIR;       
                     DUG 2;      
