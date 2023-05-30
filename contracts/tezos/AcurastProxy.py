@@ -207,6 +207,9 @@ class Inlined:
             + sp.mul(slots, Constants.REVEAL_COST)
         )
 
+    @staticmethod
+    def compute_expected_reward(execution_count, slots, reward_per_execution):
+        return sp.compute(slots * execution_count * reward_per_execution)
 
 class OutgoingActionKind:
     REGISTER_JOB = "REGISTER_JOB"
@@ -247,19 +250,32 @@ class OutgoingActionLambda:
             ).open_some(Error.INVALID_CONSUMER_CONTRACT)
         )
 
-        # Calculate the fee required for all job executions
+        # Calculate the number of executions that fit the job schedule
         startTime = sp.compute(action.schedule.startTime)
         endTime = sp.compute(action.schedule.endTime)
         interval = sp.compute(action.schedule.interval)
+        execution_count = Inlined.compute_execution_count(startTime, endTime, interval)
+
+        # Calculate the fee required for all job executions
         slots = sp.compute(action.extra.requirements.slots)
         expected_fullfilment_fee = sp.compute(action.extra.expectedFulfillmentFee)
-        execution_count = Inlined.compute_execution_count(startTime, endTime, interval)
         expected_fee = Inlined.compute_expected_fees(
             execution_count,
             slots,
             expected_fullfilment_fee,
         )
         sp.verify(sp.amount == expected_fee, message="INVALID_FEE_AMOUNT")
+
+        # Calculate the total reward required to pay all executions
+        reward_per_execution = sp.compute(action.extra.requirements.reward)
+        expected_reward = Inlined.compute_expected_reward(
+            execution_count,
+            slots,
+            reward_per_execution,
+        )
+
+        # Verify if job creator has enough acurast tokens
+
 
         # Index the job information
         context = sp.local("context", arg.context)
