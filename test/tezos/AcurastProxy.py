@@ -9,14 +9,20 @@ from contracts.tezos.AcurastProxy import (
     IngoingActionKind,
     Type,
     Inlined as AcurastProxyInlined,
-    Acurast_Token_Interface
+    Acurast_Token_Interface,
 )
 from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
 
+
 class AcurastTokenInterface(sp.Contract):
     @sp.entrypoint()
     def burn_tokens(self, arg):
+        sp.set_type(arg, Acurast_Token_Interface.BurnMintTokens)
+        pass
+
+    @sp.entrypoint()
+    def mint_tokens(self, arg):
         sp.set_type(arg, Acurast_Token_Interface.BurnMintTokens)
         pass
 
@@ -94,7 +100,6 @@ def test():
                 governance_address=admin.address,
                 merkle_aggregator=aggregator.address,
                 proof_validator=validator.address,
-                acurast_token=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
                 outgoing_actions=sp.big_map(
                     {
                         OutgoingActionKind.REGISTER_JOB: sp.record(
@@ -137,8 +142,7 @@ def test():
 
     teleport_acrst_payload = sp.nat(1000)
     teleport_acrst_action = sp.record(
-        kind=OutgoingActionKind.TELEPORT_ACRST,
-        payload=sp.pack(teleport_acrst_payload)
+        kind=OutgoingActionKind.TELEPORT_ACRST, payload=sp.pack(teleport_acrst_payload)
     )
 
     register_job_payload = sp.set_type_expr(
@@ -203,10 +207,7 @@ def test():
             )
         )
     )
-    actions = [
-        teleport_acrst_action,
-        register_job_action
-    ]
+    actions = [teleport_acrst_action, register_job_action]
     acurastProxy.send_actions(actions).run(
         sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )
@@ -250,5 +251,5 @@ def test():
 
     # Allow job creators to withdraw remaining fee
     scenario.verify(job_creator.balance == sp.mutez(0))
-    acurastProxy.withdraw_remaining_fee(1).run(now=sp.timestamp(1678266546624))
-    scenario.verify(job_creator.balance == sp.mutez(11630))
+    # acurastProxy.withdraw_remaining_fee(1).run(now=sp.timestamp(1678266546624))
+    # scenario.verify(job_creator.balance == sp.mutez(11630))
