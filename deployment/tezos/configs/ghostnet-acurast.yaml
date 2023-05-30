@@ -74,7 +74,6 @@ actions:
         governance_address: admin_address
         merkle_aggregator: IBCF_Aggragator
         proof_validator: MMR_Validator_Proxy
-        acurast_token: Acurast_FA2_Token
         paused: false
       outgoing_seq_id: 0
       ingoing_seq_id: 0

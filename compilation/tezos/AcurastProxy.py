@@ -17,13 +17,16 @@ sp.add_compilation_target(
             governance_address=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
             merkle_aggregator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
             proof_validator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-            acurast_token=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
             outgoing_actions=sp.big_map(
                 {
                     OutgoingActionKind.REGISTER_JOB: sp.record(
                         function=OutgoingActionLambda.register_job,
-                        storage=sp.record(
-                            version=1, data=sp.pack(sp.record(job_id_seq=0))
+                        storage=sp.pack(sp.nat(0)),
+                    ),
+                    OutgoingActionKind.TELEPORT_ACRST: sp.record(
+                        function=OutgoingActionLambda.teleport_acrst,
+                        storage=sp.pack(
+                            sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")
                         ),
                     ),
                 }
@@ -32,7 +35,7 @@ sp.add_compilation_target(
                 {
                     IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
                         function=IngoingActionLambda.assign_processor,
-                        storage=sp.record(version=1, data=sp.bytes("0x")),
+                        storage=sp.bytes("0x"),
                     ),
                 }
             ),
@@ -46,7 +49,7 @@ sp.add_compilation_target(
 )
 
 sp.add_expression_compilation_target(
-    "REGISTER_JOB",
+    OutgoingActionKind.REGISTER_JOB,
     sp.set_type_expr(
         OutgoingActionLambda.register_job,
         sp.TLambda(
@@ -56,8 +59,22 @@ sp.add_expression_compilation_target(
         ),
     ),
 )
+sp.add_expression_compilation_target("REGISTER_JOB_STORAGE", sp.pack(sp.nat(0)))
+
 sp.add_expression_compilation_target(
-    "REGISTER_JOB_STORAGE", sp.pack(sp.record(job_id_seq=0))
+    OutgoingActionKind.TELEPORT_ACRST,
+    sp.set_type_expr(
+        OutgoingActionLambda.teleport_acrst,
+        sp.TLambda(
+            Type.OutgoingActionLambdaArg,
+            Type.OutgoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
+sp.add_expression_compilation_target(
+    "TELEPORT_ACRST_STORAGE",
+    sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
 )
 
 sp.add_expression_compilation_target(
@@ -96,9 +113,7 @@ sp.add_expression_compilation_target(
                             kind=OutgoingActionKind.REGISTER_JOB,
                             function=sp.record(
                                 function=OutgoingActionLambda.register_job,
-                                storage=sp.record(
-                                    version=1, data=sp.pack(sp.record(job_id_seq=0))
-                                ),
+                                storage=sp.pack(sp.nat(0)),
                             ),
                         ),
                     )

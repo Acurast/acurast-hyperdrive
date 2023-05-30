@@ -50,6 +50,18 @@ class Acurast_Token_Interface:
         ).right_comb()
     )
 
+
+class Job_Status:
+    # Status after a job got registered.
+    Open = 0
+    # Status after a valid match for a job got submitted.
+    Matched = 1
+    # Status after all processors have acknowledged the job.
+    Assigned = 2
+    # Status when a job has been finalized or cancelled
+    FinalizedOrCancelled = 3
+
+
 class Type:
     # Outgoing actions
     RegisterJobAction = sp.TRecord(
@@ -85,6 +97,11 @@ class Type:
     AssignProcessor = sp.TRecord(
         job_id=sp.TNat,
         processor_address=sp.TAddress,
+    ).right_comb()
+
+    FinalizeJob = sp.TRecord(
+        job_id=sp.TNat,
+        unused_reeward=sp.TNat,
     ).right_comb()
 
     # Storage
@@ -165,7 +182,6 @@ class Type:
             update_governance_address=sp.TAddress,
             update_proof_validator=sp.TAddress,
             update_merkle_aggregator=sp.TAddress,
-            update_acurast_token=sp.TAddress,
             update_outgoing_actions=sp.TList(
                 sp.TVariant(
                     add=sp.TRecord(kind=sp.TString, function=OutgoingActionLambda),
@@ -221,16 +237,18 @@ class Inlined:
     def compute_expected_reward(execution_count, slots, reward_per_execution):
         return sp.compute(slots * execution_count * reward_per_execution)
 
+
 class OutgoingActionKind:
-    REGISTER_JOB = "REGISTER_JOB"
     DEREGISTER_JOB = "DEREGISTER_JOB"
+    FINALIZE_JOB = "FINALIZE_JOB"
+    REGISTER_JOB = "REGISTER_JOB"
     TELEPORT_ACRST = "TELEPORT_ACRST"
 
 
 class IngoingActionKind:
     ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
     FINALIZE_JOB = "FINALIZE_JOB"
-    CANCELLED_JOB = "CANCELLED_JOB"
+
 
 class OutgoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
@@ -242,7 +260,7 @@ class OutgoingActionLambda:
             "action_storage",
             sp.unpack(arg.storage, StorageType).open_some(
                 Error.CANNOT_PARSE_ACTION_STORAGE
-            )
+            ),
         )
         job_id_seq.value += 1
 
@@ -371,9 +389,7 @@ class OutgoingActionLambda:
         sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
         job_id = sp.compute(
-            sp.unpack(arg.payload, sp.TNat).open_some(
-                Error.COULD_NOT_UNPACK
-            )
+            sp.unpack(arg.payload, sp.TNat).open_some(Error.COULD_NOT_UNPACK)
         )
 
         # Get job information
@@ -382,15 +398,45 @@ class OutgoingActionLambda:
         )
 
         # Verify if job can be deregistered
-        sp.verify(job_information.status == 0, Error.CANNOT_DEREGISTER_JOB)
+        sp.verify(
+            job_information.status == Job_Status.Open, Error.CANNOT_DEREGISTER_JOB
+        )
 
         # Only the job creator can deregister the job
         origin = sp.compute(sp.sender)
         sp.verify(job_information.creator == origin, Error.NOT_JOB_CREATOR)
 
-        value = sp.pack(
-            (OutgoingActionKind.DEREGISTER_JOB, origin, sp.pack(job_id))
+        value = sp.pack((OutgoingActionKind.DEREGISTER_JOB, origin, sp.pack(job_id)))
+        key = sp.pack(arg.context.action_id)
+        state_param = sp.record(key=key, value=value)
+        # Add acurast action to the state merkle tree
+        merkle_aggregator_contract = sp.contract(
+            IBCF_Aggregator_Type.Insert_argument, arg.merkle_aggregator, "insert"
+        ).open_some(Error.INVALID_STATE_CONTRACT)
+        sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
+
+        sp.result(
+            sp.record(
+                context=arg.context,
+                new_action_storage=arg.storage,
+            )
         )
+
+    @Decorator.generate_lambda(with_operations=True)
+    def finalize_job(arg):
+        sp.set_type(arg, Type.OutgoingActionLambdaArg)
+
+        # Parse payload
+        job_id = sp.compute(
+            sp.unpack(arg.payload, sp.TNat).open_some(Error.COULD_NOT_UNPACK)
+        )
+
+        # Get origin
+        origin = sp.compute(sp.sender)
+
+        ## Emit FINALIZE_JOB action
+
+        value = sp.pack((OutgoingActionKind.FINALIZE_JOB, origin, sp.pack(job_id)))
         key = sp.pack(arg.context.action_id)
         state_param = sp.record(key=key, value=value)
         # Add acurast action to the state merkle tree
@@ -418,9 +464,7 @@ class OutgoingActionLambda:
         )
 
         amount = sp.compute(
-            sp.unpack(arg.payload, sp.TNat).open_some(
-                Error.COULD_NOT_UNPACK
-            )
+            sp.unpack(arg.payload, sp.TNat).open_some(Error.COULD_NOT_UNPACK)
         )
 
         # Get origin
@@ -438,7 +482,7 @@ class OutgoingActionLambda:
             acurast_token_address,
             "burn_tokens",
         ).open_some(Error.INVALID_CONTRACT)
-        call_argument = [ action_payload ]
+        call_argument = [action_payload]
         sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
 
         ## Emit TELEPORT_ACRST action
@@ -460,6 +504,7 @@ class OutgoingActionLambda:
                 new_action_storage=arg.storage,
             )
         )
+
 
 class IngoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
@@ -496,8 +541,60 @@ class IngoingActionLambda:
             )
 
             # Updated job status
-            with sp.if_(job_information.value.status == 0):
-                job_information.value.status = 1  # Assigned
+            with sp.if_(
+                sp.len(job_information.value.processors) == job_information.value.slots
+            ):
+                job_information.value.status = Job_Status.Assigned
+
+            # Update job information
+            context.value.job_information[action.job_id] = job_information.value
+
+        sp.result(sp.record(context=context.value, new_action_storage=arg.storage))
+
+    @Decorator.generate_lambda(with_operations=True)
+    def finalize_job(arg):
+        sp.set_type(arg, Type.IngoingActionLambdaArg)
+
+        StorageType = sp.TAddress
+        acurast_token_address = sp.compute(
+            sp.unpack(arg.storage, StorageType).open_some(
+                Error.CANNOT_PARSE_ACTION_STORAGE
+            )
+        )
+
+        context = sp.local("context", arg.context)
+
+        unpack_result = sp.compute(sp.unpack(arg.payload, Type.FinalizeJob))
+        with sp.if_(unpack_result.is_some()):
+            action = sp.compute(unpack_result.open_some(Error.COULD_NOT_UNPACK))
+            job_information = sp.local(
+                "job_information", context.value.job_information[action.job_id]
+            )
+
+            # Update job status
+            job_information.value.status = Job_Status.FinalizedOrCancelled
+
+            # Send unused fees to the job creator
+            with sp.if_(job_information.value.remaining_fee > 0):
+                sp.send(
+                    job_information.value.creator,
+                    job_information.value.remaining_fee,
+                    message=Error.INVALID_CONTRACT,
+                )
+                job_information.value.remaining_fee = sp.mutez(0)
+
+            # Mint unused rewards back to the job creator
+            acurast_token_contract = sp.contract(
+                Acurast_Token_Interface.BurnMintTokens,
+                acurast_token_address,
+                "mint_tokens",
+            ).open_some(Error.INVALID_CONTRACT)
+            mint_payload = sp.record(
+                amount=action.unused_reward,
+                owner=job_information.value.creator,
+            )
+            call_argument = [mint_payload]
+            sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
 
             # Update job information
             context.value.job_information[action.job_id] = job_information.value
@@ -513,7 +610,6 @@ class AcurastProxy(sp.Contract):
                     governance_address=sp.TAddress,
                     merkle_aggregator=sp.TAddress,
                     proof_validator=sp.TAddress,
-                    acurast_token=sp.TAddress,
                     outgoing_actions=sp.TBigMap(sp.TString, Type.OutgoingActionLambda),
                     ingoing_actions=sp.TBigMap(sp.TString, Type.IngoingActionLambda),
                     paused=sp.TBool,
@@ -656,32 +752,6 @@ class AcurastProxy(sp.Contract):
 
         self.data.job_information[arg.job_id] = job_information.value
 
-    @sp.entry_point()
-    def withdraw_remaining_fee(self, job_id):
-        # Get job information
-        job_information = sp.local(
-            "job_information",
-            self.data.job_information.get(job_id, message=Error.JOB_UNKNOWN),
-        )
-
-        # For some reason smartpy interpreter is converting timestamps to a 32 bit integers when packing the data
-        # As a workaround we use (nat to represent timestamps)
-        with sp.if_(
-            (job_information.value.status == 2)
-            | (
-                sp.mul(job_information.value.endTime, sp.int(0))
-                < sp.now - sp.timestamp(0)
-            )
-        ):
-            sp.send(
-                job_information.value.creator,
-                job_information.value.remaining_fee,
-                message=Error.INVALID_CONTRACT,
-            )
-            job_information.value.remaining_fee = sp.mutez(0)
-
-        self.data.job_information[job_id] = job_information.value
-
     @sp.entry_point(parameter_type=Type.ConfigureArgument)
     def configure(self, actions):
         # Only allowed addresses can call this entry point
@@ -696,8 +766,6 @@ class AcurastProxy(sp.Contract):
                     self.data.config.merkle_aggregator = aggregator_address
                 with action.match("update_proof_validator") as validator_address:
                     self.data.config.proof_validator = validator_address
-                with action.match("update_acurast_token") as token_address:
-                    self.data.config.acurast_token = token_address
                 with action.match("update_outgoing_actions") as update_outgoing_actions:
                     with sp.for_("updates", update_outgoing_actions) as updates:
                         with updates.match_cases() as action_kind:
