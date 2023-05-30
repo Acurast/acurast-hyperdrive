@@ -15,6 +15,7 @@ actions:
       admin:
           admin: admin_address
           paused: true
+      facilitators: []
       assets:
         token_metadata:
           0:
@@ -73,6 +74,8 @@ actions:
         governance_address: admin_address
         merkle_aggregator: IBCF_Aggragator
         proof_validator: MMR_Validator_Proxy
+        acurast_token: Acurast_FA2_Token
+        paused: false
       outgoing_seq_id: 0
       ingoing_seq_id: 0
       job_information: {}
@@ -83,6 +86,13 @@ actions:
     code_path: __SNAPSHOTS__/compilation/tezos/AcurastConsumer/AcurastConsumer/step_000_cont_0_contract.tz
     storage: __SNAPSHOTS__/compilation/tezos/AcurastConsumer/AcurastConsumer/step_000_cont_0_storage.tz
     overrides: AcurastProxy
+
+  - kind: contract_call
+    contract_address: Acurast_FA2_Token
+    entrypoint: update_facilitators
+    argument:
+      -
+        add: AcurastProxy
 
   # - kind: contract_call
   #   contract_address: KT1DhbgV7TAkhmaZjNqtA4fediPQjzHsJDad
