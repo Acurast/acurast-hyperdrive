@@ -104,11 +104,16 @@ def test():
                     {
                         OutgoingActionKind.REGISTER_JOB: sp.record(
                             function=OutgoingActionLambda.register_job,
-                            storage=sp.pack(sp.nat(0)),
+                            storage=sp.pack(
+                                sp.record(
+                                    job_id_seq=sp.nat(0),
+                                    token_address=acurastToken.address,
+                                )
+                            ),
                         ),
-                        OutgoingActionKind.TELEPORT_ACRST: sp.record(
-                            function=OutgoingActionLambda.teleport_acrst,
-                            storage=sp.pack(acurastToken.address),
+                        OutgoingActionKind.FINALIZE_JOB: sp.record(
+                            function=OutgoingActionLambda.finalize_job,
+                            storage=sp.bytes("0x"),
                         ),
                     }
                 ),
@@ -117,6 +122,10 @@ def test():
                         IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
                             function=IngoingActionLambda.assign_processor,
                             storage=sp.bytes("0x"),
+                        ),
+                        IngoingActionKind.FINALIZE_JOB: sp.record(
+                            function=IngoingActionLambda.finalize_job,
+                            storage=sp.pack(acurastToken.address),
                         ),
                     }
                 ),
@@ -139,11 +148,6 @@ def test():
         )
     )
     scenario += consumer
-
-    teleport_acrst_payload = sp.nat(1000)
-    teleport_acrst_action = sp.record(
-        kind=OutgoingActionKind.TELEPORT_ACRST, payload=sp.pack(teleport_acrst_payload)
-    )
 
     register_job_payload = sp.set_type_expr(
         sp.record(
@@ -188,7 +192,7 @@ def test():
     expected_fee = scenario.compute(
         sp.build_lambda(
             lambda arg: sp.set_type_expr(
-                AcurastProxyInlined.compute_expected_fees(
+                AcurastProxyInlined.compute_maximum_fees(
                     AcurastProxyInlined.compute_execution_count(
                         arg.startTime, arg.endTime, arg.interval
                     ),
@@ -207,7 +211,7 @@ def test():
             )
         )
     )
-    actions = [teleport_acrst_action, register_job_action]
+    actions = [register_job_action]
     acurastProxy.send_actions(actions).run(
         sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )

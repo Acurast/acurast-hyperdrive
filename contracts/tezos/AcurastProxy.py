@@ -101,7 +101,7 @@ class Type:
 
     FinalizeJob = sp.TRecord(
         job_id=sp.TNat,
-        unused_reeward=sp.TNat,
+        unused_reward=sp.TNat,
     ).right_comb()
 
     # Storage
@@ -111,6 +111,7 @@ class Type:
         processors=sp.TSet(sp.TAddress),
         expected_fullfilment_fee=sp.TMutez,
         remaining_fee=sp.TMutez,
+        maximum_reward=sp.TNat,
         slots=sp.TNat,
         status=sp.TNat,  # 0 - submitted, 1 - Assigned, 2 - Finalized/Cancelled,
         startTime=sp.TNat,
@@ -227,19 +228,18 @@ class Inlined:
         )
 
     @staticmethod
-    def compute_expected_fees(execution_count, slots, expected_fullfilment_fee):
+    def compute_maximum_fees(execution_count, slots, expected_fullfilment_fee):
         return sp.compute(
             sp.mul(slots * execution_count, expected_fullfilment_fee)
             + sp.mul(slots, Constants.REVEAL_COST)
         )
 
     @staticmethod
-    def compute_expected_reward(execution_count, slots, reward_per_execution):
+    def compute_maximum_reward(execution_count, slots, reward_per_execution):
         return sp.compute(slots * execution_count * reward_per_execution)
 
 
 class OutgoingActionKind:
-    DEREGISTER_JOB = "DEREGISTER_JOB"
     FINALIZE_JOB = "FINALIZE_JOB"
     REGISTER_JOB = "REGISTER_JOB"
     TELEPORT_ACRST = "TELEPORT_ACRST"
@@ -255,14 +255,14 @@ class OutgoingActionLambda:
     def register_job(arg):
         sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
-        StorageType = sp.TNat
-        job_id_seq = sp.local(
+        StorageType = sp.TRecord(job_id_seq=sp.TNat, token_address=sp.TAddress)
+        storage = sp.local(
             "action_storage",
             sp.unpack(arg.storage, StorageType).open_some(
                 Error.CANNOT_PARSE_ACTION_STORAGE
             ),
         )
-        job_id_seq.value += 1
+        storage.value.job_id_seq += 1
 
         action = sp.compute(
             sp.unpack(arg.payload, Type.RegisterJobAction).open_some(
@@ -288,7 +288,7 @@ class OutgoingActionLambda:
         # Calculate the fee required for all job executions
         slots = sp.compute(action.extra.requirements.slots)
         expected_fullfilment_fee = sp.compute(action.extra.expectedFulfillmentFee)
-        expected_fee = Inlined.compute_expected_fees(
+        expected_fee = Inlined.compute_maximum_fees(
             execution_count,
             slots,
             expected_fullfilment_fee,
@@ -296,23 +296,42 @@ class OutgoingActionLambda:
         sp.verify(sp.amount == expected_fee, message="INVALID_FEE_AMOUNT")
 
         # Calculate the total reward required to pay all executions
-        reward_per_execution = sp.compute(action.extra.requirements.reward)
-        expected_reward = Inlined.compute_expected_reward(
+        reward_per_execution = action.extra.requirements.reward
+        maximum_reward = Inlined.compute_maximum_reward(
             execution_count,
             slots,
             reward_per_execution,
         )
 
+        # Get origin
+        origin = sp.compute(sp.sender)
+
+        # Prepare action
+        action_payload = sp.record(
+            amount=maximum_reward,
+            owner=origin,
+        )
+
+        ## Burn the maximum reward amount that can be used by the job
+        acurast_token_contract = sp.contract(
+            Acurast_Token_Interface.BurnMintTokens,
+            storage.value.token_address,
+            "burn_tokens",
+        ).open_some(Error.INVALID_CONTRACT)
+        call_argument = [action_payload]
+        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
+
         # Index the job information
         context = sp.local("context", arg.context)
-        context.value.job_information[job_id_seq.value] = sp.record(
+        context.value.job_information[storage.value.job_id_seq] = sp.record(
             creator=sp.sender,
             destination=action.destination,
             expected_fullfilment_fee=expected_fullfilment_fee,
             processors=sp.set(),
             remaining_fee=expected_fee,
+            maximum_reward=maximum_reward,
             slots=slots,
-            status=0,  # Submitted
+            status=Job_Status.Open,
             startTime=startTime,
             endTime=endTime,
             interval=interval,
@@ -322,7 +341,7 @@ class OutgoingActionLambda:
         # Prepare acurast action
         action_with_job_id = sp.set_type_expr(
             sp.record(
-                job_id=job_id_seq.value,
+                job_id=storage.value.job_id_seq,
                 requiredModules=action.requiredModules,
                 script=action.script,
                 allowedSources=action.allowedSources,
@@ -363,9 +382,6 @@ class OutgoingActionLambda:
             ).right_comb(),
         )
 
-        # Get origin
-        origin = sp.compute(sp.sender)
-
         value = sp.pack(
             (OutgoingActionKind.REGISTER_JOB, origin, sp.pack(action_with_job_id))
         )
@@ -380,7 +396,7 @@ class OutgoingActionLambda:
         sp.result(
             sp.record(
                 context=context.value,
-                new_action_storage=sp.pack(job_id_seq.value),
+                new_action_storage=sp.pack(storage.value),
             )
         )
 
@@ -398,8 +414,10 @@ class OutgoingActionLambda:
         )
 
         # Verify if job can be finalized
-        is_open=sp.compute(job_information.status == Job_Status.Open)
-        is_expired=sp.compute(sp.to_int(job_information.endTime) + sp.timestamp(0) < sp.now)
+        is_open = sp.compute(job_information.status == Job_Status.Open)
+        is_expired = sp.compute(
+            sp.add(sp.to_int(job_information.endTime), sp.timestamp(0)) < sp.now
+        )
         sp.verify(is_open | is_expired, Error.CANNOT_FINALIZE_JOB)
 
         # Only the job creator can deregister the job
@@ -545,7 +563,7 @@ class IngoingActionLambda:
             job_information.value.status = Job_Status.FinalizedOrCancelled
 
             # Send unused fees to the job creator
-            with sp.if_(job_information.value.remaining_fee > 0):
+            with sp.if_(job_information.value.remaining_fee > sp.mutez(0)):
                 sp.send(
                     job_information.value.creator,
                     job_information.value.remaining_fee,
@@ -554,6 +572,10 @@ class IngoingActionLambda:
                 job_information.value.remaining_fee = sp.mutez(0)
 
             # Mint unused rewards back to the job creator
+            sp.verify(
+                action.unused_reward <= job_information.value.maximum_reward,
+                "ABOVE_MAXIMUM_REWARD",
+            )
             acurast_token_contract = sp.contract(
                 Acurast_Token_Interface.BurnMintTokens,
                 acurast_token_address,

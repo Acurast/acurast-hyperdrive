@@ -21,7 +21,18 @@ sp.add_compilation_target(
                 {
                     OutgoingActionKind.REGISTER_JOB: sp.record(
                         function=OutgoingActionLambda.register_job,
-                        storage=sp.pack(sp.nat(0)),
+                        storage=sp.pack(
+                            sp.record(
+                                job_id_seq=sp.nat(0),
+                                token_address=sp.address(
+                                    "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
+                                ),
+                            )
+                        ),
+                    ),
+                    OutgoingActionKind.FINALIZE_JOB: sp.record(
+                        function=OutgoingActionLambda.finalize_job,
+                        storage=sp.bytes("0x"),
                     ),
                     OutgoingActionKind.TELEPORT_ACRST: sp.record(
                         function=OutgoingActionLambda.teleport_acrst,
@@ -36,6 +47,12 @@ sp.add_compilation_target(
                     IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
                         function=IngoingActionLambda.assign_processor,
                         storage=sp.bytes("0x"),
+                    ),
+                    IngoingActionKind.FINALIZE_JOB: sp.record(
+                        function=IngoingActionLambda.finalize_job,
+                        storage=sp.pack(
+                            sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")
+                        ),
                     ),
                 }
             ),
