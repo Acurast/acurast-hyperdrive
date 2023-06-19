@@ -79,6 +79,17 @@ sp.add_expression_compilation_target(
 sp.add_expression_compilation_target("REGISTER_JOB_STORAGE", sp.pack(sp.nat(0)))
 
 sp.add_expression_compilation_target(
+    OutgoingActionKind.DEREGISTER_JOB,
+    sp.set_type_expr(
+        OutgoingActionLambda.deregister_job,
+        sp.TLambda(
+            Type.OutgoingActionLambdaArg,
+            Type.OutgoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
+sp.add_expression_compilation_target(
     OutgoingActionKind.TELEPORT_ACRST,
     sp.set_type_expr(
         OutgoingActionLambda.teleport_acrst,
