@@ -22,8 +22,8 @@ type extended_param =
 
 let fail_if_not_facilitator (facilitators: address set): unit =
     if Set.mem (Tezos.get_sender()) facilitators
-    then failwith "NOT_A_FACILITATOR"
-    else unit
+    then unit
+    else failwith "NOT_A_FACILITATOR"
 
 let main (param, storage : extended_param * storage): (operation list) * storage =
     match param with

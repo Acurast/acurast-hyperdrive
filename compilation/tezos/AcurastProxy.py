@@ -76,8 +76,30 @@ sp.add_expression_compilation_target(
         ),
     ),
 )
-sp.add_expression_compilation_target("REGISTER_JOB_STORAGE", sp.pack(sp.nat(0)))
+sp.add_expression_compilation_target(
+    "REGISTER_JOB_STORAGE",
+    sp.pack(
+        sp.record(
+            job_id_seq=sp.nat(0),
+            token_address=sp.address("KT1UcqdRzForroq6mU2YKiRtFz8khp5adePe"),
+        )
+    ),
+)
+sp.add_expression_compilation_target(
+    "FINALIZE_JOB_STORAGE", sp.pack(sp.address("KT1UcqdRzForroq6mU2YKiRtFz8khp5adePe"))
+)
 
+sp.add_expression_compilation_target(
+    "OUT_" + OutgoingActionKind.FINALIZE_JOB,
+    sp.set_type_expr(
+        OutgoingActionLambda.finalize_job,
+        sp.TLambda(
+            Type.OutgoingActionLambdaArg,
+            Type.OutgoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
 sp.add_expression_compilation_target(
     OutgoingActionKind.DEREGISTER_JOB,
     sp.set_type_expr(
@@ -106,7 +128,7 @@ sp.add_expression_compilation_target(
 )
 
 sp.add_expression_compilation_target(
-    "ASSIGN_PROCESSOR",
+    IngoingActionKind.ASSIGN_JOB_PROCESSOR,
     sp.set_type_expr(
         IngoingActionLambda.assign_processor,
         sp.TLambda(
@@ -117,9 +139,20 @@ sp.add_expression_compilation_target(
     ),
 )
 sp.add_expression_compilation_target(
-    "NOOP",
+    IngoingActionKind.NOOP,
     sp.set_type_expr(
         IngoingActionLambda.noop,
+        sp.TLambda(
+            Type.IngoingActionLambdaArg,
+            Type.IngoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
+sp.add_expression_compilation_target(
+    IngoingActionKind.FINALIZE_JOB,
+    sp.set_type_expr(
+        IngoingActionLambda.finalize_job,
         sp.TLambda(
             Type.IngoingActionLambdaArg,
             Type.IngoingActionLambdaReturn,

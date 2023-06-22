@@ -385,7 +385,7 @@
                      CAR ;
                      SENDER ;
                      MEM ;
-                     IF { PUSH string "NOT_A_FACILITATOR" ; FAILWITH } {} ;
+                     IF {} { PUSH string "NOT_A_FACILITATOR" ; FAILWITH } ;
                      DUP 2 ;
                      CAR ;
                      CDR ;

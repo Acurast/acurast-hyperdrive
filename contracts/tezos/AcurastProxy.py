@@ -48,7 +48,7 @@ class Acurast_Token_Interface:
         sp.TRecord(
             owner=sp.TAddress,
             amount=sp.TNat,
-        ).right_comb()
+        ).layout(("owner", "amount"))
     )
 
 
@@ -179,6 +179,21 @@ class Type:
 
     FulfillArgument = sp.TRecord(job_id=sp.TNat, payload=sp.TBytes).right_comb()
 
+    Storage = sp.TRecord(
+        config=sp.TRecord(
+            governance_address=sp.TAddress,
+            merkle_aggregator=sp.TAddress,
+            proof_validator=sp.TAddress,
+            outgoing_actions=sp.TBigMap(sp.TString, OutgoingActionLambda),
+            ingoing_actions=sp.TBigMap(sp.TString, IngoingActionLambda),
+            paused=sp.TBool,
+        ).right_comb(),
+        outgoing_seq_id=sp.TNat,
+        outgoing_registry=sp.TBigMap(sp.TNat, sp.TNat),
+        ingoing_seq_id=sp.TNat,
+        job_information=JobInformationIndex,
+    )
+
     ConfigureArgument = sp.TList(
         sp.TVariant(
             update_governance_address=sp.TAddress,
@@ -197,6 +212,7 @@ class Type:
                 ).right_comb()
             ),
             set_paused=sp.TBool,
+            update_storage=sp.TLambda(Storage, Storage),
         ).right_comb()
     )
 
@@ -250,6 +266,7 @@ class OutgoingActionKind:
 class IngoingActionKind:
     ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
     FINALIZE_JOB = "FINALIZE_JOB"
+    NOOP = "NOOP"
 
 
 class OutgoingActionLambda:
@@ -440,27 +457,29 @@ class OutgoingActionLambda:
     def finalize_job(arg):
         sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
-        job_id = sp.compute(
-            sp.unpack(arg.payload, sp.TNat).open_some(Error.COULD_NOT_UNPACK)
+        job_ids = sp.compute(
+            sp.unpack(arg.payload, sp.TSet(sp.TNat)).open_some(Error.COULD_NOT_UNPACK)
         )
 
-        # Get job information
-        job_information = sp.compute(
-            arg.context.job_information.get(job_id, message=Error.JOB_UNKNOWN),
-        )
-
-        # Verify if job can be finalized
-        is_open = sp.compute(job_information.status == Job_Status.Open)
-        is_expired = sp.compute(
-            sp.add(sp.to_int(job_information.endTime), sp.timestamp(0)) < sp.now
-        )
-        sp.verify(is_open | is_expired, Error.CANNOT_FINALIZE_JOB)
-
-        # Only the job creator can deregister the job
         origin = sp.compute(sp.sender)
-        sp.verify(job_information.creator == origin, Error.NOT_JOB_CREATOR)
+        with sp.for_("job_id", job_ids.elements()) as job_id:
+            # Get job information
+            job_information = sp.compute(
+                arg.context.job_information.get(job_id, message=Error.JOB_UNKNOWN),
+            )
 
-        value = sp.pack((OutgoingActionKind.FINALIZE_JOB, origin, sp.pack(job_id)))
+            # Verify if job can be finalized
+            is_open = sp.compute(job_information.status == Job_Status.Open)
+            is_expired = sp.compute(
+                sp.add(sp.to_int(job_information.endTime / 1000), sp.timestamp(0))
+                < sp.now
+            )
+            sp.verify(is_open | is_expired, Error.CANNOT_FINALIZE_JOB)
+
+            # Only the job creator can deregister the job
+            sp.verify(job_information.creator == origin, Error.NOT_JOB_CREATOR)
+
+        value = sp.pack((OutgoingActionKind.FINALIZE_JOB, origin, sp.pack(job_ids)))
         key = sp.pack(arg.context.action_id)
         state_param = sp.record(key=key, value=value)
         # Add acurast action to the state merkle tree
@@ -632,22 +651,7 @@ class IngoingActionLambda:
 
 class AcurastProxy(sp.Contract):
     def __init__(self):
-        self.init_type(
-            sp.TRecord(
-                config=sp.TRecord(
-                    governance_address=sp.TAddress,
-                    merkle_aggregator=sp.TAddress,
-                    proof_validator=sp.TAddress,
-                    outgoing_actions=sp.TBigMap(sp.TString, Type.OutgoingActionLambda),
-                    ingoing_actions=sp.TBigMap(sp.TString, Type.IngoingActionLambda),
-                    paused=sp.TBool,
-                ).right_comb(),
-                outgoing_seq_id=sp.TNat,
-                outgoing_registry=sp.TBigMap(sp.TNat, sp.TNat),
-                ingoing_seq_id=sp.TNat,
-                job_information=Type.JobInformationIndex,
-            )
-        )
+        self.init_type(Type.Storage)
 
     @sp.entry_point(parameter_type=Type.SendActionsArgument)
     def send_actions(self, arg):
@@ -814,3 +818,5 @@ class AcurastProxy(sp.Contract):
                                 del self.data.config.ingoing_actions[action_to_remove]
                 with action.match("set_paused") as paused:
                     self.data.config.paused = paused
+                with action.match("update_storage") as lamb:
+                    self.data = lamb(self.data)
