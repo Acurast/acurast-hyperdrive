@@ -84,7 +84,10 @@ def test():
             {
                 1: sp.bytes(
                     "0x00552aff0d1b8a20252c1f06786c93ac171ef13bb46bcd6677ddaccf1d1021c0"
-                )
+                ),
+                2: sp.bytes(
+                    "0x9cd61921ec81965d9e3a4da48eca828c8d95415b9923b54e7d29a607fbfeac8d"
+                ),
             }
         ),
     )
@@ -257,3 +260,37 @@ def test():
     scenario.verify(job_creator.balance == sp.mutez(0))
     # acurastProxy.withdraw_remaining_fee(1).run(now=sp.timestamp(1678266546624))
     # scenario.verify(job_creator.balance == sp.mutez(11630))
+
+    # Add 2 new jobs
+    actions = [register_job_action,register_job_action]
+    acurastProxy.send_actions(actions).run(
+        sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
+    )
+    # Assign processors
+    acurastProxy.receive_actions(
+        sp.record(
+            snapshot=2,
+            proof=[
+                sp.bytes(
+                    "0x4f815ba60f512a92d199c973bcee1654860eddfe91c3fcc558275d3d4d58fea4"
+                )
+            ],
+            leaves=[
+                sp.record(
+                    k_index=0,
+                    mmr_pos=0,
+                    data=sp.bytes(
+                        "0x05070700020707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700020a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"
+                    ),
+                ),
+                sp.record(
+                    k_index=1,
+                    mmr_pos=1,
+                    data=sp.bytes(
+                        "0x05070700030707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700030a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"
+                    ),
+                ),
+            ],
+            mmr_size=7,
+        )
+    )

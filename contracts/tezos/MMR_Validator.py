@@ -280,8 +280,8 @@ class MMR:
                     ):
                         Iterator.push(peak_roots, peak_leaves.value[0].hash)
                     with sp.else_():
-                        peak_root = MMR.calculate_peak_root(
-                            peak_leaves.value, proof_iter, peak
+                        peak_root = sp.compute(
+                            MMR.calculate_peak_root(peak_leaves.value, proof_iter, peak)
                         )
                         Iterator.push(peak_roots, peak_root)
 
@@ -297,7 +297,110 @@ class MMR:
 
         return peak_roots.value.data[0]
 
-    def calculate_peak_root(peak_leaves, proof_iter, peak):
+    def calculate_peak_root(peak_leaves, proof_iter, peak_position):
+        """
+        Calculate root hash of a sub peak of the merkle mountain
+
+        @param peak_leaves : A list of nodes to provide proof for
+        @param proof_iter  : A list of node hashes to traverse to compute the peak root hash
+        @param peak        : The index of the peak node
+        @return A tuple containing the peak root hash, and the peak root position in the merkle
+        """
+
+        queue = sp.local("queue", sp.list())
+        queue_length = sp.local("queue_length", 0)
+        with sp.for_("leaf", peak_leaves.values().rev()) as leaf:
+            queue.value.push(
+                sp.record(
+                    position = leaf.mmr_pos,
+                    hash = leaf.hash,
+                    height = sp.nat(0)
+                )
+            )
+            queue_length.value += 1
+
+        sp.trace(("----", queue.value))
+
+
+        break_loop = sp.local("break_loop", False)
+        result = sp.local("result", sp.bytes("0x"))
+        with sp.while_(~break_loop.value):
+            with sp.match_cons(queue.value) as x1:
+                node = sp.compute(x1.head)
+                queue.value = x1.tail
+                sp.trace(("node", node))
+                with sp.if_(node.position == peak_position):
+                    sp.verify(sp.len(queue.value) == 0, "CorruptedProof")
+                    result.value = node.hash
+                    break_loop.value = True
+                with sp.else_():
+                    next_height = sp.compute(sp.as_nat(MMR.pos_to_height(node.position + 1)))
+                    parent_pos = sp.local("parent_pos", 0)
+                    parent_hash = sp.local("parent_hash", sp.bytes("0x"))
+                    sibling_offset = sp.compute(MMR.sibling_offset(node.height))
+
+                    sp.trace(("sibling_offset", sibling_offset))
+                    sp.trace(("next_height", next_height))
+                    sp.trace(("height", node.height))
+                    with sp.if_(next_height > node.height):
+                        # RIGHT
+                        sibling_pos = sp.compute(sp.as_nat(node.position - sibling_offset))
+                        sp.trace(("(R) sib_pos", sibling_pos))
+                        parent_pos.value = sp.compute(node.position + 1)
+                        sp.trace(("(R) parent_pos", parent_pos.value))
+                        with sp.match_cons(queue.value) as x2:
+                            node2 = sp.compute(x2.head)
+                            with sp.if_(node2.position == sibling_pos):
+                                sp.trace("(R) merge (node, node)")
+                                parent_hash.value = node2.hash + node.hash
+                                queue.value = x2.tail
+                            with sp.else_():
+                                sp.trace("(R) merge (proof_node, node)")
+                                sibling_hash = Iterator.next(proof_iter)
+                                parent_hash.value = sibling_hash + node.hash
+                        with sp.else_():
+                            sp.trace("(R) merge (proof_node, node)")
+                            sibling_hash = Iterator.next(proof_iter)
+                            parent_hash.value = sibling_hash + node.hash
+                    with sp.else_():
+                        # LEFT
+                        sibling_pos = sp.compute(node.position + sibling_offset)
+                        parent_pos.value = sp.compute(node.position + MMR.parent_offset(node.height))
+                        sp.trace(("(L) sib_pos", sibling_pos))
+                        sp.trace(("(L) parent_pos", parent_pos.value))
+                        with sp.match_cons(queue.value) as x2:
+                            node2 = sp.compute(x2.head)
+                            with sp.if_(node2.position == sibling_pos):
+                                sp.trace("(L) merge (node, node)")
+                                parent_hash.value = node.hash + node2.hash
+                                queue.value = x2.tail
+                            with sp.else_():
+                                sp.trace("(L) merge (proof_node, node)")
+                                sibling_hash = Iterator.next(proof_iter)
+                                parent_hash.value = node.hash + sibling_hash
+                        with sp.else_():
+                            sp.trace("(L) merge (proof_node, node)")
+                            sibling_hash = Iterator.next(proof_iter)
+                            parent_hash.value = node.hash + sibling_hash
+
+                    sp.trace(("parent_pos", parent_pos.value))
+                    with sp.if_(parent_pos.value <= peak_position):
+                        queue.value.push(
+                            sp.record(
+                                position = parent_pos.value,
+                                hash = sp.keccak(parent_hash.value),
+                                height = node.height + 1
+                            )
+                        )
+                    with sp.else_():
+                        sp.failwith("CorruptedProof")
+
+            with sp.else_():
+                break_loop.value = True
+
+        return result.value
+
+    def calculate_peak_root2(peak_leaves, proof_iter, peak):
         """
         Calculate root hash of a sub peak of the merkle mountain
 
@@ -809,6 +912,7 @@ class MMR_Validator(sp.Contract):
         with sp.for_("proof_node", proof) as proof_node:
             sp.verify(proof_node != root, Error.INVALID_PROOF)
 
+        sp.trace(indexed_proof.value)
         # Compute root from proof
         computed_hash = MMR.calculate_root(
             indexed_proof.value, indexed_leaves.value, arg.mmr_size
