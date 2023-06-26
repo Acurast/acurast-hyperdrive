@@ -979,6 +979,8 @@ class MMR_Validator_Proxy(sp.Contract):
             with action.match_cases() as action:
                 with action.match("update_validator_address") as validator_address:
                     self.data.validator_address = validator_address
+                with action.match("update_governance_address") as governance_address:
+                    self.data.governance_address = governance_address
 
     @sp.onchain_view()
     def verify_proof(self, arg):
