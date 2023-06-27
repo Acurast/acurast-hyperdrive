@@ -1,4 +1,5 @@
 106916 __SNAPSHOTS__/compilation/tezos/IBCF_Eth_Validator/IBCF_Eth_Validator/step_000_cont_0_contract.tz
+1143 __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator_Proxy/step_000_cont_0_contract.tz
 15082 __SNAPSHOTS__/compilation/tezos/blueprints/BridgedAsset/BridgedAsset/step_000_cont_0_contract.tz
 19421 __SNAPSHOTS__/compilation/tezos/ligo/fa2_single_asset_contract.tz
 28894 __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_contract.tz
@@ -7,5 +8,4 @@
 39989 __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
 48479 __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Crowdfunding/IBCF_Crowdfunding/step_000_cont_0_contract.tz
 62058 __SNAPSHOTS__/compilation/tezos/blueprints/IBCF_Bridge/IBCF_Bridge/step_000_cont_0_contract.tz
-67866 __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator/step_000_cont_0_contract.tz
-891 __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator_Proxy/step_000_cont_0_contract.tz
+68112 __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator/step_000_cont_0_contract.tz

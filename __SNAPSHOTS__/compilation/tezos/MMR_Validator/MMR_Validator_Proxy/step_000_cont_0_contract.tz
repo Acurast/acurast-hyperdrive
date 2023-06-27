@@ -1,4 +1,4 @@
-parameter (list %configure address);
+parameter (list %configure (or (address %update_governance_address) (address %update_validator_address)));
 storage   (pair (address %governance_address) (address %validator_address));
 code
   {
@@ -17,10 +17,19 @@ code
     DUP;        
     ITER
       {
-        DIG 2;      
-        SWAP;       
-        UPDATE 2;   
-        SWAP;       
+        IF_LEFT
+          {
+            DIG 2;      
+            SWAP;       
+            UPDATE 1;   
+            SWAP;       
+          }
+          {
+            DIG 2;      
+            SWAP;       
+            UPDATE 2;   
+            SWAP;       
+          }; 
       }; 
     DROP;       
     NIL operation; 
