@@ -319,16 +319,12 @@ class MMR:
             )
             queue_length.value += 1
 
-        sp.trace(("----", queue.value))
-
-
         break_loop = sp.local("break_loop", False)
         result = sp.local("result", sp.bytes("0x"))
         with sp.while_(~break_loop.value):
             with sp.match_cons(queue.value) as x1:
                 node = sp.compute(x1.head)
                 queue.value = x1.tail
-                sp.trace(("node", node))
                 with sp.if_(node.position == peak_position):
                     sp.verify(sp.len(queue.value) == 0, "CorruptedProof")
                     result.value = node.hash
@@ -339,59 +335,49 @@ class MMR:
                     parent_hash = sp.local("parent_hash", sp.bytes("0x"))
                     sibling_offset = sp.compute(MMR.sibling_offset(node.height))
 
-                    sp.trace(("sibling_offset", sibling_offset))
-                    sp.trace(("next_height", next_height))
-                    sp.trace(("height", node.height))
                     with sp.if_(next_height > node.height):
                         # RIGHT
                         sibling_pos = sp.compute(sp.as_nat(node.position - sibling_offset))
-                        sp.trace(("(R) sib_pos", sibling_pos))
                         parent_pos.value = sp.compute(node.position + 1)
-                        sp.trace(("(R) parent_pos", parent_pos.value))
                         with sp.match_cons(queue.value) as x2:
                             node2 = sp.compute(x2.head)
                             with sp.if_(node2.position == sibling_pos):
-                                sp.trace("(R) merge (node, node)")
                                 parent_hash.value = node2.hash + node.hash
                                 queue.value = x2.tail
                             with sp.else_():
-                                sp.trace("(R) merge (proof_node, node)")
                                 sibling_hash = Iterator.next(proof_iter)
                                 parent_hash.value = sibling_hash + node.hash
                         with sp.else_():
-                            sp.trace("(R) merge (proof_node, node)")
                             sibling_hash = Iterator.next(proof_iter)
                             parent_hash.value = sibling_hash + node.hash
                     with sp.else_():
                         # LEFT
                         sibling_pos = sp.compute(node.position + sibling_offset)
                         parent_pos.value = sp.compute(node.position + MMR.parent_offset(node.height))
-                        sp.trace(("(L) sib_pos", sibling_pos))
-                        sp.trace(("(L) parent_pos", parent_pos.value))
                         with sp.match_cons(queue.value) as x2:
                             node2 = sp.compute(x2.head)
                             with sp.if_(node2.position == sibling_pos):
-                                sp.trace("(L) merge (node, node)")
                                 parent_hash.value = node.hash + node2.hash
                                 queue.value = x2.tail
                             with sp.else_():
-                                sp.trace("(L) merge (proof_node, node)")
                                 sibling_hash = Iterator.next(proof_iter)
                                 parent_hash.value = node.hash + sibling_hash
                         with sp.else_():
-                            sp.trace("(L) merge (proof_node, node)")
                             sibling_hash = Iterator.next(proof_iter)
                             parent_hash.value = node.hash + sibling_hash
 
-                    sp.trace(("parent_pos", parent_pos.value))
                     with sp.if_(parent_pos.value <= peak_position):
-                        queue.value.push(
+                        # Add new node to the bottom of the queue
+                        new_queue = sp.local("new_queue", [
                             sp.record(
                                 position = parent_pos.value,
                                 hash = sp.keccak(parent_hash.value),
                                 height = node.height + 1
                             )
-                        )
+                        ])
+                        with sp.for_("item", queue.value) as item:
+                            new_queue.value.push(item)
+                        queue.value = new_queue.value
                     with sp.else_():
                         sp.failwith("CorruptedProof")
 
@@ -912,7 +898,6 @@ class MMR_Validator(sp.Contract):
         with sp.for_("proof_node", proof) as proof_node:
             sp.verify(proof_node != root, Error.INVALID_PROOF)
 
-        sp.trace(indexed_proof.value)
         # Compute root from proof
         computed_hash = MMR.calculate_root(
             indexed_proof.value, indexed_leaves.value, arg.mmr_size

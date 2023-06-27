@@ -39,6 +39,9 @@ def test():
                 4: sp.bytes(
                     "0x6febfc341bd3acea5b8e961dd7ab0c2f71578d34afaf4ca7d84443b32824685b"
                 ),
+                5: sp.bytes(
+                    "0x1fe10aa430fefd6713e347417d32ad71502b81cb3082e41ab71be5e8f15bb661"
+                ),
             }
         ),
     )
@@ -307,6 +310,53 @@ def test():
                 one=sp.map(
                     {
                         0: sp.record(
+                            mmr_pos=94,
+                            hash=sp.keccak(
+                                sp.bytes("0x0507070030070701000000044e4f4f500a00000000")
+                            ),
+                        ),
+                        1: sp.record(
+                            mmr_pos=95,
+                            hash=sp.keccak(
+                                sp.bytes("0x0507070031070701000000044e4f4f500a00000000")
+                            ),
+                        ),
+                        2: sp.record(
+                            mmr_pos=97,
+                            hash=sp.keccak(
+                                sp.bytes("0x0507070032070701000000044e4f4f500a00000000")
+                            ),
+                        ),
+                        3: sp.record(
+                            mmr_pos=98,
+                            hash=sp.keccak(
+                                sp.bytes("0x0507070033070701000000044e4f4f500a00000000")
+                            ),
+                        ),
+                    }
+                ),
+                two=0,
+                three=sp.map(
+                    {
+                        0: sp.bytes(
+                            "0xa2fd5ffd8bfb1936e8762e857b76572f14844aa377f13e211027d397237e84e9"
+                        ),
+                        1: sp.bytes(
+                            "0x2510b9516b262cec8be88b0dee8a4f08a0c89060a5fcb859e6b119dedca7eeec"
+                        ),
+                    }
+                ),
+                four=100,
+            )
+        )
+    )
+
+    scenario.show(
+        calculate_peak_root_lambda(
+            sp.record(
+                one=sp.map(
+                    {
+                        0: sp.record(
                             k_index=0,
                             mmr_pos=0,
                             hash=sp.bytes(
@@ -333,10 +383,6 @@ def test():
                 four=6,
             )
         )
-    )
-
-    calculate_root_lambda = sp.build_lambda(
-        lambda arg: MMR.calculate_root(arg.one, arg.two, arg.three)
     )
 
     scenario.verify_equal(
@@ -567,6 +613,80 @@ def test():
                     ),
                 ],
                 mmr_size=3,
+            )
+        )
+        == True
+    )
+
+    scenario.verify(
+        c1.verify_proof(
+            sp.record(
+                snapshot=5,
+                proof=[
+                    sp.bytes(
+                        "0xa2fd5ffd8bfb1936e8762e857b76572f14844aa377f13e211027d397237e84e9"
+                    ),
+                    sp.bytes(
+                        "0x2510b9516b262cec8be88b0dee8a4f08a0c89060a5fcb859e6b119dedca7eeec"
+                    ),
+                ],
+                leaves=[
+                    sp.record(
+                        k_index=0,
+                        mmr_pos=94,
+                        hash=sp.keccak(
+                            sp.bytes(
+                                "0x0507070030070701000000044e4f4f500a00000000"
+                            )
+                        ),
+                    ),
+                    sp.record(
+                        k_index=1,
+                        mmr_pos=95,
+                        hash=sp.keccak(
+                            sp.bytes(
+                                "0x0507070031070701000000044e4f4f500a00000000"
+                            )
+                        ),
+                    ),
+                    sp.record(
+                        k_index=2,
+                        mmr_pos=97,
+                        hash=sp.keccak(
+                            sp.bytes(
+                                "0x0507070032070701000000044e4f4f500a00000000"
+                            )
+                        ),
+                    ),
+                    sp.record(
+                        k_index=3,
+                        mmr_pos=98,
+                        hash=sp.keccak(
+                            sp.bytes(
+                                "0x0507070033070701000000044e4f4f500a00000000"
+                            )
+                        ),
+                    ),
+                    sp.record(
+                        k_index=4,
+                        mmr_pos=101,
+                        hash=sp.keccak(
+                            sp.bytes(
+                                "0x0507070034070701000000044e4f4f500a00000000"
+                            )
+                        ),
+                    ),
+                    sp.record(
+                        k_index=5,
+                        mmr_pos=102,
+                        hash=sp.keccak(
+                            sp.bytes(
+                                "0x0507070035070701000000044e4f4f500a00000000"
+                            )
+                        ),
+                    ),
+                ],
+                mmr_size=104,
             )
         )
         == True

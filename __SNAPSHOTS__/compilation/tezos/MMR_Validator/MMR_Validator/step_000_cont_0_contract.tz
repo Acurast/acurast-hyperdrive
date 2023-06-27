@@ -219,7 +219,7 @@ code
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 777; 
+                        PUSH int 763; 
                         FAILWITH;   
                       }
                       {}; 
@@ -261,7 +261,7 @@ code
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 784; 
+                        PUSH int 770; 
                         FAILWITH;   
                       }
                       {}; 
@@ -437,7 +437,7 @@ view
         ISNAT;      
         IF_NONE
           {
-            PUSH int 626; 
+            PUSH int 612; 
             FAILWITH;   
           }
           {}; 
@@ -459,7 +459,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 591; 
+                PUSH int 577; 
                 FAILWITH;   
               }
               {}; 
@@ -471,7 +471,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 642; 
+                PUSH int 628; 
                 FAILWITH;   
               }
               {}; 
@@ -509,7 +509,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 599; 
+                        PUSH int 585; 
                         FAILWITH;   
                       }
                       {}; 
@@ -522,7 +522,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 600; 
+                        PUSH int 586; 
                         FAILWITH;   
                       }
                       {}; 
@@ -556,7 +556,7 @@ view
             DUP;        
             IF_NONE
               {
-                PUSH int 607; 
+                PUSH int 593; 
                 FAILWITH;   
               }
               {}; 
@@ -1252,7 +1252,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 337; 
+                                    PUSH int 333; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1266,7 +1266,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 642; 
+                                    PUSH int 628; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1284,7 +1284,7 @@ view
                                     ISNAT;      
                                     IF_NONE
                                       {
-                                        PUSH int 347; 
+                                        PUSH int 340; 
                                         FAILWITH;   
                                       }
                                       {}; 
@@ -1659,7 +1659,7 @@ view
                                 LE;         
                                 IF
                                   {
-                                    DIG 6;      
+                                    NIL (pair bytes (pair nat nat)); 
                                     DIG 2;      
                                     PUSH nat 1; 
                                     DIG 4;      
@@ -1669,6 +1669,11 @@ view
                                     KECCAK;     
                                     PAIR 3;     
                                     CONS;       
+                                    DIG 4;      
+                                    ITER
+                                      {
+                                        CONS;       
+                                      }; 
                                     DUG 3;      
                                   }
                                   {
