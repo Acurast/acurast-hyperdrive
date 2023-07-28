@@ -234,14 +234,12 @@ def test():
             proof=[],
             leaves=[
                 sp.record(
-                    k_index=0,
                     mmr_pos=0,
                     data=sp.bytes(
                         "0x05070700000707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"
                     ),
                 ),
                 sp.record(
-                    k_index=1,
                     mmr_pos=1,
                     data=sp.bytes(
                         "0x05070700010707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700010a000000160000edaa0fa299565241bd285414579f88705568c6b0"
@@ -277,14 +275,12 @@ def test():
             ],
             leaves=[
                 sp.record(
-                    k_index=0,
                     mmr_pos=0,
                     data=sp.bytes(
                         "0x05070700020707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700020a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"
                     ),
                 ),
                 sp.record(
-                    k_index=1,
                     mmr_pos=1,
                     data=sp.bytes(
                         "0x05070700030707010000001441535349474e5f4a4f425f50524f434553534f520a0000002005070700030a000000160000eaeec9ada5305ad61fc452a5ee9f7d4f55f80467"

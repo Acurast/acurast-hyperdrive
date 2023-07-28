@@ -89,35 +89,30 @@ def test():
                             hash=sp.bytes(
                                 "0x2b97a4b75a93aa1ac8581fac0f7d4ab42406569409a737bdf9de584903b372c5"
                             ),
-                            k_index=2,
                             mmr_pos=3,
                         ),
                         1: sp.record(
                             hash=sp.bytes(
                                 "0xd279eb4bf22b2aeded31e65a126516215a9d93f83e3e425fdcd1a05ab347e535"
                             ),
-                            k_index=5,
                             mmr_pos=8,
                         ),
                         2: sp.record(
                             hash=sp.bytes(
                                 "0x38e18ac9b4d78020e0f164d6da9ea61b962ab1975bcf6e8e80e9a9fc2ae509f8"
                             ),
-                            k_index=0,
                             mmr_pos=15,
                         ),
                         3: sp.record(
                             hash=sp.bytes(
                                 "0x1a3930f70948f7eb1ceab07ecdb0967986091fd8b4b4f447406045431abd9795"
                             ),
-                            k_index=2,
                             mmr_pos=18,
                         ),
                         4: sp.record(
                             hash=sp.bytes(
                                 "0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9"
                             ),
-                            k_index=0,
                             mmr_pos=22,
                         ),
                     }
@@ -132,14 +127,12 @@ def test():
                         hash=sp.bytes(
                             "0x2b97a4b75a93aa1ac8581fac0f7d4ab42406569409a737bdf9de584903b372c5"
                         ),
-                        k_index=2,
                         mmr_pos=3,
                     ),
                     1: sp.record(
                         hash=sp.bytes(
                             "0xd279eb4bf22b2aeded31e65a126516215a9d93f83e3e425fdcd1a05ab347e535"
                         ),
-                        k_index=5,
                         mmr_pos=8,
                     ),
                 }
@@ -150,21 +143,18 @@ def test():
                         hash=sp.bytes(
                             "0x38e18ac9b4d78020e0f164d6da9ea61b962ab1975bcf6e8e80e9a9fc2ae509f8"
                         ),
-                        k_index=0,
                         mmr_pos=15,
                     ),
                     1: sp.record(
                         hash=sp.bytes(
                             "0x1a3930f70948f7eb1ceab07ecdb0967986091fd8b4b4f447406045431abd9795"
                         ),
-                        k_index=2,
                         mmr_pos=18,
                     ),
                     2: sp.record(
                         hash=sp.bytes(
                             "0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9"
                         ),
-                        k_index=0,
                         mmr_pos=22,
                     ),
                 }
@@ -180,7 +170,7 @@ def test():
                         0: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0x7463c9b814b5d9081938e21346fe8bf81a9a9a0dcfa7bcc03b644a361e395a3b"
                                     ),
@@ -192,7 +182,7 @@ def test():
                 sp.map(
                     {
                         0: sp.record(
-                            k_index=0,
+                            mmr_pos=0,
                             hash=sp.bytes(
                                 "0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9"
                             ),
@@ -214,13 +204,13 @@ def test():
                         0: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0x754310be011a7a378b07fa7cbac39dbedcadf645c518ddec58deeaa8c29e0634"
                                     ),
                                 ),
                                 1: sp.record(
-                                    k_index=3,
+                                    mmr_pos=3,
                                     hash=sp.bytes(
                                         "0x06be3c46e5a06d7b3e438a9d698f4319dc628624a63e484d97f00b92d09edce7"
                                     ),
@@ -233,13 +223,13 @@ def test():
                 sp.map(
                     {
                         0: sp.record(
-                            k_index=0,
+                            mmr_pos=0,
                             hash=sp.bytes(
                                 "0x38e18ac9b4d78020e0f164d6da9ea61b962ab1975bcf6e8e80e9a9fc2ae509f8"
                             ),
                         ),
                         1: sp.record(
-                            k_index=2,
+                            mmr_pos=2,
                             hash=sp.bytes(
                                 "0x1a3930f70948f7eb1ceab07ecdb0967986091fd8b4b4f447406045431abd9795"
                             ),
@@ -264,7 +254,6 @@ def test():
                 one=sp.map(
                     {
                         0: sp.record(
-                            k_index=0,
                             mmr_pos=22,
                             hash=sp.bytes(
                                 "0xe54ccfb12a140c2dddb6cf78d1c6121610260412c66d00658ed1267863427ab9"
@@ -357,14 +346,12 @@ def test():
                 one=sp.map(
                     {
                         0: sp.record(
-                            k_index=0,
                             mmr_pos=0,
                             hash=sp.bytes(
                                 "0x258ff0aa07802204fc15c478ff72d4f6caafdf31b05f814f4ec5106afa454a8e"
                             ),
                         ),
                         1: sp.record(
-                            k_index=1,
                             mmr_pos=1,
                             hash=sp.bytes(
                                 "0xaca4581bffa87509b6557397f88cf5c2534cf900892729cd82aaf3cebe025fd6"
@@ -392,13 +379,13 @@ def test():
                     sp.map(
                         {
                             0: sp.record(
-                                k_index=1,
+                                mmr_pos=1,
                                 hash=sp.bytes(
                                     "0x1000000000000000000000000000000000000000000000000000000000000000"
                                 ),
                             ),
                             1: sp.record(
-                                k_index=2,
+                                mmr_pos=2,
                                 hash=sp.bytes(
                                     "0x2000000000000000000000000000000000000000000000000000000000000000"
                                 ),
@@ -408,13 +395,13 @@ def test():
                     sp.map(
                         {
                             0: sp.record(
-                                k_index=5,
+                                mmr_pos=5,
                                 hash=sp.bytes(
                                     "0x5000000000000000000000000000000000000000000000000000000000000000"
                                 ),
                             ),
                             1: sp.record(
-                                k_index=3,
+                                mmr_pos=3,
                                 hash=sp.bytes(
                                     "0x3000000000000000000000000000000000000000000000000000000000000000"
                                 ),
@@ -427,25 +414,25 @@ def test():
         sp.map(
             {
                 0: sp.record(
-                    k_index=1,
+                    mmr_pos=1,
                     hash=sp.bytes(
                         "0x1000000000000000000000000000000000000000000000000000000000000000"
                     ),
                 ),
                 1: sp.record(
-                    k_index=2,
+                    mmr_pos=2,
                     hash=sp.bytes(
                         "0x2000000000000000000000000000000000000000000000000000000000000000"
                     ),
                 ),
                 2: sp.record(
-                    k_index=3,
+                    mmr_pos=3,
                     hash=sp.bytes(
                         "0x3000000000000000000000000000000000000000000000000000000000000000"
                     ),
                 ),
                 3: sp.record(
-                    k_index=5,
+                    mmr_pos=5,
                     hash=sp.bytes(
                         "0x5000000000000000000000000000000000000000000000000000000000000000"
                     ),
@@ -461,7 +448,7 @@ def test():
                         0: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=3,
+                                    mmr_pos=3,
                                     hash=sp.bytes(
                                         "0x065aff9602a25b0538643a8a81fa29fdaba2ae568b61ac217cea9233798ab14a"
                                     ),
@@ -471,7 +458,7 @@ def test():
                         1: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=0,
+                                    mmr_pos=0,
                                     hash=sp.bytes(
                                         "0x95e6f12aa5a8a8f4c4910166152849834cc388a8151c43298b99af0de7125e99"
                                     ),
@@ -481,7 +468,7 @@ def test():
                         2: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0xe43a34012e0a45ce6075ac377bf0a35ba316c9f324cafb9016e0e58032c01ec8"
                                     ),
@@ -491,7 +478,7 @@ def test():
                         3: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0xd21d5d4bde2d68d4179093c889138cefca3eb4e95e91554876153832848c8887"
                                     ),
@@ -501,7 +488,7 @@ def test():
                         4: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0x427e513e4be7a3b801b69ac49ffbd435a0e46114e2ab5e1258518017d4a6c595"
                                     ),
@@ -511,7 +498,7 @@ def test():
                         5: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0x7da58cfe1038b71aeef0b0f22ecaea7d6368916f5214a18fd971bd34c6ab86b1"
                                     ),
@@ -521,7 +508,7 @@ def test():
                         6: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0x479f391367a51f2b8f14ee907ebd21e3c7d1da2ea63946335e4ed13e4e882e23"
                                     ),
@@ -531,7 +518,7 @@ def test():
                         7: sp.map(
                             {
                                 0: sp.record(
-                                    k_index=1,
+                                    mmr_pos=1,
                                     hash=sp.bytes(
                                         "0x469d3885ec0cae3f1172312460226cfbc0a4140230f8761d0fb6bde6d83d8408"
                                     ),
@@ -543,7 +530,7 @@ def test():
                 sp.map(
                     {
                         0: sp.record(
-                            k_index=2,
+                            mmr_pos=2,
                             hash=sp.bytes(
                                 "0x0302a35dfed8f03aa94acf2a4e0f01909591e0e39baeacb2ba5fc9ab83a514ff"
                             ),
@@ -568,7 +555,6 @@ def test():
                 ],
                 leaves=[
                     sp.record(
-                        k_index=1,
                         mmr_pos=8,
                         hash=sp.keccak(
                             sp.bytes(
@@ -577,7 +563,6 @@ def test():
                         ),
                     ),
                     sp.record(
-                        k_index=0,
                         mmr_pos=10,
                         hash=sp.keccak(
                             sp.bytes(
@@ -603,7 +588,6 @@ def test():
                 ],
                 leaves=[
                     sp.record(
-                        k_index=1,
                         mmr_pos=1,
                         hash=sp.keccak(
                             sp.bytes(
@@ -632,7 +616,6 @@ def test():
                 ],
                 leaves=[
                     sp.record(
-                        k_index=0,
                         mmr_pos=94,
                         hash=sp.keccak(
                             sp.bytes(
@@ -641,7 +624,6 @@ def test():
                         ),
                     ),
                     sp.record(
-                        k_index=1,
                         mmr_pos=95,
                         hash=sp.keccak(
                             sp.bytes(
@@ -650,7 +632,6 @@ def test():
                         ),
                     ),
                     sp.record(
-                        k_index=2,
                         mmr_pos=97,
                         hash=sp.keccak(
                             sp.bytes(
@@ -659,7 +640,6 @@ def test():
                         ),
                     ),
                     sp.record(
-                        k_index=3,
                         mmr_pos=98,
                         hash=sp.keccak(
                             sp.bytes(
@@ -668,7 +648,6 @@ def test():
                         ),
                     ),
                     sp.record(
-                        k_index=4,
                         mmr_pos=101,
                         hash=sp.keccak(
                             sp.bytes(
@@ -677,7 +656,6 @@ def test():
                         ),
                     ),
                     sp.record(
-                        k_index=5,
                         mmr_pos=102,
                         hash=sp.keccak(
                             sp.bytes(

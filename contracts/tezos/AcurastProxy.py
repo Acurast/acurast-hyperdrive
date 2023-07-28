@@ -166,8 +166,6 @@ class Type:
         mmr_size=sp.TNat,
         leaves=sp.TList(
             sp.TRecord(
-                # Mountain specific index from top to bottom
-                k_index=sp.TNat,
                 # The general position in the tree
                 mmr_pos=sp.TNat,
                 # Encoded message
@@ -708,7 +706,6 @@ class AcurastProxy(sp.Contract):
                     mmr_size=arg.mmr_size,
                     leaves=arg.leaves.map(
                         lambda leaf: sp.record(
-                            k_index=leaf.k_index,
                             mmr_pos=leaf.mmr_pos,
                             hash=sp.keccak(leaf.data),
                         )
