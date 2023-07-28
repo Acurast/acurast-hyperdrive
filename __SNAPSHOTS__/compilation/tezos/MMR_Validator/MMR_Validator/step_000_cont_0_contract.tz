@@ -219,7 +219,7 @@ code
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 763; 
+                        PUSH int 693; 
                         FAILWITH;   
                       }
                       {}; 
@@ -261,7 +261,7 @@ code
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 770; 
+                        PUSH int 700; 
                         FAILWITH;   
                       }
                       {}; 
@@ -322,13 +322,13 @@ code
     PAIR;       
   };
 view
-  "verify_proof" (pair (list %leaves (pair (bytes %hash) (pair (nat %k_index) (nat %mmr_pos)))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) bool
+  "verify_proof" (pair (list %leaves (pair (bytes %hash) (nat %mmr_pos))) (pair (nat %mmr_size) (pair (list %proof bytes) (nat %snapshot)))) bool
   {
     UNPAIR;     
     DUP;        
     UNPAIR 4;   
     PUSH int 0; 
-    EMPTY_MAP int (pair bytes (pair nat nat)); 
+    EMPTY_MAP int (pair bytes nat); 
     DUP 7;      
     CAR;        
     ITER
@@ -437,7 +437,7 @@ view
         ISNAT;      
         IF_NONE
           {
-            PUSH int 612; 
+            PUSH int 542; 
             FAILWITH;   
           }
           {}; 
@@ -459,7 +459,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 577; 
+                PUSH int 507; 
                 FAILWITH;   
               }
               {}; 
@@ -471,7 +471,7 @@ view
             ISNAT;      
             IF_NONE
               {
-                PUSH int 628; 
+                PUSH int 558; 
                 FAILWITH;   
               }
               {}; 
@@ -509,7 +509,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 585; 
+                        PUSH int 515; 
                         FAILWITH;   
                       }
                       {}; 
@@ -522,7 +522,7 @@ view
                     ISNAT;      
                     IF_NONE
                       {
-                        PUSH int 586; 
+                        PUSH int 516; 
                         FAILWITH;   
                       }
                       {}; 
@@ -556,7 +556,7 @@ view
             DUP;        
             IF_NONE
               {
-                PUSH int 593; 
+                PUSH int 523; 
                 FAILWITH;   
               }
               {}; 
@@ -647,7 +647,7 @@ view
         DUP 2;      
         IF
           {
-            EMPTY_MAP int (pair bytes (pair nat nat)); 
+            EMPTY_MAP int (pair bytes nat); 
             PUSH nat 0; 
             DUP 5;      
             SIZE;       
@@ -655,9 +655,9 @@ view
             GT;         
             IF
               {
-                EMPTY_MAP int (pair bytes (pair nat nat)); 
+                EMPTY_MAP int (pair bytes nat); 
                 PUSH int 0; 
-                EMPTY_MAP int (pair bytes (pair nat nat)); 
+                EMPTY_MAP int (pair bytes nat); 
                 PUSH int 0; 
                 DUP;        
                 PUSH bool False; 
@@ -672,7 +672,7 @@ view
                       }
                       {
                         DUP;        
-                        GET 4;      
+                        CDR;        
                         DUP 10;     
                         COMPARE;    
                         LT;         
@@ -746,7 +746,7 @@ view
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 68; 
+                        PUSH int 60; 
                         FAILWITH;   
                       }
                       {}; 
@@ -787,11 +787,11 @@ view
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 279; 
+                        PUSH int 273; 
                         FAILWITH;   
                       }
                       {}; 
-                    GET 4;      
+                    CDR;        
                     COMPARE;    
                     EQ;         
                   }
@@ -811,7 +811,7 @@ view
                     GET;        
                     IF_NONE
                       {
-                        PUSH int 281; 
+                        PUSH int 275; 
                         FAILWITH;   
                       }
                       {}; 
@@ -831,20 +831,20 @@ view
                   {
                     NIL (pair bytes (pair nat nat)); 
                     PUSH int 0; 
-                    NIL (pair bytes (pair nat nat)); 
+                    NIL (pair bytes nat); 
                     DUP 5;      
                     ITER
                       {
                         CDR;        
                         CONS;       
                       }; 
-                    NIL (pair bytes (pair nat nat)); 
+                    NIL (pair bytes nat); 
                     SWAP;       
                     ITER
                       {
                         CONS;       
                       }; 
-                    NIL (pair bytes (pair nat nat)); 
+                    NIL (pair bytes nat); 
                     SWAP;       
                     ITER
                       {
@@ -854,7 +854,7 @@ view
                       {
                         DIG 2;      
                         DUP 2;      
-                        GET 4;      
+                        CDR;        
                         PUSH nat 0; 
                         DIG 3;      
                         CAR;        
@@ -1252,7 +1252,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 333; 
+                                    PUSH int 327; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1266,7 +1266,7 @@ view
                                 ISNAT;      
                                 IF_NONE
                                   {
-                                    PUSH int 628; 
+                                    PUSH int 558; 
                                     FAILWITH;   
                                   }
                                   {}; 
@@ -1284,7 +1284,7 @@ view
                                     ISNAT;      
                                     IF_NONE
                                       {
-                                        PUSH int 340; 
+                                        PUSH int 334; 
                                         FAILWITH;   
                                       }
                                       {}; 
@@ -1394,7 +1394,7 @@ view
                                             GET;        
                                             IF_NONE
                                               {
-                                                PUSH int 68; 
+                                                PUSH int 60; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -1451,7 +1451,7 @@ view
                                         GET;        
                                         IF_NONE
                                           {
-                                            PUSH int 68; 
+                                            PUSH int 60; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -1581,7 +1581,7 @@ view
                                             GET;        
                                             IF_NONE
                                               {
-                                                PUSH int 68; 
+                                                PUSH int 60; 
                                                 FAILWITH;   
                                               }
                                               {}; 
@@ -1637,7 +1637,7 @@ view
                                         GET;        
                                         IF_NONE
                                           {
-                                            PUSH int 68; 
+                                            PUSH int 60; 
                                             FAILWITH;   
                                           }
                                           {}; 
@@ -1747,7 +1747,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 75; 
+            PUSH int 67; 
             FAILWITH;   
           }
           {}; 
@@ -1766,7 +1766,7 @@ view
         GET;        
         IF_NONE
           {
-            PUSH int 75; 
+            PUSH int 67; 
             FAILWITH;   
           }
           {}; 
@@ -1832,7 +1832,7 @@ view
     GET;        
     IF_NONE
       {
-        PUSH int 298; 
+        PUSH int 292; 
         FAILWITH;   
       }
       {}; 

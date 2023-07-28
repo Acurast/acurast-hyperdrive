@@ -4,17 +4,9 @@ from contracts.tezos.libs.utils import generate_var, Decorator
 
 
 class Type:
-    Leaf = sp.TRecord(
-        # the leftmost index of a node
-        k_index=sp.TNat,
+    Node = sp.TRecord(
         # The position in the tree
         mmr_pos=sp.TNat,
-        # The hash of the position in the tree
-        hash=sp.TBytes,
-    ).right_comb()
-    Node = sp.TRecord(
-        # Distance of the node to the leftmost node
-        k_index=sp.TNat,
         # A hash of the node itself
         hash=sp.TBytes,
     ).right_comb()
@@ -39,7 +31,7 @@ class Type:
     Verify_proof_argument = sp.TRecord(
         snapshot=sp.TNat,
         mmr_size=sp.TNat,
-        leaves=sp.TList(Leaf),
+        leaves=sp.TList(Node),
         proof=sp.TList(sp.TBytes),
     ).right_comb()
 
@@ -81,6 +73,9 @@ class Iterator:
 
 @Decorator.generate_lambda()
 def merge_maps(arg):
+    """
+        Merge 2 maps (indexed lists) (l1, l2) by appending the entries of l2 to l1
+    """
     (l1, l2) = sp.match_pair(arg)
 
     result = sp.local(generate_var("result"), l1)
@@ -113,7 +108,7 @@ def merge(arg):
     ):
         left_el = left[left_i.value]
         right_el = right[right_i.value]
-        with sp.if_(left_el.k_index < right_el.k_index):
+        with sp.if_(left_el.mmr_pos < right_el.mmr_pos):
             sorted.value[sorted_index.value] = left_el
             left_i.value += 1
         with sp.else_():
@@ -214,7 +209,6 @@ class MultiProof:
             index = sp.local(generate_var("index"), 0)
             with sp.while_(index.value < current_layer_length):
                 node = sp.local(generate_var("node"), current_layer.value[index.value])
-                node.value.k_index = node.value.k_index / 2
                 with sp.if_((index.value + 1) >= current_layer_length):
                     next_layer.value[next_layer_index.value] = node.value
                 with sp.else_():
@@ -386,50 +380,6 @@ class MMR:
 
         return result.value
 
-    def calculate_peak_root2(peak_leaves, proof_iter, peak):
-        """
-        Calculate root hash of a sub peak of the merkle mountain
-
-        @param peak_leaves : A list of nodes to provide proof for
-        @param proof_iter  : A list of node hashes to traverse to compute the peak root hash
-        @param peak        : The index of the peak node
-        @return A tuple containing the peak root hash, and the peak root position in the merkle
-        """
-        res = sp.compute(MMR.mmr_leaf_to_node(peak_leaves))
-        leaves = sp.local(generate_var("leaves"), sp.fst(res))
-        current_layer = sp.local(generate_var("current_layer"), sp.snd(res))
-
-        height = sp.compute(MMR.pos_to_height(peak))
-        layers = sp.local(
-            generate_var("layers"),
-            sp.map(tkey=sp.TIntOrNat, tvalue=sp.TMap(sp.TIntOrNat, Type.Node)),
-        )
-
-        i = sp.local(generate_var("i"), 0)
-        in_loop = sp.local(generate_var("in_loop"), True)
-        with sp.while_(in_loop.value & (i.value < height)):
-            layers.value[i.value] = sp.map()
-
-            siblings = sp.compute(MMR.sibling_indices(current_layer.value))
-            diff = sp.compute(MMR.difference(siblings, current_layer.value))
-
-            diff_length = sp.compute(sp.len(diff))
-            with sp.if_(diff_length == 0):
-                in_loop.value = False
-            with sp.else_():
-                j = sp.local(generate_var("j"), 0)
-                with sp.for_("el", diff.elements()) as el:
-                    layers.value[i.value][j.value] = sp.record(
-                        k_index=el, hash=Iterator.next(proof_iter)
-                    )
-                    j.value += 1
-
-                current_layer.value = MMR.parent_indices(siblings)
-
-            i.value += 1
-
-        return MultiProof.calculate_root((layers.value, leaves.value))
-
     def difference(left, right):
         diff = sp.local(generate_var("diff"), sp.map())
         diff_count = sp.local(generate_var("diff_count"), 0)
@@ -499,26 +449,6 @@ class MMR:
             i.value += 1
 
         return parents.value
-
-    def mmr_leaf_to_node(leaves):
-        """
-        Convert Merkle mountain leaf to a Merkle node
-
-        @param leaves : A list of merkle mountain range leaves
-        @return a tuple with the list of merkle nodes and the list of nodes at 0 and 1 respectively
-        """
-        nodes = sp.local(generate_var("parents"), sp.map())
-        indices = sp.local(generate_var("indices"), sp.map())
-
-        index = sp.local(generate_var("index"), 0)
-        length = sp.compute(sp.len(leaves))
-        with sp.while_(index.value < length):
-            leaf = sp.compute(leaves[index.value])
-            nodes.value[index.value] = sp.record(k_index=leaf.k_index, hash=leaf.hash)
-            indices.value[index.value] = leaf.k_index
-            index.value += 1
-
-        return (nodes.value, indices.value)
 
     def leaves_for_peak(leaves, peak):
         """
@@ -905,42 +835,6 @@ class MMR_Validator(sp.Contract):
 
         # Validate proof result
         sp.result(root == computed_hash)
-
-    # @sp.entry_point(
-    #     parameter_type = sp.TRecord(
-    #         root = sp.TBytes,
-    #         proof = sp.TList(sp.TVariant(message = sp.TBytes, merge_op = sp.TBool, node = sp.TBytes))
-    #     )
-    # )
-    # def receive_message(self, arg):
-    #     progress_stack = sp.local(generate_var("progress_stack"), sp.map(tkey=sp.TIntOrNat, tvalue = sp.TBytes))
-    #     messages = sp.local(generate_var("messages"), sp.map())
-
-    #     with sp.for_("element", arg.proof) as el:
-    #         with el.match_cases() as value:
-    #             with value.match("message") as message:
-    #                 messages.value[sp.len(messages.value)] = message
-    #                 progress_stack.value[sp.len(progress_stack.value)] = message
-    #             with value.match("node") as node:
-    #                 progress_stack.value[sp.len(progress_stack.value)] = node
-    #             with value.match("merge_op") as reversed:
-    #                 stack_size = sp.compute(sp.len(progress_stack.value))
-    #                 sp.verify(stack_size >= 2, "EXPECTED_TWO_NODES")
-    #                 el1_index = abs(stack_size-2) # ABS is cheaper than IS_NAT (We already know that there are at least 2 nodes)
-    #                 el2_index = abs(stack_size-1) # ABS is cheaper than IS_NAT (We already know that there are at least 2 nodes)
-
-    #                 el1_bytes = sp.compute(progress_stack.value[el1_index])
-    #                 el2_bytes = sp.compute(progress_stack.value[el2_index])
-
-    #                 del progress_stack.value[el2_index]
-
-    #                 with sp.if_(reversed):
-    #                     progress_stack.value[el1_index] = sp.keccak(el2_bytes + el1_bytes)
-    #                 with sp.else_():
-    #                     progress_stack.value[el1_index] = sp.keccak(el1_bytes + el2_bytes)
-
-    #     sp.verify(arg.root == progress_stack.value[0], ("PROOF_INVALID", progress_stack.value))
-
 
 class MMR_Validator_Proxy(sp.Contract):
     class Error:
