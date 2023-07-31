@@ -18,14 +18,14 @@ def generate_var(postfix=None):
 
 
 class Decorator:
-    def generate_lambda(with_operations=False, recursive=False):
+    def generate_lambda(with_storage=None, with_operations=False, recursive=False):
         """
         A decorator that transforms a function into a Tezos Lambda
         """
 
         def transform(f):
             return sp.build_lambda(
-                f, with_operations=with_operations, recursive=recursive
+                f, with_storage=with_storage, with_operations=with_operations, recursive=recursive
             )
 
         return transform

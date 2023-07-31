@@ -11,6 +11,7 @@ from contracts.tezos.AcurastProxy import (
     Inlined as AcurastProxyInlined,
     Acurast_Token_Interface,
 )
+from contracts.tezos.libs.utils import Decorator
 from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
 
@@ -132,7 +133,7 @@ def test():
                         ),
                     }
                 ),
-                paused=False,
+                paused=True,
             ),
             outgoing_seq_id=0,
             outgoing_registry=sp.big_map(),
@@ -151,6 +152,31 @@ def test():
         )
     )
     scenario += consumer
+
+    ## Test generic call in configure entrypoint
+
+    scenario.verify(acurastProxy.balance == sp.tez(0))
+    scenario.verify(acurastProxy.data.config.paused)
+
+    @Decorator.generate_lambda(with_storage="read-write", with_operations=True)
+    def generic_action(self, unit):
+        sp.send(sp.sender, sp.tez(1))
+
+        self.data.config.paused = False
+
+    acurastProxy.configure(
+        [
+            sp.variant("generic", generic_action)
+        ]
+    ).run(
+        sender=admin.address,
+        amount=sp.tez(1)
+    )
+
+    scenario.verify(acurastProxy.balance == sp.tez(0))
+    scenario.verify(~acurastProxy.data.config.paused)
+
+    ##! Test generic call in configure entrypoint
 
     register_job_payload = sp.set_type_expr(
         sp.record(

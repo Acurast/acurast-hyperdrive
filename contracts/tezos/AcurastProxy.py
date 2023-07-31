@@ -19,7 +19,7 @@ from contracts.tezos.AcurastConsumer import (
 
 
 class Constants:
-    REVEAL_COST = sp.mutez(370)
+    REVEAL_COST = sp.mutez(1200)
 
 
 class Error:
@@ -210,7 +210,7 @@ class Type:
                 ).right_comb()
             ),
             set_paused=sp.TBool,
-            update_storage=sp.TLambda(Storage, Storage),
+            generic=sp.TLambda(sp.TUnit, sp.TUnit, with_storage="read-write", with_operations=True),
         ).right_comb()
     )
 
@@ -827,5 +827,5 @@ class AcurastProxy(sp.Contract):
                                 del self.data.config.ingoing_actions[action_to_remove]
                 with action.match("set_paused") as paused:
                     self.data.config.paused = paused
-                with action.match("update_storage") as lamb:
-                    self.data = lamb(self.data)
+                with action.match("generic") as lamb:
+                    sp.compute(lamb(sp.unit))
