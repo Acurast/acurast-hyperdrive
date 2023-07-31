@@ -13,55 +13,53 @@ sp.add_compilation_target(
     "AcurastProxy",
     AcurastProxy(),
     storage=sp.record(
-        config=sp.record(
-            governance_address=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-            merkle_aggregator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-            proof_validator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
-            outgoing_actions=sp.big_map(
-                {
-                    OutgoingActionKind.REGISTER_JOB: sp.record(
-                        function=OutgoingActionLambda.register_job,
-                        storage=sp.pack(
-                            sp.record(
-                                job_id_seq=sp.nat(0),
-                                token_address=sp.address(
-                                    "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
-                                ),
-                            )
-                        ),
-                    ),
-                    OutgoingActionKind.FINALIZE_JOB: sp.record(
-                        function=OutgoingActionLambda.finalize_job,
-                        storage=sp.bytes("0x"),
-                    ),
-                    OutgoingActionKind.TELEPORT_ACRST: sp.record(
-                        function=OutgoingActionLambda.teleport_acrst,
-                        storage=sp.pack(
-                            sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")
-                        ),
-                    ),
-                }
+        store=sp.record(
+            config=sp.record(
+                governance_address=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
+                merkle_aggregator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
+                proof_validator=sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"),
+                paused=False,
             ),
-            ingoing_actions=sp.big_map(
-                {
-                    IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
-                        function=IngoingActionLambda.assign_processor,
-                        storage=sp.bytes("0x"),
-                    ),
-                    IngoingActionKind.FINALIZE_JOB: sp.record(
-                        function=IngoingActionLambda.finalize_job,
-                        storage=sp.pack(
-                            sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")
-                        ),
-                    ),
-                }
-            ),
-            paused=False,
+            outgoing_seq_id=0,
+            outgoing_registry=sp.big_map(),
+            ingoing_seq_id=0,
+            job_information=sp.big_map(),
         ),
-        outgoing_seq_id=0,
-        outgoing_registry=sp.big_map(),
-        ingoing_seq_id=0,
-        job_information=sp.big_map(),
+        outgoing_actions=sp.big_map(
+            {
+                OutgoingActionKind.REGISTER_JOB: sp.record(
+                    function=OutgoingActionLambda.register_job,
+                    storage=sp.pack(
+                        sp.record(
+                            job_id_seq=sp.nat(0),
+                            token_address=sp.address(
+                                "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
+                            ),
+                        )
+                    ),
+                ),
+                OutgoingActionKind.FINALIZE_JOB: sp.record(
+                    function=OutgoingActionLambda.finalize_job,
+                    storage=sp.bytes("0x"),
+                ),
+                OutgoingActionKind.TELEPORT_ACRST: sp.record(
+                    function=OutgoingActionLambda.teleport_acrst,
+                    storage=sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
+                ),
+            }
+        ),
+        ingoing_actions=sp.big_map(
+            {
+                IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
+                    function=IngoingActionLambda.assign_processor,
+                    storage=sp.bytes("0x"),
+                ),
+                IngoingActionKind.FINALIZE_JOB: sp.record(
+                    function=IngoingActionLambda.finalize_job,
+                    storage=sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
+                ),
+            }
+        ),
     ),
 )
 

@@ -70,14 +70,15 @@ actions:
     code_path: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_contract.tz
     storage: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_storage.tz
     overrides:
-      config:
-        governance_address: admin_address
-        merkle_aggregator: IBCF_Aggragator
-        proof_validator: MMR_Validator_Proxy
-        paused: false
-      outgoing_seq_id: 0
-      ingoing_seq_id: 0
-      job_information: {}
+      store:
+        config:
+          governance_address: admin_address
+          merkle_aggregator: IBCF_Aggragator
+          proof_validator: MMR_Validator_Proxy
+          paused: false
+        outgoing_seq_id: 0
+        ingoing_seq_id: 0
+        job_information: {}
 
   - kind: origination
     contract_kind: AcurastConsumer

@@ -25,7 +25,10 @@ class Decorator:
 
         def transform(f):
             return sp.build_lambda(
-                f, with_storage=with_storage, with_operations=with_operations, recursive=recursive
+                f,
+                with_storage=with_storage,
+                with_operations=with_operations,
+                recursive=recursive,
             )
 
         return transform
