@@ -618,49 +618,37 @@ def test():
                     sp.record(
                         mmr_pos=94,
                         hash=sp.keccak(
-                            sp.bytes(
-                                "0x0507070030070701000000044e4f4f500a00000000"
-                            )
+                            sp.bytes("0x0507070030070701000000044e4f4f500a00000000")
                         ),
                     ),
                     sp.record(
                         mmr_pos=95,
                         hash=sp.keccak(
-                            sp.bytes(
-                                "0x0507070031070701000000044e4f4f500a00000000"
-                            )
+                            sp.bytes("0x0507070031070701000000044e4f4f500a00000000")
                         ),
                     ),
                     sp.record(
                         mmr_pos=97,
                         hash=sp.keccak(
-                            sp.bytes(
-                                "0x0507070032070701000000044e4f4f500a00000000"
-                            )
+                            sp.bytes("0x0507070032070701000000044e4f4f500a00000000")
                         ),
                     ),
                     sp.record(
                         mmr_pos=98,
                         hash=sp.keccak(
-                            sp.bytes(
-                                "0x0507070033070701000000044e4f4f500a00000000"
-                            )
+                            sp.bytes("0x0507070033070701000000044e4f4f500a00000000")
                         ),
                     ),
                     sp.record(
                         mmr_pos=101,
                         hash=sp.keccak(
-                            sp.bytes(
-                                "0x0507070034070701000000044e4f4f500a00000000"
-                            )
+                            sp.bytes("0x0507070034070701000000044e4f4f500a00000000")
                         ),
                     ),
                     sp.record(
                         mmr_pos=102,
                         hash=sp.keccak(
-                            sp.bytes(
-                                "0x0507070035070701000000044e4f4f500a00000000"
-                            )
+                            sp.bytes("0x0507070035070701000000044e4f4f500a00000000")
                         ),
                     ),
                 ],

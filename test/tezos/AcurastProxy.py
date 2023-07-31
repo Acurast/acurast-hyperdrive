@@ -100,46 +100,48 @@ def test():
     acurastProxy = AcurastProxy()
     acurastProxy.update_initial_storage(
         sp.record(
-            config=sp.record(
-                governance_address=admin.address,
-                merkle_aggregator=aggregator.address,
-                proof_validator=validator.address,
-                outgoing_actions=sp.big_map(
-                    {
-                        OutgoingActionKind.REGISTER_JOB: sp.record(
-                            function=OutgoingActionLambda.register_job,
-                            storage=sp.pack(
-                                sp.record(
-                                    job_id_seq=sp.nat(0),
-                                    token_address=acurastToken.address,
-                                )
-                            ),
-                        ),
-                        OutgoingActionKind.FINALIZE_JOB: sp.record(
-                            function=OutgoingActionLambda.finalize_job,
-                            storage=sp.bytes("0x"),
-                        ),
-                    }
+            store=sp.record(
+                config=sp.record(
+                    governance_address=admin.address,
+                    merkle_aggregator=aggregator.address,
+                    proof_validator=validator.address,
+                    paused=True,
                 ),
-                ingoing_actions=sp.big_map(
-                    {
-                        IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
-                            function=IngoingActionLambda.assign_processor,
-                            storage=sp.bytes("0x"),
-                        ),
-                        IngoingActionKind.FINALIZE_JOB: sp.record(
-                            function=IngoingActionLambda.finalize_job,
-                            storage=sp.pack(acurastToken.address),
-                        ),
-                    }
-                ),
-                paused=True,
+                outgoing_seq_id=0,
+                outgoing_registry=sp.big_map(),
+                ingoing_seq_id=0,
+                job_information=sp.big_map(),
             ),
-            outgoing_seq_id=0,
-            outgoing_registry=sp.big_map(),
-            ingoing_seq_id=0,
-            job_information=sp.big_map(),
-        )
+            outgoing_actions=sp.big_map(
+                {
+                    OutgoingActionKind.REGISTER_JOB: sp.record(
+                        function=OutgoingActionLambda.register_job,
+                        storage=sp.pack(
+                            sp.record(
+                                job_id_seq=sp.nat(0),
+                                token_address=acurastToken.address,
+                            )
+                        ),
+                    ),
+                    OutgoingActionKind.FINALIZE_JOB: sp.record(
+                        function=OutgoingActionLambda.finalize_job,
+                        storage=sp.bytes("0x"),
+                    ),
+                }
+            ),
+            ingoing_actions=sp.big_map(
+                {
+                    IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
+                        function=IngoingActionLambda.assign_processor,
+                        storage=sp.bytes("0x"),
+                    ),
+                    IngoingActionKind.FINALIZE_JOB: sp.record(
+                        function=IngoingActionLambda.finalize_job,
+                        storage=sp.pack(acurastToken.address),
+                    ),
+                }
+            ),
+        ),
     )
     scenario += acurastProxy
 
@@ -156,25 +158,20 @@ def test():
     ## Test generic call in configure entrypoint
 
     scenario.verify(acurastProxy.balance == sp.tez(0))
-    scenario.verify(acurastProxy.data.config.paused)
+    scenario.verify(acurastProxy.data.store.config.paused)
 
     @Decorator.generate_lambda(with_storage="read-write", with_operations=True)
     def generic_action(self, unit):
         sp.send(sp.sender, sp.tez(1))
 
-        self.data.config.paused = False
+        self.data.store.config.paused = False
 
-    acurastProxy.configure(
-        [
-            sp.variant("generic", generic_action)
-        ]
-    ).run(
-        sender=admin.address,
-        amount=sp.tez(1)
+    acurastProxy.configure([sp.variant("generic", generic_action)]).run(
+        sender=admin.address, amount=sp.tez(1)
     )
 
     scenario.verify(acurastProxy.balance == sp.tez(0))
-    scenario.verify(~acurastProxy.data.config.paused)
+    scenario.verify(~acurastProxy.data.store.config.paused)
 
     ##! Test generic call in configure entrypoint
 
@@ -286,7 +283,7 @@ def test():
     # scenario.verify(job_creator.balance == sp.mutez(11630))
 
     # Add 2 new jobs
-    actions = [register_job_action,register_job_action]
+    actions = [register_job_action, register_job_action]
     acurastProxy.send_actions(actions).run(
         sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )

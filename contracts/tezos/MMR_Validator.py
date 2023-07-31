@@ -74,7 +74,7 @@ class Iterator:
 @Decorator.generate_lambda()
 def merge_maps(arg):
     """
-        Merge 2 maps (indexed lists) (l1, l2) by appending the entries of l2 to l1
+    Merge 2 maps (indexed lists) (l1, l2) by appending the entries of l2 to l1
     """
     (l1, l2) = sp.match_pair(arg)
 
@@ -305,11 +305,7 @@ class MMR:
         queue_length = sp.local("queue_length", 0)
         with sp.for_("leaf", peak_leaves.values().rev()) as leaf:
             queue.value.push(
-                sp.record(
-                    position = leaf.mmr_pos,
-                    hash = leaf.hash,
-                    height = sp.nat(0)
-                )
+                sp.record(position=leaf.mmr_pos, hash=leaf.hash, height=sp.nat(0))
             )
             queue_length.value += 1
 
@@ -324,14 +320,18 @@ class MMR:
                     result.value = node.hash
                     break_loop.value = True
                 with sp.else_():
-                    next_height = sp.compute(sp.as_nat(MMR.pos_to_height(node.position + 1)))
+                    next_height = sp.compute(
+                        sp.as_nat(MMR.pos_to_height(node.position + 1))
+                    )
                     parent_pos = sp.local("parent_pos", 0)
                     parent_hash = sp.local("parent_hash", sp.bytes("0x"))
                     sibling_offset = sp.compute(MMR.sibling_offset(node.height))
 
                     with sp.if_(next_height > node.height):
                         # RIGHT
-                        sibling_pos = sp.compute(sp.as_nat(node.position - sibling_offset))
+                        sibling_pos = sp.compute(
+                            sp.as_nat(node.position - sibling_offset)
+                        )
                         parent_pos.value = sp.compute(node.position + 1)
                         with sp.match_cons(queue.value) as x2:
                             node2 = sp.compute(x2.head)
@@ -347,7 +347,9 @@ class MMR:
                     with sp.else_():
                         # LEFT
                         sibling_pos = sp.compute(node.position + sibling_offset)
-                        parent_pos.value = sp.compute(node.position + MMR.parent_offset(node.height))
+                        parent_pos.value = sp.compute(
+                            node.position + MMR.parent_offset(node.height)
+                        )
                         with sp.match_cons(queue.value) as x2:
                             node2 = sp.compute(x2.head)
                             with sp.if_(node2.position == sibling_pos):
@@ -362,13 +364,16 @@ class MMR:
 
                     with sp.if_(parent_pos.value <= peak_position):
                         # Add new node to the bottom of the queue
-                        new_queue = sp.local("new_queue", [
-                            sp.record(
-                                position = parent_pos.value,
-                                hash = sp.keccak(parent_hash.value),
-                                height = node.height + 1
-                            )
-                        ])
+                        new_queue = sp.local(
+                            "new_queue",
+                            [
+                                sp.record(
+                                    position=parent_pos.value,
+                                    hash=sp.keccak(parent_hash.value),
+                                    height=node.height + 1,
+                                )
+                            ],
+                        )
                         with sp.for_("item", queue.value) as item:
                             new_queue.value.push(item)
                         queue.value = new_queue.value
@@ -835,6 +840,7 @@ class MMR_Validator(sp.Contract):
 
         # Validate proof result
         sp.result(root == computed_hash)
+
 
 class MMR_Validator_Proxy(sp.Contract):
     class Error:
