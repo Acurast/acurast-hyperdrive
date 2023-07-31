@@ -334,18 +334,6 @@ class OutgoingActionLambda:
             owner=origin,
         )
 
-        # TODO: !IMPORTANT
-        # -------------------------------------
-        # Remove before going to production
-        acurast_token_contract = sp.contract(
-            Acurast_Token_Interface.BurnMintTokens,
-            storage.value.token_address,
-            "mint_tokens",
-        ).open_some(Error.INVALID_CONTRACT)
-        call_argument = [action_payload]
-        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
-        # -------------------------------------
-
         ## Burn the maximum reward amount that can be used by the job
         acurast_token_contract = sp.contract(
             Acurast_Token_Interface.BurnMintTokens,
