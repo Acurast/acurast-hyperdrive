@@ -1,0 +1,96 @@
+pytezos:
+  rpc_endpoint: https://rpc.tzbeta.net/
+  private_key: TBD
+known_addresses:
+  governance_address: TBD
+actions:
+
+  - kind: origination
+    contract_kind: Acurast_FA2_Token
+    name: Acurast_FA2_Token
+    code_path: __SNAPSHOTS__/compilation/tezos/ligo/fa2_single_asset_contract.tz
+    overrides:
+      admin:
+          admin: governance_address
+          paused: true
+      facilitators: []
+      assets:
+        token_metadata:
+          0:
+            token_id: 0
+            token_info:
+              symbol: "0x4143525354"
+              name: "0x4163757261737420546f6b656e"
+              decimals: "0x3138"
+        total_supply: 0
+      metadata:
+        "": "0x74657a6f732d73746f726167653a636f6e74656e74"
+        "content": "0x"
+
+  - kind: origination
+    contract_kind: IBCF_Aggragator
+    name: IBCF_Aggragator
+    code_path: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_contract.tz
+    storage: __SNAPSHOTS__/compilation/tezos/IBCF_Aggregator/IBCF_Aggregator/step_000_cont_0_storage.tz
+    overrides:
+      config:
+        administrator: governance_address
+        snapshot_duration: 5
+        max_state_size: 512
+
+  - kind: origination
+    contract_kind: MMR_Validator
+    name: MMR_Validator
+    code_path: __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator/step_000_cont_0_contract.tz
+    storage: __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator/step_000_cont_0_storage.tz
+    overrides:
+      config:
+        governance_address: governance_address
+        validators:
+        minimum_endorsements: 1
+      current_snapshot: 1
+      snapshot_submissions: {}
+      root: {}
+
+  - kind: origination
+    contract_kind: MMR_Validator_Proxy
+    name: MMR_Validator_Proxy
+    code_path: __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator_Proxy/step_000_cont_0_contract.tz
+    storage: __SNAPSHOTS__/compilation/tezos/MMR_Validator/MMR_Validator_Proxy/step_000_cont_0_storage.tz
+    overrides:
+      governance_address: governance_address
+      validator_address: MMR_Validator
+
+  - kind: origination
+    contract_kind: AcurastProxy
+    name: AcurastProxy
+    code_path: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_contract.tz
+    storage: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_storage.tz
+    overrides:
+      config:
+        governance_address: governance_address
+        merkle_aggregator: IBCF_Aggragator
+        proof_validator: MMR_Validator_Proxy
+        paused: false
+      outgoing_seq_id: 0
+      ingoing_seq_id: 0
+      job_information: {}
+
+  - kind: origination
+    contract_kind: AcurastConsumer
+    name: AcurastConsumer
+    code_path: __SNAPSHOTS__/compilation/tezos/AcurastConsumer/AcurastConsumer/step_000_cont_0_contract.tz
+    storage: __SNAPSHOTS__/compilation/tezos/AcurastConsumer/AcurastConsumer/step_000_cont_0_storage.tz
+    overrides: AcurastProxy
+
+  - kind: contract_call
+    contract_address: Acurast_FA2_Token
+    entrypoint: update_facilitators
+    argument:
+      -
+        add: AcurastProxy
+
+  # - kind: contract_call
+  #   contract_address: KT1DhbgV7TAkhmaZjNqtA4fediPQjzHsJDad
+  #   entrypoint: configure
+  #   micheline: __SNAPSHOTS__/compilation/tezos/AcurastProxy/CONFIGURE/step_000_expression.tz
