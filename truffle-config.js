@@ -35,6 +35,18 @@ module.exports = {
       timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
     },
+    sepolia: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [process.env["PRIVATE_KEY"]],
+          providerOrUrl: process.env["RPC_URL"],
+        }),
+      network_id: 11155111, // goerli's id
+      gas: 4465030,
+      confirmations: 2, // # of confirmations to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
     mumbai: {
       provider: () =>
         new HDWalletProvider({
@@ -75,7 +87,8 @@ module.exports = {
 
   // Set default mocha options here, use special reporters, etc.
   mocha: {
-    timeout: 100000,
+    timeout: 1000000,
+    enableTimeouts: false
   },
 
   // Configure your compilers
