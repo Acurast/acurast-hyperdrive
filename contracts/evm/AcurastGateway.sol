@@ -5,6 +5,7 @@
 pragma solidity ^0.8.17;
 
 import './MMR_Validator.sol';
+import './AcurastConsumer.sol';
 import './libs/Asset.sol';
 
 library OUT_ACTION_KIND {
@@ -329,7 +330,35 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
         proof_validator.verify_proof(proof.snapshot, proof.proof, leaves, proof.mmr_size);
     }
 
-    function fulfill() public {
+    function fulfill(uint128 job_id, bytes memory payload) public {
+        // Verify if sender is assigned to the job
+        require(contains_address(job_information[job_id].processors, msg.sender), "NOT_JOB_PROCESSOR");
+
+        // Re-fill processor fees
+        uint256 fee = job_information[job_id].expected_fullfilment_fee;
+        job_information[job_id].remaining_fee -= fee;
+
+        // Do not send a empty transaction
+        if(job_information[job_id].expected_fullfilment_fee > 0) {
+            // Transfer amount
+            (bool success,) = payable(msg.sender).call{value: fee}("");
+            // Emit an event if successful
+            if(success) {
+                emit FeeSentToProcessor(job_id, msg.sender, fee);
+            }
+        }
+
+        // Pass fulfillment payload to target contract
+        IAcurastConsumer(job_information[job_id].destination).fulfill(job_id, payload);
+    }
+
+    function contains_address(address[] memory processors, address processor) private pure returns (bool) {
+        for(uint i=0; i<processors.length; i++) {
+            if (processors[i] == processor) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function get_message(uint256 message_id) public view returns(bytes memory) {
