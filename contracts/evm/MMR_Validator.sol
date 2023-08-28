@@ -134,7 +134,7 @@ contract MMR_Validator is MerkleMountainRange {
     function verify_proof(uint128 snapshot_number, bytes32[] memory proof, MmrLeaf[] memory leaves, uint256 mmr_size) public view {
         bytes32 snapshot_root = get_state_root(snapshot_number);
 
-        require(MerkleMountainRange.VerifyProof(snapshot_root, proof, leaves, mmr_size), MMR_Validator_Err.PROOF_INVALID);
+        require(VerifyProof(snapshot_root, proof, leaves, mmr_size), MMR_Validator_Err.PROOF_INVALID);
     }
 
     /**

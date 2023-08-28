@@ -1,9 +1,8 @@
 const Web3 = require("web3");
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
-const BigNumber = require("bignumber.js");
-
 const MMR_Validator = artifacts.require("MMR_Validator");
+const AcurastAsset = artifacts.require("Asset");
 const AcurastGateway = artifacts.require("AcurastGateway");
 const AcurastGatewayV2 = artifacts.require("AcurastGatewayV2");
 
@@ -16,8 +15,13 @@ contract('AcurastGateway (proxy)', function ([alice, primary]) {
             [alice, primary],
             { from: primary }
           );
-        this.acurastGateway = await deployProxy(AcurastGateway, [this.mmr_validator.address], {initializer: 'initialize'});
+        this.acurastGateway = await deployProxy(AcurastGateway, [this.mmr_validator.address, primary], {initializer: 'initialize'});
         this.acurastGatewayV2 = await upgradeProxy(this.acurastGateway.address, AcurastGatewayV2);
+
+        this.acurast_asset = await AcurastAsset.new("Acurast Canary Asset", "ACU", primary);
+        await this.acurast_asset.mint(primary, 1000000, {from: primary});
+        await this.acurast_asset.set_manager(this.acurastGatewayV2.address, {from: primary});
+        await this.acurastGatewayV2.set_asset(this.acurast_asset.address, {from: primary});
     });
 
     // Test case
@@ -51,7 +55,7 @@ contract('AcurastGateway (proxy)', function ([alice, primary]) {
         // }
         //console.log(JSON.stringify(a(arg)))
         //console.log(await this.acurastGatewayV2.register_job(arg))
-        await this.acurastGatewayV2.register_job(arg, { value: 200 });
+        await this.acurastGatewayV2.register_job(arg, {from: primary, value: 200 });
     });
 
     it('Receive noop message', async function () {
