@@ -1,10 +1,11 @@
 const Web3 = require("web3");
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
+const BigNumber = require("bignumber.js");
+
 const MMR_Validator = artifacts.require("MMR_Validator");
 const AcurastGateway = artifacts.require("AcurastGateway");
 const AcurastGatewayV2 = artifacts.require("AcurastGatewayV2");
-
 
 contract('AcurastGateway (proxy)', function ([alice, primary]) {
     beforeEach(async function () {
@@ -20,51 +21,74 @@ contract('AcurastGateway (proxy)', function ([alice, primary]) {
     });
 
     // Test case
-    it('retrieve returns a value previously initialized', async function () {
+    it('Register a job', async function () {
         const arg = {
-            allowedSources: [],
-            allowOnlyVerifiedSources: true,
+            allowed_sources: [],
+            // allow_only_verified_sources: true,
             destination: "0x918eFEF09c0Ef0fDF488f1306466cEDD9E741b6b",
             requirements: {
-                slots: 0,
-                reward: 0,
-                minReputation: 0,
-                instantMatch: []
+                slots: 2,
+                reward: 11,
+                min_reputation: 100,
+                instant_match: []
             },
-            expectedFulfillmentFee: 0,
-            requiredModules: [],
+            expected_fullfilment_fee: 100,
+            required_modules: [],
             script: "0x00",
             schedule: {
-                duration: 0,
-                startTime: 0,
-                endTime: 0,
-                interval: 0,
-                maxStartDelay: 0,
+                duration: 10,
+                start_time: 10,
+                end_time: 20,
+                interval: 10,
+                max_start_delay: 10,
             },
-            memoryCapacity: 0,
-            networkRequests: 0,
-            storageCapacity: 0,
+            memory_capacity: 10,
+            network_requests: 10,
+            storage_capacity: 10,
         };
-        function a(o) {
-            return Object.values(o).map(v => typeof(v) == "object" ? a(v) : v);
-        }
+        // function a(o) {
+        //     return Object.values(o).map(v => typeof(v) == "object" ? a(v) : v);
+        // }
         //console.log(JSON.stringify(a(arg)))
         //console.log(await this.acurastGatewayV2.register_job(arg))
-        await this.acurastGatewayV2.register_job(arg);
+        await this.acurastGatewayV2.register_job(arg, { value: 200 });
     });
 
     it('Receive noop message', async function () {
         const snapshot = 1;
         const mmr_size = 3;
-        const root = "0x57f88dbc0f80032c952638b253c750b1b47e5247ab2a9b2092a7ede81c1bafa7";
-        const proof_items = ["0x1e98d6cc38508d55ed3a243dd1bdbfec3ad6d2c63e0c1c709f03586daf36d00b"];
+        const root = "0xf805950edaf6f0ee75cf7ba469c2ea381667f1b75d5bfacf1749500448019049";
+        const proof_items = ["0x79dd2180cc76e44fd7d3b6d1c89b9dfae07800741f7d36837d64bedd7300ed2e"];
         const leaves = [
             {
                 k_index: 1,
                 leaf_index: 1,
-                hash: Web3.utils.sha3(
-                    "0x00000000000000000000000000000000000000000000000000000000000000ff0000000000000000000000000000000000000000000000000000000000000001c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
-                ),
+                data: "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000000"
+            }
+        ];
+
+        await this.mmr_validator.submit_state_root(snapshot, root, { from: primary });
+        await this.mmr_validator.submit_state_root(snapshot, root, { from: alice });
+
+        const proof = {
+            snapshot,
+            mmr_size,
+            leaves,
+            proof: proof_items,
+        }
+        await this.acurastGatewayV2.receive_messages(proof)
+    });
+
+    it('Receive assign_job_processor message', async function () {
+        const snapshot = 1;
+        const mmr_size = 3;
+        const root = "0x4a1b0f75b84c5889aabb63aa60e239dd31a6984a7859669e728f701143e088b6";
+        const proof_items = ["0x7f2b55cdca847a711b533639374ffbc98e176c9360af938b70fa72a198ca8c5a"];
+        const leaves = [
+            {
+                k_index: 1,
+                leaf_index: 1,
+                data: "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000d91e25b70ca8d302d242ba96dc032673cfbc66c9"
             }
         ];
 
