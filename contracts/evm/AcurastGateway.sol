@@ -12,6 +12,24 @@ library OUT_ACTION_KIND {
     uint16 constant FINALIZE_JOB = 2;
 }
 
+library IN_ACTION_KIND {
+    uint16 constant ASSIGN_JOB_PROCESSOR = 0;
+    uint16 constant FINALIZE_JOB = 1;
+    uint16 constant NOOP = 255;
+}
+
+library JOB_STATUS {
+    // Status after a job got registered.
+    uint8 constant Open = 0;
+    // Status after a valid match for a job got submitted.
+    uint8 constant Matched = 1;
+    // Status after all processors have acknowledged the job.
+    uint8 constant Assigned = 2;
+    // Status when a job has been finalized or cancelled
+    uint8 constant FinalizedOrCancelled = 3;
+
+}
+
 struct JobInformation {
     address creator;
     address destination;
@@ -35,30 +53,30 @@ struct JobMatch {
 struct JobRequirements {
     uint8 slots;
     uint128 reward;
-    uint128 minReputation;
-    JobMatch[] instantMatch;
+    uint128 min_reputation;
+    JobMatch[] instant_match;
 }
 
 struct JobSchedule {
     uint64 duration;
-    uint64 startTime;
-    uint64 endTime;
+    uint64 start_time;
+    uint64 end_time;
     uint64 interval;
-    uint64 maxStartDelay;
+    uint64 max_start_delay;
 }
 
 struct RegisterJobPayload {
-    bytes32[] allowedSources;
-    bool allowOnlyVerifiedSources;
+    bytes32[] allowed_sources;
+    bool allow_only_verified_sources;
     address destination;
     JobRequirements requirements;
-    uint256 expectedFulfillmentFee;
-    uint16[] requiredModules;
+    uint256 expected_fullfilment_fee;
+    uint16[] required_modules;
     bytes script;
     JobSchedule schedule;
-    uint32 memoryCapacity;
-    uint32 networkRequests;
-    uint32 storageCapacity;
+    uint32 memory_capacity;
+    uint32 network_requests;
+    uint32 storage_capacity;
 }
 
 struct AcurastJobRegistration {
@@ -78,6 +96,17 @@ struct Message {
     uint16 action;
     address origin;
     bytes payload;
+}
+
+struct MessageReceived {
+    uint16 action;
+    uint128 messageId;
+    bytes payload;
+}
+
+struct AssignJob {
+    uint128 job_id;
+    address processor;
 }
 
 struct UnhashedLeaf {
@@ -116,7 +145,24 @@ contract AcurastGateway is AcurastGatewayStorage {
     }
 }
 
+library Helper {
+    function compute_execution_count(uint64 start_time, uint64 end_time, uint64 interval) internal pure returns (uint64) {
+        require(start_time <= end_time, "INVALID_SCHEDULE");
+        return (end_time - start_time) / interval;
+    }
+
+    function compute_maximum_fees(uint64 execution_count, uint16 slots, uint256 expected_fullfilment_fee) internal pure returns (uint256) {
+        return slots * execution_count * expected_fullfilment_fee;
+    }
+
+    function compute_maximum_reward(uint64 execution_count, uint8 slots, uint256 reward_per_execution) internal pure returns (uint256) {
+        return slots * execution_count * reward_per_execution;
+    }
+}
+
 contract AcurastGatewayV2 is AcurastGatewayStorage {
+    event ReceivedMessage(MessageReceived);
+
     /**
      * Send outgoing action
      */
@@ -136,22 +182,67 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
     /**
      * This function can be called by users to register Acurast jobs.
      */
-    function register_job(RegisterJobPayload memory payload) public {
+    function register_job(RegisterJobPayload memory payload) public payable {
         // Increase job id sequence
         job_seq_id += 1;
 
         AcurastJobRegistration memory action = AcurastJobRegistration(
             job_seq_id,
-            payload.allowedSources,
-            payload.allowOnlyVerifiedSources,
+            payload.allowed_sources,
+            payload.allow_only_verified_sources,
             payload.requirements,
-            payload.requiredModules,
+            payload.required_modules,
             payload.script,
             payload.schedule,
-            payload.memoryCapacity,
-            payload.networkRequests,
-            payload.storageCapacity
+            payload.memory_capacity,
+            payload.network_requests,
+            payload.storage_capacity
         );
+
+        // Get the number of times the job will execute
+        uint64 execution_count = Helper.compute_execution_count(
+            payload.schedule.start_time,
+            payload.schedule.end_time,
+            payload.schedule.interval
+        );
+
+        // Get the mamimum amount of rewards to be paid to the processors for executing the job
+        uint256 maximum_reward = Helper.compute_maximum_reward(
+            execution_count,
+            payload.requirements.slots,
+            payload.requirements.reward
+        );
+
+        // TODO: burn tokens on the EVM side (The registration action will mint the tokens on Acurast)
+        // Implement an Acurast token as ERC20
+
+
+        // Get the expected fees to be paid to the processors and verify
+        // if the sender provided enough balance to cover the costs
+        uint256 expected_fee = Helper.compute_maximum_fees(
+            execution_count,
+            payload.requirements.slots,
+            payload.expected_fullfilment_fee
+        );
+        require(msg.value == expected_fee, "INVALID_FEE_AMOUNT");
+
+        address[] memory empty;
+        JobInformation memory job_info = JobInformation(
+            msg.sender,
+            payload.destination,
+            empty,
+            payload.expected_fullfilment_fee,
+            expected_fee, // remaining_fee
+            maximum_reward, // maximum_reward
+            payload.requirements.slots,
+            JOB_STATUS.Open, // status
+            payload.schedule.start_time,
+            payload.schedule.end_time,
+            payload.schedule.interval,
+            ""
+        );
+        // Store the jonb information
+        job_information[job_seq_id] = job_info;
 
         send_message(OUT_ACTION_KIND.REGISTER_JOB, abi.encode(action));
     }
@@ -176,17 +267,29 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
 
     function receive_messages(ReceiveMessagesPayload memory proof) public {
         MmrLeaf[] memory leaves = new MmrLeaf[](proof.leaves.length);
-        bytes[] memory messages = new bytes[](proof.leaves.length);
+        //MessageReceived[] memory messages = new ReceivedMessage[](proof.leaves.length);
         for (uint i=0; i<proof.leaves.length; i++) {
             UnhashedLeaf memory leave = proof.leaves[i];
-            messages[i] = leave.data;
             leaves[i] = MmrLeaf(leave.k_index, leave.leaf_index, keccak256(leave.data));
+            // Process message
+            // If the proof is invalid, it will be reverted at the end.
+            MessageReceived memory message;
+            (message) = abi.decode(leave.data, (MessageReceived));
+            if (message.action == IN_ACTION_KIND.NOOP) {
+                // DO NOTHING
+            } else if (message.action == IN_ACTION_KIND.ASSIGN_JOB_PROCESSOR) {
+                // Decode action payload
+                AssignJob memory action;
+                (action) = abi.decode(message.payload, (AssignJob));
+
+                // Assign processor to the job
+                job_information[action.job_id].processors.push(action.processor);
+            }
+            emit ReceivedMessage(message);
         }
 
         // Validate messages proof, this call will revert if the proof is invalid.
         proof_validator.verify_proof(proof.snapshot, proof.proof, leaves, proof.mmr_size);
-
-        // Process messages
     }
 
     function get_message(uint256 message_id) public view returns(bytes memory) {
