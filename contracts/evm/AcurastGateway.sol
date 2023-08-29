@@ -106,10 +106,19 @@ struct MessageReceived {
     bytes payload;
 }
 
+/// Incoming action payloads
+
 struct AssignJob {
     uint128 job_id;
     address processor;
 }
+
+struct FinalizeJob {
+    uint128 job_id;
+    uint256 unused_reward;
+}
+
+//! Incoming action payloads
 
 struct UnhashedLeaf {
     // The leftmost index of a node
@@ -183,13 +192,39 @@ library Helper {
 
 abstract contract IncomingActionHandler is AcurastGatewayStorage {
     event FeeSentToProcessor(uint128, address, uint256);
+    event RefundJobCreator(uint128, uint256);
 
     function noop() internal {
         // DO NOTHING
     }
 
-    function finalize_job() internal {
-        // TODO
+    function finalize_job(bytes memory payload) internal {
+        // Decode action payload
+        FinalizeJob memory action;
+        (action) = abi.decode(payload, (FinalizeJob));
+
+        // Assign processor to the job
+        JobInformation memory job = job_information[action.job_id];
+
+        // Update job status
+        job.status = JOB_STATUS.FINALIZED_OR_CANCELLED;
+
+        // Send unused fees to the job creator
+        if(job.remaining_fee > 0) {
+            (bool success,) = payable(job.creator).call{value: job.remaining_fee}("");
+            // Emit an event if successful
+            if(success) {
+                emit RefundJobCreator(action.job_id, job.remaining_fee);
+                job.remaining_fee = 0;
+            }
+
+            // Mint unused rewards back to the job creator
+            require(action.unused_reward <= job.maximum_reward, "ABOVE_MAXIMUM_REWARD");
+            acurast_asset.mint(job.creator, action.unused_reward);
+
+            // Update job information
+            job_information[action.job_id] = job;
+        }
     }
 
     function assign_job_processor(bytes memory payload) internal {
@@ -361,7 +396,7 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
                 // Explicitly do nothing
                 IncomingActionHandler.noop();
             } if (message.action == IN_ACTION_KIND.FINALIZE_JOB) {
-                IncomingActionHandler.finalize_job();
+                IncomingActionHandler.finalize_job(message.payload);
             } else if (message.action == IN_ACTION_KIND.ASSIGN_JOB_PROCESSOR) {
                 IncomingActionHandler.assign_job_processor(message.payload);
             }
