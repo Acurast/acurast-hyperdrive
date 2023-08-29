@@ -255,7 +255,9 @@ abstract contract IncomingActionHandler is AcurastGatewayStorage {
 }
 
 contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
-    event ReceivedMessage(MessageReceived);
+    event ReceivedMessages(MessageReceived[]);
+    event CouldNotProcessIncomingMessages(string, UnhashedLeaf[]);
+    event CouldNotProcessIncomingMessages(bytes, UnhashedLeaf[]);
 
     /**
      * Send outgoing action
@@ -381,16 +383,15 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
         send_message(OUT_ACTION_KIND.FINALIZE_JOB, encoded_payload);
     }
 
-    function receive_messages(ReceiveMessagesPayload memory proof) public {
-        MmrLeaf[] memory leaves = new MmrLeaf[](proof.leaves.length);
-        //MessageReceived[] memory messages = new ReceivedMessage[](proof.leaves.length);
-        for (uint i=0; i<proof.leaves.length; i++) {
-            UnhashedLeaf memory leave = proof.leaves[i];
-            leaves[i] = MmrLeaf(leave.k_index, leave.leaf_index, keccak256(leave.data));
+    function process_incoming_messages(bytes[] memory leaves) public returns (MessageReceived[] memory) {
+        // This method can only be called by this contract
+        require(msg.sender == address(this), "NOT_AUTHORIZED");
+
+        MessageReceived[] memory messages = new MessageReceived[](leaves.length);
+        for (uint i=0; i<messages.length; i++) {
             // Process message
-            // If the proof is invalid, it will be reverted at the end.
             MessageReceived memory message;
-            (message) = abi.decode(leave.data, (MessageReceived));
+            (message) = abi.decode(leaves[i], (MessageReceived));
             // Process actions by kind
             if (message.action == IN_ACTION_KIND.NOOP) {
                 // Explicitly do nothing
@@ -400,7 +401,30 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
             } else if (message.action == IN_ACTION_KIND.ASSIGN_JOB_PROCESSOR) {
                 IncomingActionHandler.assign_job_processor(message.payload);
             }
-            emit ReceivedMessage(message);
+            messages[i] = message;
+        }
+
+        return messages;
+    }
+
+    function receive_messages(ReceiveMessagesPayload memory proof) public {
+        MmrLeaf[] memory leaves = new MmrLeaf[](proof.leaves.length);
+        bytes[] memory leaves_data = new bytes[](proof.leaves.length);
+        for (uint i=0; i<proof.leaves.length; i++) {
+            UnhashedLeaf memory leave = proof.leaves[i];
+            leaves[i] = MmrLeaf(leave.k_index, leave.leaf_index, keccak256(leave.data));
+            leaves_data[i] = leave.data;
+        }
+
+        // Process messages
+        // If the proof is invalid, it will be reverted at the end.
+        try AcurastGatewayV2(this).process_incoming_messages(leaves_data) returns (MessageReceived[] memory messages) {
+            emit ReceivedMessages(messages);
+        } catch Error(string memory err) {
+            // This may occur if there is an overflow with the two numbers and the `AddNumbers` contract explicitly fails with a `revert()`
+            emit CouldNotProcessIncomingMessages(err, proof.leaves);
+        } catch (bytes memory err) {
+            emit CouldNotProcessIncomingMessages(err, proof.leaves);
         }
 
         // Validate messages proof, this call will revert if the proof is invalid.
