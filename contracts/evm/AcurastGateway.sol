@@ -181,9 +181,46 @@ library Helper {
     }
 }
 
-contract AcurastGatewayV2 is AcurastGatewayStorage {
-    event ReceivedMessage(MessageReceived);
+abstract contract IncomingActionHandler is AcurastGatewayStorage {
     event FeeSentToProcessor(uint128, address, uint256);
+
+    function noop() internal {
+        // DO NOTHING
+    }
+
+    function finalize_job() internal {
+        // TODO
+    }
+
+    function assign_job_processor(bytes memory payload) internal {
+        // Decode action payload
+        AssignJob memory action;
+        (action) = abi.decode(payload, (AssignJob));
+
+        // Assign processor to the job
+        job_information[action.job_id].processors.push(action.processor);
+
+        // Send initial fees to the processor
+        uint256 initial_fee = job_information[action.job_id].expected_fullfilment_fee;
+
+        job_information[action.job_id].remaining_fee -= initial_fee;
+
+        // Transfer amount
+        (bool success,) = payable(action.processor).call{value: initial_fee}("");
+        // Emit an event if successful
+        if(success) {
+            emit FeeSentToProcessor(action.job_id, action.processor, initial_fee);
+        }
+
+        // Updated job status
+        if(job_information[action.job_id].processors.length == job_information[action.job_id].slots) {
+            job_information[action.job_id].status = JOB_STATUS.ASSIGNED;
+        }
+    }
+}
+
+contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
+    event ReceivedMessage(MessageReceived);
 
     /**
      * Send outgoing action
@@ -272,6 +309,15 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
      * This function can be called by users to register Acurast jobs.
      */
     function deregister_job(uint128 job_id) public {
+        JobInformation memory job = job_information[job_id];
+
+        // Verify if job can be finalized
+        require(job.status == JOB_STATUS.OPEN, "CANNOT_CANCEL_JOB");
+
+        // Only the job creator can deregister the job
+        address origin = msg.sender;
+        require(job.creator == origin, "NOT_JOB_CREATOR");
+
         bytes memory encoded_payload = abi.encode(job_id);
 
         send_message(OUT_ACTION_KIND.DEREGISTER_JOB, encoded_payload);
@@ -281,6 +327,20 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
      * This function can be called by users to register Acurast jobs.
      */
     function finalize_job(uint128[] memory job_ids) public {
+        for(uint i=0; i<job_ids.length; i++) {
+            // Get job information
+            JobInformation memory job = job_information[job_ids[i]];
+
+            // Verify if job can be finalized
+            bool is_open = job.status == JOB_STATUS.OPEN;
+            bool is_expired = (job.end_time / 1000) < block.timestamp;
+
+            require(is_open || is_expired, "CANNOT_FINALIZE_JOB");
+
+            // Only the job creator can deregister the job
+            require(job.creator == msg.sender, "NOT_JOB_CREATOR");
+        }
+
         bytes memory encoded_payload = abi.encode(job_ids);
 
         send_message(OUT_ACTION_KIND.FINALIZE_JOB, encoded_payload);
@@ -296,32 +356,14 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
             // If the proof is invalid, it will be reverted at the end.
             MessageReceived memory message;
             (message) = abi.decode(leave.data, (MessageReceived));
+            // Process actions by kind
             if (message.action == IN_ACTION_KIND.NOOP) {
-                // DO NOTHING
+                // Explicitly do nothing
+                IncomingActionHandler.noop();
+            } if (message.action == IN_ACTION_KIND.FINALIZE_JOB) {
+                IncomingActionHandler.finalize_job();
             } else if (message.action == IN_ACTION_KIND.ASSIGN_JOB_PROCESSOR) {
-                // Decode action payload
-                AssignJob memory action;
-                (action) = abi.decode(message.payload, (AssignJob));
-
-                // Assign processor to the job
-                job_information[action.job_id].processors.push(action.processor);
-
-                // Send initial fees to the processor
-                uint256 initial_fee = job_information[action.job_id].expected_fullfilment_fee;
-
-                job_information[action.job_id].remaining_fee -= initial_fee;
-
-                // Transfer amount
-                (bool success,) = payable(action.processor).call{value: initial_fee}("");
-                // Emit an event if successful
-                if(success) {
-                    emit FeeSentToProcessor(action.job_id, action.processor, initial_fee);
-                }
-
-                // Updated job status
-                if(job_information[action.job_id].processors.length == job_information[action.job_id].slots) {
-                    job_information[action.job_id].status = JOB_STATUS.ASSIGNED;
-                }
+                IncomingActionHandler.assign_job_processor(message.payload);
             }
             emit ReceivedMessage(message);
         }
@@ -330,6 +372,12 @@ contract AcurastGatewayV2 is AcurastGatewayStorage {
         proof_validator.verify_proof(proof.snapshot, proof.proof, leaves, proof.mmr_size);
     }
 
+    /**
+     * Proxy job fulfillment to the respective destination and
+     * re-fill the processor address with the execution fees.
+     *
+     * Also, ensure that the caller is a valid processor address.
+     */
     function fulfill(uint128 job_id, bytes memory payload) public {
         // Verify if sender is assigned to the job
         require(contains_address(job_information[job_id].processors, msg.sender), "NOT_JOB_PROCESSOR");
