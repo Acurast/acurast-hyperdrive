@@ -29,7 +29,7 @@ class Error:
     INVALID_VIEW = "INVALID_VIEW"
     NOT_GOVERNANCE = "NOT_GOVERNANCE"
     OUTGOING_ACTION_NOT_SUPPORTED = "OUTGOING_ACTION_NOT_SUPPORTED"
-    INGOING_ACTION_NOT_SUPPORTED = "INGOING_ACTION_NOT_SUPPORTED"
+    INCOMING_ACTION_NOT_SUPPORTED = "INCOMING_ACTION_NOT_SUPPORTED"
     COULD_NOT_UNPACK = "COULD_NOT_UNPACK"
     CANNOT_DECODE_ACTION = "CANNOT_DECODE_ACTION"
     CANNOT_PARSE_ACTION_STORAGE = "CANNOT_PARSE_ACTION_STORAGE"
@@ -94,7 +94,7 @@ class Type:
         storage=sp.TNat,
     ).right_comb()
 
-    # Ingoing actions
+    # Incoming actions
     AssignProcessor = sp.TRecord(
         job_id=sp.TNat,
         processor_address=sp.TAddress,
@@ -132,7 +132,7 @@ class Type:
         ).right_comb(),
         outgoing_seq_id=sp.TNat,
         outgoing_registry=sp.TBigMap(sp.TNat, sp.TNat),
-        ingoing_seq_id=sp.TNat,
+        incoming_seq_id=sp.TNat,
         job_information=JobInformationIndex,
     )
 
@@ -152,18 +152,18 @@ class Type:
         storage=ActionStorage,
     ).right_comb()
 
-    IngoingContext = sp.TRecord(action_id=sp.TNat, store=Store)
-    IngoingActionLambdaArg = sp.TRecord(
-        context=IngoingContext,
+    IncomingContext = sp.TRecord(action_id=sp.TNat, store=Store)
+    IncomingActionLambdaArg = sp.TRecord(
+        context=IncomingContext,
         payload=sp.TBytes,
         storage=ActionStorage,
     ).right_comb()
-    IngoingActionLambdaReturn = sp.TRecord(
-        context=IngoingContext, new_action_storage=ActionStorage
+    IncomingActionLambdaReturn = sp.TRecord(
+        context=IncomingContext, new_action_storage=ActionStorage
     ).right_comb()
-    IngoingActionLambda = sp.TRecord(
+    IncomingActionLambda = sp.TRecord(
         function=sp.TLambda(
-            IngoingActionLambdaArg, IngoingActionLambdaReturn, with_operations=True
+            IncomingActionLambdaArg, IncomingActionLambdaReturn, with_operations=True
         ),
         storage=ActionStorage,
     ).right_comb()
@@ -191,7 +191,7 @@ class Type:
 
     Storage = sp.TRecord(
         outgoing_actions=sp.TBigMap(sp.TString, OutgoingActionLambda),
-        ingoing_actions=sp.TBigMap(sp.TString, IngoingActionLambda),
+        incoming_actions=sp.TBigMap(sp.TString, IncomingActionLambda),
         store=Store,
     )
 
@@ -206,9 +206,9 @@ class Type:
                     remove=sp.TString,
                 ).right_comb()
             ),
-            update_ingoing_actions=sp.TList(
+            update_incoming_actions=sp.TList(
                 sp.TVariant(
-                    add=sp.TRecord(kind=sp.TString, function=IngoingActionLambda),
+                    add=sp.TRecord(kind=sp.TString, function=IncomingActionLambda),
                     remove=sp.TString,
                 ).right_comb()
             ),
@@ -220,7 +220,7 @@ class Type:
     )
 
     AcurastMessage = sp.TRecord(
-        ingoing_action_id=sp.TNat, kind=sp.TString, payload=sp.TBytes
+        incoming_action_id=sp.TNat, kind=sp.TString, payload=sp.TBytes
     )
 
 
@@ -266,7 +266,7 @@ class OutgoingActionKind:
     TELEPORT_ACRST = "TELEPORT_ACRST"
 
 
-class IngoingActionKind:
+class IncomingActionKind:
     ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
     FINALIZE_JOB = "FINALIZE_JOB"
     NOOP = "NOOP"
@@ -562,16 +562,16 @@ class OutgoingActionLambda:
         )
 
 
-class IngoingActionLambda:
+class IncomingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
     def noop(arg):
-        sp.set_type(arg, Type.IngoingActionLambdaArg)
+        sp.set_type(arg, Type.IncomingActionLambdaArg)
 
         sp.result(sp.record(context=arg.context, new_action_storage=arg.storage))
 
     @Decorator.generate_lambda(with_operations=True)
     def assign_processor(arg):
-        sp.set_type(arg, Type.IngoingActionLambdaArg)
+        sp.set_type(arg, Type.IncomingActionLambdaArg)
 
         context = sp.local("context", arg.context)
 
@@ -609,7 +609,7 @@ class IngoingActionLambda:
 
     @Decorator.generate_lambda(with_operations=True)
     def finalize_job(arg):
-        sp.set_type(arg, Type.IngoingActionLambdaArg)
+        sp.set_type(arg, Type.IncomingActionLambdaArg)
 
         StorageType = sp.TAddress
         acurast_token_address = sp.compute(
@@ -733,19 +733,19 @@ class AcurastProxy(sp.Contract):
             )
 
             # Ensure messages are processed sequentially
-            sp.verify(action.ingoing_action_id == self.data.store.ingoing_seq_id)
+            sp.verify(action.incoming_action_id == self.data.store.incoming_seq_id)
             # The id coming from acurast starts on 0
-            self.data.store.ingoing_seq_id += 1
+            self.data.store.incoming_seq_id += 1
 
-            # Get ingoing action lambda
-            # - Fail with "INGOING_ACTION_NOT_SUPPORTED" if actions is not known
-            action_lambda = self.data.ingoing_actions.get(
-                action.kind, message=Error.INGOING_ACTION_NOT_SUPPORTED
+            # Get incoming action lambda
+            # - Fail with "INCOMING_ACTION_NOT_SUPPORTED" if actions is not known
+            action_lambda = self.data.incoming_actions.get(
+                action.kind, message=Error.INCOMING_ACTION_NOT_SUPPORTED
             )
 
             lambda_argument = sp.record(
                 context=sp.record(
-                    action_id=self.data.store.ingoing_seq_id,
+                    action_id=self.data.store.incoming_seq_id,
                     store=self.data.store,
                 ),
                 payload=action.payload,
@@ -755,7 +755,7 @@ class AcurastProxy(sp.Contract):
 
             # Commit storage changes
             self.data.store = result.context.store
-            self.data.ingoing_actions[action.kind].storage = result.new_action_storage
+            self.data.incoming_actions[action.kind].storage = result.new_action_storage
 
     @sp.entry_point(parameter_type=Type.FulfillArgument)
     def fulfill(self, arg):
@@ -816,15 +816,15 @@ class AcurastProxy(sp.Contract):
                                 ] = action_to_add.function
                             with action_kind.match("remove") as action_to_remove:
                                 del self.data.outgoing_actions[action_to_remove]
-                with action.match("update_ingoing_actions") as update_ingoing_actions:
-                    with sp.for_("updates", update_ingoing_actions) as updates:
+                with action.match("update_incoming_actions") as update_incoming_actions:
+                    with sp.for_("updates", update_incoming_actions) as updates:
                         with updates.match_cases() as action_kind:
                             with action_kind.match("add") as action_to_add:
-                                self.data.ingoing_actions[
+                                self.data.incoming_actions[
                                     action_to_add.kind
                                 ] = action_to_add.function
                             with action_kind.match("remove") as action_to_remove:
-                                del self.data.ingoing_actions[action_to_remove]
+                                del self.data.incoming_actions[action_to_remove]
                 with action.match("set_paused") as paused:
                     self.data.store.config.paused = paused
                 with action.match("generic") as lamb:

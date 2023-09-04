@@ -77,7 +77,7 @@ actions:
           proof_validator: MMR_Validator_Proxy
           paused: false
         outgoing_seq_id: 0
-        ingoing_seq_id: 0
+        incoming_seq_id: 0
         job_information: {}
 
   - kind: origination
