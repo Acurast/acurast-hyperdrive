@@ -4,8 +4,8 @@ from contracts.tezos.AcurastProxy import (
     AcurastProxy,
     OutgoingActionLambda,
     OutgoingActionKind,
-    IngoingActionLambda,
-    IngoingActionKind,
+    IncomingActionLambda,
+    IncomingActionKind,
     Type,
 )
 
@@ -22,7 +22,7 @@ sp.add_compilation_target(
             ),
             outgoing_seq_id=0,
             outgoing_registry=sp.big_map(),
-            ingoing_seq_id=0,
+            incoming_seq_id=0,
             job_information=sp.big_map(),
         ),
         outgoing_actions=sp.big_map(
@@ -48,14 +48,14 @@ sp.add_compilation_target(
                 ),
             }
         ),
-        ingoing_actions=sp.big_map(
+        incoming_actions=sp.big_map(
             {
-                IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
-                    function=IngoingActionLambda.assign_processor,
+                IncomingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
+                    function=IncomingActionLambda.assign_processor,
                     storage=sp.bytes("0x"),
                 ),
-                IngoingActionKind.FINALIZE_JOB: sp.record(
-                    function=IngoingActionLambda.finalize_job,
+                IncomingActionKind.FINALIZE_JOB: sp.record(
+                    function=IncomingActionLambda.finalize_job,
                     storage=sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
                 ),
             }
@@ -126,34 +126,34 @@ sp.add_expression_compilation_target(
 )
 
 sp.add_expression_compilation_target(
-    IngoingActionKind.ASSIGN_JOB_PROCESSOR,
+    IncomingActionKind.ASSIGN_JOB_PROCESSOR,
     sp.set_type_expr(
-        IngoingActionLambda.assign_processor,
+        IncomingActionLambda.assign_processor,
         sp.TLambda(
-            Type.IngoingActionLambdaArg,
-            Type.IngoingActionLambdaReturn,
+            Type.IncomingActionLambdaArg,
+            Type.IncomingActionLambdaReturn,
             with_operations=True,
         ),
     ),
 )
 sp.add_expression_compilation_target(
-    IngoingActionKind.NOOP,
+    IncomingActionKind.NOOP,
     sp.set_type_expr(
-        IngoingActionLambda.noop,
+        IncomingActionLambda.noop,
         sp.TLambda(
-            Type.IngoingActionLambdaArg,
-            Type.IngoingActionLambdaReturn,
+            Type.IncomingActionLambdaArg,
+            Type.IncomingActionLambdaReturn,
             with_operations=True,
         ),
     ),
 )
 sp.add_expression_compilation_target(
-    IngoingActionKind.FINALIZE_JOB,
+    IncomingActionKind.FINALIZE_JOB,
     sp.set_type_expr(
-        IngoingActionLambda.finalize_job,
+        IncomingActionLambda.finalize_job,
         sp.TLambda(
-            Type.IngoingActionLambdaArg,
-            Type.IngoingActionLambdaReturn,
+            Type.IncomingActionLambdaArg,
+            Type.IncomingActionLambdaReturn,
             with_operations=True,
         ),
     ),

@@ -4,9 +4,9 @@ from contracts.tezos.IBCF_Aggregator import IBCF_Aggregator, EMPTY_TREE
 from contracts.tezos.AcurastProxy import (
     AcurastProxy,
     OutgoingActionLambda,
-    IngoingActionLambda,
+    IncomingActionLambda,
     OutgoingActionKind,
-    IngoingActionKind,
+    IncomingActionKind,
     Type,
     Inlined as AcurastProxyInlined,
     Acurast_Token_Interface,
@@ -109,7 +109,7 @@ def test():
                 ),
                 outgoing_seq_id=0,
                 outgoing_registry=sp.big_map(),
-                ingoing_seq_id=0,
+                incoming_seq_id=0,
                 job_information=sp.big_map(),
             ),
             outgoing_actions=sp.big_map(
@@ -129,14 +129,14 @@ def test():
                     ),
                 }
             ),
-            ingoing_actions=sp.big_map(
+            incoming_actions=sp.big_map(
                 {
-                    IngoingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
-                        function=IngoingActionLambda.assign_processor,
+                    IncomingActionKind.ASSIGN_JOB_PROCESSOR: sp.record(
+                        function=IncomingActionLambda.assign_processor,
                         storage=sp.bytes("0x"),
                     ),
-                    IngoingActionKind.FINALIZE_JOB: sp.record(
-                        function=IngoingActionLambda.finalize_job,
+                    IncomingActionKind.FINALIZE_JOB: sp.record(
+                        function=IncomingActionLambda.finalize_job,
                         storage=sp.pack(acurastToken.address),
                     ),
                 }
