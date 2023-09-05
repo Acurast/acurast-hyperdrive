@@ -12,11 +12,14 @@ library OUT_ACTION_KIND {
     uint16 constant REGISTER_JOB = 0;
     uint16 constant DEREGISTER_JOB = 1;
     uint16 constant FINALIZE_JOB = 2;
+
+    uint16 constant NOOP = 255;
 }
 
 library IN_ACTION_KIND {
     uint16 constant ASSIGN_JOB_PROCESSOR = 0;
     uint16 constant FINALIZE_JOB = 1;
+
     uint16 constant NOOP = 255;
 }
 
@@ -137,12 +140,12 @@ struct ReceiveMessagesPayload {
 }
 
 contract AcurastGatewayStorage {
-    uint256 out_seq_id;
-    uint256 in_seq_id;
-    address manager;
-    MMR_Validator proof_validator;
-    Asset acurast_asset;
-    uint128 job_seq_id;
+    uint256 public out_seq_id;
+    uint256 public in_seq_id;
+    address public manager;
+    MMR_Validator public proof_validator;
+    Asset public acurast_asset;
+    uint128 public job_seq_id;
     mapping(uint => JobInformation) job_information;
     mapping(uint => bytes32) message_hash;
     mapping(bytes32 => bytes) message;
@@ -162,11 +165,26 @@ contract AcurastGatewayStorage {
     function set_asset(Asset asset) public is_manager {
         acurast_asset = asset;
     }
+
+    /**
+     * Configure proof validator
+     */
+    function set_validator(MMR_Validator validator) public is_manager {
+        proof_validator = validator;
+    }
+
+    /**
+     * Configure manager
+     */
+    function set_manager(address _manager) public is_manager {
+        manager = _manager;
+    }
 }
 
 
 contract AcurastGateway is AcurastGatewayStorage {
     function initialize(MMR_Validator _proof_validator, address _manager) public {
+        require(manager == address(0), "ALREADY_INITIALIZED");
         out_seq_id = 0;
         in_seq_id = 0;
         job_seq_id = 0;
@@ -194,11 +212,11 @@ abstract contract IncomingActionHandler is AcurastGatewayStorage {
     event FeeSentToProcessor(uint128, address, uint256);
     event RefundJobCreator(uint128, uint256);
 
-    function noop() internal {
+    function in_noop() internal {
         // DO NOTHING
     }
 
-    function finalize_job(bytes memory payload) internal {
+    function in_finalize_job(bytes memory payload) internal {
         // Decode action payload
         FinalizeJob memory action;
         (action) = abi.decode(payload, (FinalizeJob));
@@ -227,7 +245,7 @@ abstract contract IncomingActionHandler is AcurastGatewayStorage {
         }
     }
 
-    function assign_job_processor(bytes memory payload) internal {
+    function in_assign_job_processor(bytes memory payload) internal {
         // Decode action payload
         AssignJob memory action;
         (action) = abi.decode(payload, (AssignJob));
@@ -260,6 +278,14 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
     event CouldNotProcessIncomingMessages(bytes, UnhashedLeaf[]);
 
     /**
+     * TODO: Remove for production
+     * Mint Acurast tokens
+     */
+    function faucet(uint256 amount) public {
+        acurast_asset.mint(msg.sender, amount);
+    }
+
+    /**
      * Send outgoing action
      */
     function send_message(uint16 kind, bytes memory encoded_payload) private {
@@ -273,6 +299,10 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
         bytes32 h = keccak256(encoded_msg);
         message_hash[out_seq_id] = h;
         message[h] = encoded_msg;
+    }
+
+    function noop() public {
+        send_message(OUT_ACTION_KIND.NOOP, "");
     }
 
     /**
@@ -383,42 +413,42 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
         send_message(OUT_ACTION_KIND.FINALIZE_JOB, encoded_payload);
     }
 
-    function process_incoming_messages(bytes[] memory leaves) public returns (MessageReceived[] memory) {
+    function process_incoming_messages(MessageReceived[] memory messages) public returns (bool) {
         // This method can only be called by this contract
         require(msg.sender == address(this), "NOT_AUTHORIZED");
 
-        MessageReceived[] memory messages = new MessageReceived[](leaves.length);
         for (uint i=0; i<messages.length; i++) {
-            // Process message
-            MessageReceived memory message;
-            (message) = abi.decode(leaves[i], (MessageReceived));
             // Process actions by kind
-            if (message.action == IN_ACTION_KIND.NOOP) {
+            if (messages[i].action == IN_ACTION_KIND.NOOP) {
                 // Explicitly do nothing
-                IncomingActionHandler.noop();
-            } if (message.action == IN_ACTION_KIND.FINALIZE_JOB) {
-                IncomingActionHandler.finalize_job(message.payload);
-            } else if (message.action == IN_ACTION_KIND.ASSIGN_JOB_PROCESSOR) {
-                IncomingActionHandler.assign_job_processor(message.payload);
+                IncomingActionHandler.in_noop();
+            } if (messages[i].action == IN_ACTION_KIND.FINALIZE_JOB) {
+                IncomingActionHandler.in_finalize_job(messages[i].payload);
+            } else if (messages[i].action == IN_ACTION_KIND.ASSIGN_JOB_PROCESSOR) {
+                IncomingActionHandler.in_assign_job_processor(messages[i].payload);
             }
-            messages[i] = message;
         }
 
-        return messages;
+        return true;
     }
 
     function receive_messages(ReceiveMessagesPayload memory proof) public {
         MmrLeaf[] memory leaves = new MmrLeaf[](proof.leaves.length);
-        bytes[] memory leaves_data = new bytes[](proof.leaves.length);
+        MessageReceived[] memory messages = new MessageReceived[](proof.leaves.length);
         for (uint i=0; i<proof.leaves.length; i++) {
             UnhashedLeaf memory leave = proof.leaves[i];
             leaves[i] = MmrLeaf(leave.k_index, leave.leaf_index, keccak256(leave.data));
-            leaves_data[i] = leave.data;
-        }
 
+            MessageReceived memory message;
+            (message) = abi.decode(leave.data, (MessageReceived));
+
+            require(message.message_id == in_seq_id, "INVALID_MESSAGE_ID");
+            in_seq_id += 1;
+            messages[i] = message;
+        }
         // Process messages
         // If the proof is invalid, it will be reverted at the end.
-        try AcurastGatewayV2(this).process_incoming_messages(leaves_data) returns (MessageReceived[] memory messages) {
+        try AcurastGatewayV2(this).process_incoming_messages(messages) returns (bool result) {
             emit ReceivedMessages(messages);
         } catch Error(string memory err) {
             // This may occur if there is an overflow with the two numbers and the `AddNumbers` contract explicitly fails with a `revert()`
@@ -427,7 +457,7 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
             emit CouldNotProcessIncomingMessages(err, proof.leaves);
         }
 
-        // Validate messages proof, this call will revert if the proof is invalid.
+        // Validate messages proof, the whole call will revert if the proof is invalid.
         proof_validator.verify_proof(proof.snapshot, proof.proof, leaves, proof.mmr_size);
     }
 
@@ -470,5 +500,13 @@ contract AcurastGatewayV2 is AcurastGatewayStorage, IncomingActionHandler {
 
     function get_message(uint256 message_id) public view returns(bytes memory) {
         return message[message_hash[message_id]];
+    }
+
+    function get_message_hash(uint256 message_id) public view returns(bytes32) {
+        return message_hash[message_id];
+    }
+
+    function get_job_information(uint256 job_id) public view returns(JobInformation memory) {
+        return job_information[job_id];
     }
 }
