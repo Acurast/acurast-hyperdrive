@@ -23,7 +23,7 @@ contract Asset is ERC20 {
     }
 
     /**
-     * Configure manaher
+     * Configure manager
      */
     function set_manager(address _manager) public is_manager {
         manager = _manager;

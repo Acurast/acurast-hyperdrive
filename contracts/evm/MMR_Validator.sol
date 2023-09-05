@@ -18,7 +18,7 @@ struct StateRootSubmission {
 }
 
 contract MMR_Validator is MerkleMountainRange {
-    uint256 current_snapshot = 1;
+    uint128 current_snapshot = 1;
     address manager;
     // Minimum expected endorsements for a given state root to be considered valid
     uint8 minimum_endorsements;
@@ -86,7 +86,7 @@ contract MMR_Validator is MerkleMountainRange {
     /**
      * Adds the state root for a given snapshot.
      */
-    function submit_state_root(uint snapshot_number, bytes32 _state_root) public is_validator {
+    function submit_state_root(uint128 snapshot_number, bytes32 _state_root) public is_validator {
         // Ensure state roots are processed sequentially
         require(current_snapshot == snapshot_number, MMR_Validator_Err.INVALID_SNAPSHOT);
 
@@ -134,6 +134,11 @@ contract MMR_Validator is MerkleMountainRange {
     function verify_proof(uint128 snapshot_number, bytes32[] memory proof, MmrLeaf[] memory leaves, uint256 mmr_size) public view {
         bytes32 snapshot_root = get_state_root(snapshot_number);
 
+        // Reject any proof that contains the final state root in the proof path.
+        for(uint i=0; i<proof.length; i++) {
+            require(proof[i] != snapshot_root, MMR_Validator_Err.PROOF_INVALID);
+        }
+
         require(VerifyProof(snapshot_root, proof, leaves, mmr_size), MMR_Validator_Err.PROOF_INVALID);
     }
 
@@ -142,7 +147,7 @@ contract MMR_Validator is MerkleMountainRange {
      *
      * Fails if snapshot was not finalized.
      */
-    function get_state_root(uint snapshot_number) public view returns (bytes32) {
+    function get_state_root(uint128 snapshot_number) public view returns (bytes32) {
         require(snapshot_number < current_snapshot, MMR_Validator_Err.SNAPSHOT_NOT_FINALIZED);
 
         StateRootSubmission[] memory submissions = snapshot[snapshot_number];
