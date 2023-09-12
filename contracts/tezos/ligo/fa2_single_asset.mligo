@@ -18,6 +18,7 @@ type extended_param =
     | Assets of fa2_entry_points
     | Tokens of token_manager
     | Update_facilitators of update_facilitators_action list
+    | Set_token_metadata of token_metadata
     | Set_metadata of contract_metadata
 
 let fail_if_not_facilitator (facilitators: address set): unit =
@@ -51,6 +52,13 @@ let main (param, storage : extended_param * storage): (operation list) * storage
         | Remove facilitator -> Set.remove facilitator acc
         in
         ([], { storage with facilitators = List.fold update_facilitators p storage.facilitators; })
+    | Set_token_metadata p ->
+        let _ = fail_if_not_admin storage.admin in
+
+        let token_metadata = Big_map.update p.token_id (Some p) storage.assets.token_metadata in
+
+        let new_storage = { storage with assets = { storage.assets with token_metadata }; } in
+        ([], new_storage)
     | Set_metadata p ->
         let _ = fail_if_not_admin storage.admin in
 
