@@ -114,9 +114,12 @@ export CONFIG_PATH = deployment/tezos/configs/ghostnet-avalanche.yaml
 deploy-tezos-avalanche: setup_env
 	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
 
-
 export CONFIG_PATH = deployment/tezos/configs/ghostnet-acurast.yaml
 deploy-tezos-acurast: setup_env
+	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
+
+export CONFIG_PATH = deployment/tezos/configs/mainnet-kusama.yaml
+deploy-tezos-canary: setup_env
 	@python3 deployment/tezos/apply.py $(SNAPSHOTS_FOLDER)/deployment-$(notdir $(basename $(CONFIG_PATH))).yaml
 
 export RPC_URL ?= https://sepolia.infura.io/v3/75829a5785c844bc9c9e6e891130ee6f

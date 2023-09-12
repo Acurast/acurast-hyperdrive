@@ -1,8 +1,8 @@
 pytezos:
   rpc_endpoint: https://rpc.tzbeta.net/
-  private_key: TBD
+  private_key: EMPTY
 known_addresses:
-  governance_address: TBD
+  governance_address: tz1XS2Qp3vWjcQHYksRfrbYcc7iqiDXW37jD
 actions:
 
   - kind: origination
@@ -19,13 +19,10 @@ actions:
           0:
             token_id: 0
             token_info:
-              symbol: "0x63414355"
-              name: "0x416375726173742043616e61727920546f6b656e"
-              decimals: "0x3132"
+              "": "0x697066733a2f2f516d6167735955384a4c65714337574350317a77665653694657665064715471425a63646d62315a456b676d544a"
         total_supply: 0
       metadata:
-        "": "0x74657a6f732d73746f726167653a636f6e74656e74"
-        "content": "0x7ba2020226e616d65223a2022416375726173742043616e61727920546f6b656e222ca2020226465736372697074696f6e223a202254686520416375726173742043616e61727920546f6b656e206973207573656420746f20696e74657261637420776974682074686520416375726173742070726f746f636f6c2e222ca20202276657273696f6e223a2022312e302e30222ca202022686f6d6570616765223a202268747470733a2f2f616375726173742e636f6d222ca202022696e7465726661636573223a205ba2020202022545a49502d3136222ca2020202022545a49502d313222a20205d2ca2020227669657773223a205b5da7d"
+        "": "0x697066733a2f2f516d6332724d336837726f55536a507270695a6443384e4b7534356641556f796459486171523253345553517045"
 
   - kind: origination
     contract_kind: IBCF_Aggragator
@@ -46,7 +43,7 @@ actions:
     overrides:
       config:
         governance_address: governance_address
-        validators:
+        validators: []
         minimum_endorsements: 1
       current_snapshot: 1
       snapshot_submissions: {}
@@ -67,14 +64,15 @@ actions:
     code_path: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_contract.tz
     storage: __SNAPSHOTS__/compilation/tezos/AcurastProxy/AcurastProxy/step_000_cont_0_storage.tz
     overrides:
-      config:
-        governance_address: governance_address
-        merkle_aggregator: IBCF_Aggragator
-        proof_validator: MMR_Validator_Proxy
-        paused: false
-      outgoing_seq_id: 0
-      incoming_seq_id: 0
-      job_information: {}
+      store:
+        config:
+          governance_address: governance_address
+          merkle_aggregator: IBCF_Aggragator
+          proof_validator: MMR_Validator_Proxy
+          paused: false
+        outgoing_seq_id: 0
+        incoming_seq_id: 0
+        job_information: {}
 
   - kind: origination
     contract_kind: AcurastConsumer
@@ -83,12 +81,12 @@ actions:
     storage: __SNAPSHOTS__/compilation/tezos/AcurastConsumer/AcurastConsumer/step_000_cont_0_storage.tz
     overrides: AcurastProxy
 
-  - kind: contract_call
-    contract_address: Acurast_FA2_Token
-    entrypoint: update_facilitators
-    argument:
-      -
-        add: AcurastProxy
+  # - kind: contract_call
+  #   contract_address: Acurast_FA2_Token
+  #   entrypoint: update_facilitators
+  #   argument:
+  #     -
+  #       add: AcurastProxy
 
   # - kind: contract_call
   #   contract_address: KT1DhbgV7TAkhmaZjNqtA4fediPQjzHsJDad
