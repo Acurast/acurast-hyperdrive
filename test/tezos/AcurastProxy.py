@@ -145,6 +145,27 @@ def test():
     )
     scenario += acurastProxy
 
+    add_noop_outgoing_action = sp.variant(
+        "add",
+        sp.record(
+            kind=OutgoingActionKind.NOOP,
+            function=sp.record(
+                function = sp.set_type_expr(
+                    OutgoingActionLambda.noop,
+                    sp.TLambda(
+                        Type.OutgoingActionLambdaArg,
+                        Type.OutgoingActionLambdaReturn,
+                        with_operations=True,
+                    ),
+                ),
+                storage = sp.bytes("0x")
+            )
+        )
+    )
+    acurastProxy.configure([sp.variant("update_outgoing_actions", [add_noop_outgoing_action])]).run(
+        sender=admin.address
+    )
+
     consumer = AcurastConsumer()
     consumer.update_initial_storage(
         sp.record(
