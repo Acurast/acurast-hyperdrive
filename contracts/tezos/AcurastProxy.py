@@ -16,7 +16,49 @@ from contracts.tezos.AcurastConsumer import (
     Type as AcurastConsumer_Type,
     Entrypoint as AcurastConsumer_Entrypoint,
 )
+import contracts.tezos.libs.fa2_lib as FA2
 
+class Market:
+    ASSET_ADDRESS = sp.address("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW") # https://better-call.dev/mainnet/KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW
+    ASSET_ID = 0 # uUSD
+
+    def compute_swap_price(expected_acurast_amount):
+        # 1B cACU (12 decimals) ||== 65M uUSD (12 decimals)
+        ratio = sp.record(
+            numerator = 65,
+            denominator = 1000
+        )
+        # Calculate how many uusd is required to cover for the job cost
+        exchange_result = sp.compute(
+            sp.ediv(ratio.numerator * expected_acurast_amount, ratio.denominator).open_some("FAILED_TO_CONVERT_AMOUNT")
+        )
+        # Ceil the amount if the result has decimal places
+        exchange_amount = sp.local("exchange_amount", sp.fst(exchange_result))
+        with sp.if_(sp.snd(exchange_result) > 0):
+            exchange_amount.value += 1
+
+        return exchange_amount.value
+
+
+    def buy_acurast_tokens(exchange_asset, amount):
+        payload = sp.record(
+            from_ = sp.sender,
+            txs=[
+                sp.record(
+                    to_         = sp.self_address,
+                    token_id    = exchange_asset.id,
+                    amount      = Market.compute_swap_price(amount),
+                )
+            ],
+        )
+
+        acurast_token_contract = sp.contract(
+            FA2.t_transfer_params,
+            exchange_asset.address,
+            "transfer",
+        ).open_some(Error.INVALID_CONTRACT)
+        call_argument = [payload]
+        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
 
 class Constants:
     REVEAL_COST = sp.mutez(1200)
@@ -263,7 +305,7 @@ class OutgoingActionKind:
     FINALIZE_JOB = "FINALIZE_JOB"
     DEREGISTER_JOB = "DEREGISTER_JOB"
     REGISTER_JOB = "REGISTER_JOB"
-    TELEPORT_ACRST = "TELEPORT_ACRST"
+    TELEPORT_ACRST = "TELEPORT_ACRST" # TODO: remove?
     NOOP = "NOOP"
 
 
@@ -302,7 +344,14 @@ class OutgoingActionLambda:
     def register_job(arg):
         sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
-        StorageType = sp.TRecord(job_id_seq=sp.TNat, token_address=sp.TAddress)
+        StorageType = sp.TRecord(
+            job_id_seq=sp.TNat,
+            token_address=sp.TAddress,
+            fa2_uusd = sp.TRecord(
+                address=sp.TAddress,
+                id=sp.TNat
+            )
+        )
         storage = sp.local(
             "action_storage",
             sp.unpack(arg.storage, StorageType).open_some(
@@ -359,14 +408,8 @@ class OutgoingActionLambda:
             owner=origin,
         )
 
-        ## Burn the maximum reward amount that can be used by the job
-        acurast_token_contract = sp.contract(
-            Acurast_Token_Interface.BurnMintTokens,
-            storage.value.token_address,
-            "burn_tokens",
-        ).open_some(Error.INVALID_CONTRACT)
-        call_argument = [action_payload]
-        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
+        # Buy enough cACU to cover the maximum reward amount that can be used by the job
+        Market.buy_acurast_tokens(storage.value.fa2_uusd, maximum_reward)
 
         # Index the job information
         context = sp.local("context", arg.context)
