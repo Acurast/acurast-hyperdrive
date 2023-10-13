@@ -14,7 +14,7 @@ from contracts.tezos.AcurastProxy import (
 from contracts.tezos.libs.utils import Decorator
 from contracts.tezos.AcurastConsumer import AcurastConsumer
 from contracts.tezos.MMR_Validator import MMR_Validator
-
+import contracts.tezos.libs.fa2_lib as fa2
 
 class AcurastTokenInterface(sp.Contract):
     @sp.entrypoint()
@@ -97,6 +97,20 @@ def test():
     acurastToken = AcurastTokenInterface()
     scenario += acurastToken
 
+    tok0_md = fa2.make_metadata(name="Token Zero", decimals=1, symbol="Tok0")
+    TOKEN_METADATA = [tok0_md]
+    METADATA = sp.utils.metadata_of_url("ipfs://example")
+    ledger = {
+        (job_creator.address, 0): 10000,
+    }
+    token_metadata = TOKEN_METADATA
+    uusdToken = fa2.Fa2Fungible(
+        metadata=METADATA,
+        ledger=ledger,
+        token_metadata=token_metadata,
+    )
+    scenario += uusdToken
+
     acurastProxy = AcurastProxy()
     acurastProxy.update_initial_storage(
         sp.record(
@@ -120,6 +134,10 @@ def test():
                             sp.record(
                                 job_id_seq=sp.nat(0),
                                 token_address=acurastToken.address,
+                                fa2_uusd = sp.record(
+                                    address=uusdToken.address,
+                                    id=0
+                                )
                             )
                         ),
                     ),
@@ -258,10 +276,18 @@ def test():
             )
         )
     )
+    # Set proxy as operator
+    uusdToken.update_operators([sp.variant("add_operator", sp.record(owner=job_creator.address, operator=acurastProxy.address, token_id=0))]).run(sender=job_creator.address)
+
+    # Register job
     actions = [register_job_action]
     acurastProxy.send_actions(actions).run(
         sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )
+
+    # Unset proxy as operator
+    uusdToken.update_operators([sp.variant("remove_operator", sp.record(owner=job_creator.address, operator=acurastProxy.address, token_id=0))]).run(sender=job_creator.address)
+
     # The contract balance should now be equal to the expected fee (only one job added yet)
     scenario.verify(acurastProxy.balance == expected_fee)
 
@@ -303,11 +329,18 @@ def test():
     # acurastProxy.withdraw_remaining_fee(1).run(now=sp.timestamp(1678266546624))
     # scenario.verify(job_creator.balance == sp.mutez(11630))
 
+    # Set proxy as operator
+    uusdToken.update_operators([sp.variant("add_operator", sp.record(owner=job_creator.address, operator=acurastProxy.address, token_id=0))]).run(sender=job_creator.address)
+
     # Add 2 new jobs
     actions = [register_job_action, register_job_action]
     acurastProxy.send_actions(actions).run(
         sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )
+
+    # Unset proxy as operator
+    uusdToken.update_operators([sp.variant("remove_operator", sp.record(owner=job_creator.address, operator=acurastProxy.address, token_id=0))]).run(sender=job_creator.address)
+
     # Assign processors
     acurastProxy.receive_actions(
         sp.record(
