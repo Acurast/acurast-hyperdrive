@@ -74,6 +74,19 @@ sp.add_expression_compilation_target(
         ),
     ),
 )
+
+sp.add_expression_compilation_target(
+    "OUT_" + OutgoingActionKind.NOOP,
+    sp.set_type_expr(
+        OutgoingActionLambda.noop,
+        sp.TLambda(
+            Type.OutgoingActionLambdaArg,
+            Type.OutgoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
+
 sp.add_expression_compilation_target(
     "REGISTER_JOB_STORAGE",
     sp.pack(
@@ -158,6 +171,31 @@ sp.add_expression_compilation_target(
         ),
     ),
 )
+
+sp.add_expression_compilation_target(
+    "CONFIGURE_OUT_NOOP",
+    sp.set_type_expr(
+        [
+            sp.variant(
+                "update_outgoing_actions",
+                [
+                    sp.variant(
+                        "add",
+                        sp.record(
+                            kind=OutgoingActionKind.NOOP,
+                            function=sp.record(
+                                function=OutgoingActionLambda.noop,
+                                storage=sp.bytes("0x"),
+                            ),
+                        ),
+                    )
+                ],
+            )
+        ],
+        Type.ConfigureArgument,
+    ),
+)
+
 
 sp.add_expression_compilation_target(
     "CONFIGURE",
