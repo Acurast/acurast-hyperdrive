@@ -529,5 +529,18 @@
                  UPDATE 1 ;
                  UPDATE 2 ;
                  NIL operation } } ;
-         PAIR } }
+         PAIR } ;
+  view "get_balance"
+       (pair address nat)
+       nat
+       { UNPAIR ;
+         CAR ;
+         SWAP ;
+         CAR ;
+         CDR ;
+         CAR ;
+         CAR ;
+         SWAP ;
+         GET ;
+         IF_NONE { PUSH nat 0 } {} } }
 

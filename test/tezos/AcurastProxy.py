@@ -27,6 +27,10 @@ class AcurastTokenInterface(sp.Contract):
         sp.set_type(arg, Acurast_Token_Interface.BurnMintTokens)
         pass
 
+    @sp.onchain_view()
+    def get_balance(self, arg):
+        sp.set_type(arg, sp.TRecord(owner=sp.TAddress, token_id=sp.TNat))
+        sp.result(sp.nat(10000))
 
 class ImplicitInterface(sp.Contract):
     @sp.entrypoint()
@@ -101,7 +105,7 @@ def test():
     TOKEN_METADATA = [tok0_md]
     METADATA = sp.utils.metadata_of_url("ipfs://example")
     ledger = {
-        (job_creator.address, 0): 10000,
+        (job_creator.address, 0): 1000000000000,
     }
     token_metadata = TOKEN_METADATA
     uusdToken = fa2.Fa2Fungible(
@@ -225,9 +229,9 @@ def test():
             requiredModules=sp.set([0]),
             schedule=sp.record(
                 duration=30000,
-                startTime=1678266066623,
-                endTime=1678266546623,
-                interval=31000,
+                startTime=1697618400000,
+                endTime=1697618700000,
+                interval=60000,
                 maxStartDelay=0,
             ),
             memory=1,
@@ -235,8 +239,8 @@ def test():
             storage=1,
             extra=sp.record(
                 requirements=sp.record(
-                    slots=1,
-                    reward=1000,
+                    slots=2,
+                    reward=10000000000,
                     minReputation=sp.none,
                     instantMatch=sp.some(
                         sp.set(
@@ -244,7 +248,7 @@ def test():
                         )
                     ),
                 ),
-                expectedFulfillmentFee=sp.mutez(1000),
+                expectedFulfillmentFee=sp.mutez(2000),
             ),
         ),
         Type.RegisterJobAction,
@@ -288,6 +292,9 @@ def test():
     # Unset proxy as operator
     uusdToken.update_operators([sp.variant("remove_operator", sp.record(owner=job_creator.address, operator=acurastProxy.address, token_id=0))]).run(sender=job_creator.address)
 
+    scenario.verify(uusdToken.data.ledger[(acurastProxy.address, 0)] == 6500000000)
+    scenario.verify(uusdToken.data.ledger[(job_creator.address, 0)] == 993500000000)
+
     # The contract balance should now be equal to the expected fee (only one job added yet)
     scenario.verify(acurastProxy.balance == expected_fee)
 
@@ -320,14 +327,18 @@ def test():
         )
     )
 
-    acurastProxy.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(
-        sender=sp.address("tz1h4EsGunH2Ue1T2uNs8mfKZ8XZoQji3HcK")
-    )
+    for x in range(5):
+        acurastProxy.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(
+            sender=sp.address("tz1h4EsGunH2Ue1T2uNs8mfKZ8XZoQji3HcK")
+        )
+        acurastProxy.fulfill(sp.record(job_id=1, payload=sp.bytes("0x"))).run(
+            sender=sp.address("tz1hJgZdhnRGvg5XD6pYxRCsbWh4jg5HQ476")
+        )
+
+    scenario.show(acurastProxy.data.store.job_information[1].remaining_fee == sp.mutez(0))
 
     # Allow job creators to withdraw remaining fee
     scenario.verify(job_creator.balance == sp.mutez(0))
-    # acurastProxy.withdraw_remaining_fee(1).run(now=sp.timestamp(1678266546624))
-    # scenario.verify(job_creator.balance == sp.mutez(11630))
 
     # Set proxy as operator
     uusdToken.update_operators([sp.variant("add_operator", sp.record(owner=job_creator.address, operator=acurastProxy.address, token_id=0))]).run(sender=job_creator.address)
