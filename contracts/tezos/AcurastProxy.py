@@ -39,8 +39,27 @@ class Market:
 
         return exchange_amount.value
 
+    def refund_uusd_tokens(exchange_asset, destination, amount):
+        payload = sp.record(
+            from_ = sp.self_address,
+            txs=[
+                sp.record(
+                    to_         = destination,
+                    token_id    = exchange_asset.id,
+                    amount      = Market.compute_swap_price(amount),
+                )
+            ],
+        )
 
-    def buy_acurast_tokens(exchange_asset, amount):
+        token_contract = sp.contract(
+            FA2.t_transfer_params,
+            exchange_asset.address,
+            "transfer",
+        ).open_some(Error.INVALID_CONTRACT)
+        call_argument = [payload]
+        sp.transfer(call_argument, sp.mutez(0), token_contract)
+
+    def pay_with_uusd_tokens(exchange_asset, amount):
         payload = sp.record(
             from_ = sp.sender,
             txs=[
@@ -52,13 +71,13 @@ class Market:
             ],
         )
 
-        acurast_token_contract = sp.contract(
+        token_contract = sp.contract(
             FA2.t_transfer_params,
             exchange_asset.address,
             "transfer",
         ).open_some(Error.INVALID_CONTRACT)
         call_argument = [payload]
-        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
+        sp.transfer(call_argument, sp.mutez(0), token_contract)
 
 class Constants:
     REVEAL_COST = sp.mutez(1200)
@@ -402,14 +421,8 @@ class OutgoingActionLambda:
         # Get origin
         origin = sp.compute(sp.sender)
 
-        # Prepare action
-        action_payload = sp.record(
-            amount=maximum_reward,
-            owner=origin,
-        )
-
-        # Buy enough cACU to cover the maximum reward amount that can be used by the job
-        Market.buy_acurast_tokens(storage.value.fa2_uusd, maximum_reward)
+        # Pay job registration with uusd
+        Market.pay_with_uusd_tokens(storage.value.fa2_uusd, maximum_reward)
 
         # Index the job information
         context = sp.local("context", arg.context)
@@ -574,60 +587,60 @@ class OutgoingActionLambda:
             )
         )
 
-    @Decorator.generate_lambda(with_operations=True)
-    def teleport_acrst(arg):
-        sp.set_type(arg, Type.OutgoingActionLambdaArg)
+    # @Decorator.generate_lambda(with_operations=True)
+    # def teleport_acrst(arg):
+    #     sp.set_type(arg, Type.OutgoingActionLambdaArg)
 
-        StorageType = sp.TAddress
-        acurast_token_address = sp.compute(
-            sp.unpack(arg.storage, StorageType).open_some(
-                Error.CANNOT_PARSE_ACTION_STORAGE
-            )
-        )
+    #     StorageType = sp.TAddress
+    #     acurast_token_address = sp.compute(
+    #         sp.unpack(arg.storage, StorageType).open_some(
+    #             Error.CANNOT_PARSE_ACTION_STORAGE
+    #         )
+    #     )
 
-        amount = sp.compute(
-            sp.unpack(arg.payload, sp.TNat).open_some(Error.COULD_NOT_UNPACK)
-        )
+    #     amount = sp.compute(
+    #         sp.unpack(arg.payload, sp.TNat).open_some(Error.COULD_NOT_UNPACK)
+    #     )
 
-        # Get origin
-        origin = sp.compute(sp.sender)
+    #     # Get origin
+    #     origin = sp.compute(sp.sender)
 
-        # Prepare action
-        action_payload = sp.record(
-            amount=amount,
-            owner=origin,
-        )
+    #     # Prepare action
+    #     action_payload = sp.record(
+    #         amount=amount,
+    #         owner=origin,
+    #     )
 
-        ## Burn reward on Tezos chain
-        acurast_token_contract = sp.contract(
-            Acurast_Token_Interface.BurnMintTokens,
-            acurast_token_address,
-            "burn_tokens",
-        ).open_some(Error.INVALID_CONTRACT)
-        call_argument = [action_payload]
-        sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
+    #     ## Burn reward on Tezos chain
+    #     acurast_token_contract = sp.contract(
+    #         Acurast_Token_Interface.BurnMintTokens,
+    #         acurast_token_address,
+    #         "burn_tokens",
+    #     ).open_some(Error.INVALID_CONTRACT)
+    #     call_argument = [action_payload]
+    #     sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
 
-        ## Emit TELEPORT_ACRST action
+    #     ## Emit TELEPORT_ACRST action
 
-        value = sp.pack(
-            (OutgoingActionKind.TELEPORT_ACRST, origin, sp.pack(action_payload))
-        )
-        key = sp.pack(arg.context.action_id)
-        state_param = sp.record(key=key, value=value)
-        # Add acurast action to the state merkle tree
-        merkle_aggregator_contract = sp.contract(
-            IBCF_Aggregator_Type.Insert_argument,
-            arg.context.store.config.merkle_aggregator,
-            "insert",
-        ).open_some(Error.INVALID_STATE_CONTRACT)
-        sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
+    #     value = sp.pack(
+    #         (OutgoingActionKind.TELEPORT_ACRST, origin, sp.pack(action_payload))
+    #     )
+    #     key = sp.pack(arg.context.action_id)
+    #     state_param = sp.record(key=key, value=value)
+    #     # Add acurast action to the state merkle tree
+    #     merkle_aggregator_contract = sp.contract(
+    #         IBCF_Aggregator_Type.Insert_argument,
+    #         arg.context.store.config.merkle_aggregator,
+    #         "insert",
+    #     ).open_some(Error.INVALID_STATE_CONTRACT)
+    #     sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
 
-        sp.result(
-            sp.record(
-                context=arg.context,
-                new_action_storage=arg.storage,
-            )
-        )
+    #     sp.result(
+    #         sp.record(
+    #             context=arg.context,
+    #             new_action_storage=arg.storage,
+    #         )
+    #     )
 
 
 class IncomingActionLambda:
@@ -679,8 +692,11 @@ class IncomingActionLambda:
     def finalize_job(arg):
         sp.set_type(arg, Type.IncomingActionLambdaArg)
 
-        StorageType = sp.TAddress
-        acurast_token_address = sp.compute(
+        StorageType = sp.TRecord(
+            address=sp.TAddress,
+            id=sp.TNat
+        )
+        uusd_asset = sp.compute(
             sp.unpack(arg.storage, StorageType).open_some(
                 Error.CANNOT_PARSE_ACTION_STORAGE
             )
@@ -712,17 +728,9 @@ class IncomingActionLambda:
                 action.unused_reward <= job_information.value.maximum_reward,
                 "ABOVE_MAXIMUM_REWARD",
             )
-            acurast_token_contract = sp.contract(
-                Acurast_Token_Interface.BurnMintTokens,
-                acurast_token_address,
-                "mint_tokens",
-            ).open_some(Error.INVALID_CONTRACT)
-            mint_payload = sp.record(
-                amount=action.unused_reward,
-                owner=job_information.value.creator,
-            )
-            call_argument = [mint_payload]
-            sp.transfer(call_argument, sp.mutez(0), acurast_token_contract)
+
+            # Refund remaining uusd
+            Market.refund_uusd_tokens(uusd_asset, job_information.value.creator, action.unused_reward)
 
             # Update job information
             context.value.store.job_information[action.job_id] = job_information.value
@@ -766,6 +774,7 @@ class AcurastProxy(sp.Contract):
 
     @sp.entry_point(parameter_type=Type.ReceiveActionsArgument)
     def receive_actions(self, arg):
+        Inlined.failIfPaused(self)
         # Validate proof
         is_valid = sp.view(
             "verify_proof",
@@ -827,6 +836,7 @@ class AcurastProxy(sp.Contract):
 
     @sp.entry_point(parameter_type=Type.FulfillArgument)
     def fulfill(self, arg):
+        Inlined.failIfPaused(self)
         # Get job information
         job_information = sp.local(
             "job_information",
@@ -840,11 +850,12 @@ class AcurastProxy(sp.Contract):
         )
 
         # Re-fill processor fees
-        job_information.value.remaining_fee -= (
-            job_information.value.expected_fullfilment_fee
-        )
         # Forbidden to credit 0ꜩ to a contract without code.
-        with sp.if_(job_information.value.expected_fullfilment_fee > sp.mutez(0)):
+        has_funds = job_information.value.remaining_fee >= job_information.value.expected_fullfilment_fee
+        with sp.if_(has_funds & (job_information.value.expected_fullfilment_fee > sp.mutez(0))):
+            job_information.value.remaining_fee -= (
+               job_information.value.expected_fullfilment_fee
+            )
             sp.send(
                 sp.sender,
                 job_information.value.expected_fullfilment_fee,

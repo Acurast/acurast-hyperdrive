@@ -42,10 +42,10 @@ sp.add_compilation_target(
                     function=OutgoingActionLambda.finalize_job,
                     storage=sp.bytes("0x"),
                 ),
-                OutgoingActionKind.TELEPORT_ACRST: sp.record(
-                    function=OutgoingActionLambda.teleport_acrst,
-                    storage=sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
-                ),
+                # OutgoingActionKind.TELEPORT_ACRST: sp.record(
+                #     function=OutgoingActionLambda.teleport_acrst,
+                #     storage=sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
+                # ),
             }
         ),
         incoming_actions=sp.big_map(
@@ -92,12 +92,19 @@ sp.add_expression_compilation_target(
     sp.pack(
         sp.record(
             job_id_seq=sp.nat(0),
-            token_address=sp.address("KT1UcqdRzForroq6mU2YKiRtFz8khp5adePe"),
+            token_address=sp.address("KT1Vk5VhzwXez6zPFd46r9f9ZhYQkefRGbQr"),
+            fa2_uusd = sp.record(
+                address=sp.address("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW"),
+                id=0
+            )
         )
     ),
 )
 sp.add_expression_compilation_target(
-    "FINALIZE_JOB_STORAGE", sp.pack(sp.address("KT1UcqdRzForroq6mU2YKiRtFz8khp5adePe"))
+    "FINALIZE_JOB_STORAGE", sp.pack(sp.record(
+        address=sp.address("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW"),
+        id=0
+    ))
 )
 
 sp.add_expression_compilation_target(
@@ -122,21 +129,21 @@ sp.add_expression_compilation_target(
         ),
     ),
 )
-sp.add_expression_compilation_target(
-    OutgoingActionKind.TELEPORT_ACRST,
-    sp.set_type_expr(
-        OutgoingActionLambda.teleport_acrst,
-        sp.TLambda(
-            Type.OutgoingActionLambdaArg,
-            Type.OutgoingActionLambdaReturn,
-            with_operations=True,
-        ),
-    ),
-)
-sp.add_expression_compilation_target(
-    "TELEPORT_ACRST_STORAGE",
-    sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
-)
+# sp.add_expression_compilation_target(
+#     OutgoingActionKind.TELEPORT_ACRST,
+#     sp.set_type_expr(
+#         OutgoingActionLambda.teleport_acrst,
+#         sp.TLambda(
+#             Type.OutgoingActionLambdaArg,
+#             Type.OutgoingActionLambdaReturn,
+#             with_operations=True,
+#         ),
+#     ),
+# )
+# sp.add_expression_compilation_target(
+#     "TELEPORT_ACRST_STORAGE",
+#     sp.pack(sp.address("KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT")),
+# )
 
 sp.add_expression_compilation_target(
     IncomingActionKind.ASSIGN_JOB_PROCESSOR,
