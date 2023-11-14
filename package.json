@@ -5,8 +5,8 @@
   "devDependencies": {
     "@ethereumjs/trie": "5.0.1",
     "@openzeppelin/contracts": "4.8.0",
-    "@openzeppelin/truffle-upgrades": "^1.19.0",
-    "@truffle/hdwallet-provider": "2.1.1",
+    "@openzeppelin/truffle-upgrades": "^1.20.1",
+    "@truffle/hdwallet-provider": "2.1.14",
     "@typescript-eslint/eslint-plugin": "5.42.1",
     "@typescript-eslint/parser": "5.42.1",
     "ec-pem": "0.18.0",
@@ -14,13 +14,15 @@
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
     "prettier": "2.8.1",
-    "truffle": "5.11.2",
+    "truffle": "5.11.3",
     "web3": "1.8.1"
   },
   "scripts": {
     "compile": "truffle compile",
     "test": "truffle test --migrations_directory migrations_null",
-    "deploy:sepolia": "truffle deploy --network sepolia --reset",
+    "test:AcurastGateway": "truffle test --migrations_directory migrations_null test/evm/AcurastGateway.js",
+    "test:mmr": "truffle test --migrations_directory migrations_null test/evm/mmr.js",
+    "deploy:sepolia": "truffle deploy deployment/evm/1_acurast_gateway.js --network sepolia --interactive --skip-dry-run --reset",
     "deploy:mumbai": "truffle deploy --network mumbai --reset",
     "deploy:bsc": "truffle deploy --network bsc --reset",
     "deploy:avalanche": "truffle deploy --network avalanche --reset",
@@ -35,7 +37,8 @@
   },
   "workspaces": [
     "packages/**",
-    "apps/playground"
+    "apps/playground",
+    "apps/playground-aeternity"
   ],
   "packageManager": "yarn@3.3.0"
 }
