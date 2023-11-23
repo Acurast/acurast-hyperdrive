@@ -1,7 +1,5 @@
 import { createContext } from 'react';
 import type { BigNumber } from 'bignumber.js';
-import { BigMapAbstraction } from '@taquito/taquito';
-import { Ethereum, Tezos } from 'ibcf-sdk';
 
 export enum Network {
     Ethereum = 'ethereum-sepolia',
