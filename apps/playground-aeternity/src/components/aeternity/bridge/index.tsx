@@ -91,11 +91,6 @@ const AeternityBridge = () => {
                             </Typography>
                         </Grid>
                         <Grid item>
-                            <Button fullWidth size="small" onClick={connectAeternityWallet}>
-                                Connect
-                            </Button>
-                        </Grid>
-                        <Grid item>
                             <AeternityIcon />
                         </Grid>
                     </Grid>
@@ -119,21 +114,6 @@ const AeternityBridge = () => {
                                             {Constants.aeternity.bridge_address}
                                         </a>
                                     </Typography>
-                                </Grid>
-                                <Grid item>
-                                    <Grid
-                                        container
-                                        direction="row"
-                                        justifyContent="flex-end"
-                                        alignItems="center"
-                                        spacing={2}
-                                    >
-                                        <Grid item>
-                                            <Button fullWidth size="small" onClick={() => setBridgeModalOpen(true)}>
-                                                Bridge
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
                                 </Grid>
                             </Grid>
                             <Divider sx={{ marginTop: 2, marginBottom: 2 }} />

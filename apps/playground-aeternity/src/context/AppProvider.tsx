@@ -42,6 +42,7 @@ async function fetchAeternityBridgeInfo(): Promise<AeternityBridgeInfo> {
 }
 
 async function fetchEvmBridgeInfo(network: Network): Promise<EVMBridgeInfo> {
+    const account = (await EthereumEthers.listAccounts())[0];
     const bridge = new Contract(Constants[network].bridge_address, Constants[network].bridge_abi, EthereumEthers);
 
     const assetAddress = await bridge.asset();
@@ -92,9 +93,10 @@ async function fetchEvmBridgeInfo(network: Network): Promise<EVMBridgeInfo> {
         });
 
     return {
+        account,
         asset: {
             address: assetAddress,
-            balance: (await asset.balanceOf((await EthereumEthers.listAccounts())[0])).toString(),
+            balance: (await asset.balanceOf(account)).toString(),
         },
         movements,
     };
