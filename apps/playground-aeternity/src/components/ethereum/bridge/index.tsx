@@ -87,21 +87,6 @@ const EthereumBridge = () => {
                                         </a>
                                     </Typography>
                                 </Grid>
-                                <Grid item>
-                                    <Grid
-                                        container
-                                        direction="row"
-                                        justifyContent="flex-end"
-                                        alignItems="center"
-                                        spacing={2}
-                                    >
-                                        <Grid item>
-                                            <Button fullWidth size="small" onClick={() => setWrapModalOpen(true)}>
-                                                Bridge
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
                             </Grid>
                             <Divider sx={{ marginTop: 2, marginBottom: 2 }} />
                             <Card variant="outlined">

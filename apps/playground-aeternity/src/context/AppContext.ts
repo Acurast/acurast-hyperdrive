@@ -28,6 +28,7 @@ export interface AssetInfo {
 }
 
 export interface EVMBridgeInfo {
+    account: string;
     asset: AssetInfo;
     movements: BridgeMovement[];
 }

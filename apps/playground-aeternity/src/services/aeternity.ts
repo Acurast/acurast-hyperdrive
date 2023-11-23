@@ -21,20 +21,24 @@ const Aeternity = new AeSdkAepp({
 });
 
 export const connect = async () => {
-    const handleWallets = async ({ wallets, newWallet }: any) => {
-        const wallet: any = wallets['Superhero Wallet'];
-        if (wallet) {
-            const walletInfo = await Aeternity.connectToWallet(wallet.getConnection());
-            const {
-                address: { current },
-            } = await Aeternity.subscribeAddress(SUBSCRIPTION_TYPES.subscribe, 'connected');
-            console.log(walletInfo, current);
-        }
-        stopScan();
-    };
+    return new Promise((resolve, reject) => {
+        const handleWallets = async ({ wallets, newWallet }: any) => {
+            const wallet: any = wallets['Superhero Wallet'];
+            if (wallet) {
+                const walletInfo = await Aeternity.connectToWallet(wallet.getConnection());
+                const {
+                    address: { current },
+                } = await Aeternity.subscribeAddress(SUBSCRIPTION_TYPES.subscribe, 'connected');
+                console.log(walletInfo, current);
+                resolve(current);
+            }
+            stopScan();
+            reject();
+        };
 
-    const scannerConnection = new BrowserWindowMessageConnection();
-    const stopScan = walletDetector(scannerConnection, handleWallets);
+        const scannerConnection = new BrowserWindowMessageConnection();
+        const stopScan = walletDetector(scannerConnection, handleWallets);
+    });
 };
 
 export default Aeternity;
