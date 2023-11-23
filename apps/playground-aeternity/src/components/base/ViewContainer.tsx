@@ -42,9 +42,9 @@ const ViewContainer: React.FC<{ children: React.ReactNode }> = (props) => {
             <NavigationBar />
             <div className={classes.container}>{props.children}</div>
             <footer className={classes.footer}>
-                <a href="https://papers.ch" target="_blank" rel="noopener noreferrer" className={classes.link}>
+                <a href="https://acurast.com" target="_blank" rel="noopener noreferrer" className={classes.link}>
                     <Typography variant="overline" style={{ marginRight: '0.5em' }}>
-                        Powered by papers.ch
+                        Powered by Acurast
                     </Typography>
                 </a>
             </footer>

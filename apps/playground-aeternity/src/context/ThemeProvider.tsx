@@ -15,7 +15,7 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = (props) => {
                     mode: theme,
                     primary: {
                         light: '#69a9ff',
-                        main: '#007bff',
+                        main: '#eeff41',
                         dark: '#0050cb',
                     },
                     secondary: {
