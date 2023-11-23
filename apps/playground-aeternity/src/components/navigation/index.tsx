@@ -28,7 +28,7 @@ const NavigationBar = () => {
         <AppBar position="static" color="default">
             <Toolbar>
                 <Typography>
-                    <span style={{ color: 'red' }}>Demo</span>
+                    <span style={{ color: 'white' }}>ACURAST</span>
                 </Typography>
                 <Box sx={{ flexGrow: 1 }} />
 
