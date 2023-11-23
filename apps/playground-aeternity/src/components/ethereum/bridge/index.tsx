@@ -28,7 +28,7 @@ const EthereumBridge = () => {
             Constants[network].bridge_abi,
             EthereumSDK.getSigner(),
         );
-        if (!destination || destination.length < 32) {
+        if (!destination || destination.length != 53 || !destination.startsWith('ak')) {
             return setError(new Error('Invalid destination!'));
         }
         if (!amount || amount == '0') {
@@ -155,7 +155,7 @@ const EthereumBridge = () => {
             >
                 <TextField
                     error={!destination}
-                    placeholder="Destination (tz...)"
+                    placeholder="Destination (ct_...)"
                     value={destination || ''}
                     onChange={handleDestination}
                     fullWidth

@@ -4,7 +4,6 @@
     "private": true,
     "devDependencies": {
         "@aeternity/aepp-sdk": "13.2.2",
-        "@airgap/beacon-sdk": "4.0.12",
         "@craco/craco": "6.4.5",
         "@emotion/react": "11.10.0",
         "@emotion/styled": "11.10.0",
@@ -27,7 +26,6 @@
         "eslint-plugin-prettier": "4.2.1",
         "ethers": "5.7.2",
         "fork-ts-checker-webpack-plugin": "7.2.13",
-        "ibcf-sdk": "workspaces:*",
         "jdenticon": "3.1.1",
         "prism-react-renderer": "1.3.5",
         "react": "18.2.0",

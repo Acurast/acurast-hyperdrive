@@ -4,7 +4,7 @@ const Constants = {
     network: 'custom',
     rpc: 'https://tezos-ghostnet-node-1.diamond.papers.tech',
     [Network.Ethereum]: {
-        bridge_address: '0x43733e95b0e5e6b57f863c19adadc04866da87bd',
+        bridge_address: '0xc42aa80c6B70fd2441EB7E1Db0105Dde9BDDbDcb',
         bridge_abi: [
             {
                 inputs: [
@@ -218,7 +218,7 @@ const Constants = {
     aeternity: {
         explorer: 'https://testnet.aescan.io',
         rpc: 'https://testnet.aeternity.io',
-        bridge_address: 'ct_2staJWJ8F77Kpo6mVETWkghyAtbaKJjUNZQj7evJbWZ7PruU42' as `ct_${string}`,
+        bridge_address: 'ct_2HXE5GDaqBSE4BUE7nXsXSCBgNWJQ3JTjyW7KjdTqBDw5PKqCJ' as `ct_${string}`, //ct_SbSddc769XoaNJP4bs1YT3it65RK6ce4cZnxxYM7sfBG9RLBF
         bridge_aci: [
             { namespace: { name: 'Option', typedefs: [] } },
             { namespace: { name: 'ListInternal', typedefs: [] } },

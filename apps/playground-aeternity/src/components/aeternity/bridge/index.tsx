@@ -24,7 +24,7 @@ const AeternityBridge = () => {
     const [confirming, setConfirming] = React.useState(false);
 
     const bridge = React.useCallback(async () => {
-        if (!destination || destination.length < 32) {
+        if (!destination || destination.length != 42 || !destination.startsWith('0x')) {
             return setError('Invalid destination!');
         }
         if (!amount || amount == '0') {
@@ -43,7 +43,7 @@ const AeternityBridge = () => {
                 from_account: Aeternity.address,
                 for_account: Constants.aeternity.bridge_address.replace('ct_', 'ak_'),
             });
-
+            console.log(allowance);
             if (!allowance) {
                 const create_allowance_call = await asset_contract.create_allowance(
                     Constants.aeternity.bridge_address.replace('ct_', 'ak_'),

@@ -7,7 +7,6 @@ import {
     Box,
     Typography,
 } from '@mui/material';
-import { Tezos } from 'ibcf-sdk';
 
 import TableRow from 'src/components/base/TableRow';
 import Table from '../../base/Table';
@@ -16,7 +15,16 @@ import { BridgeMovement } from 'src/context/AppContext';
 const TRow: React.FC<BridgeMovement> = ({ destination, amount, nonce }) => {
     return (
         <TableRow>
-            <TableCell component="th" scope="row">
+            <TableCell
+                component="th"
+                scope="row"
+                sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: 300,
+                }}
+            >
                 <Typography variant="caption">{destination}</Typography>
             </TableCell>
             <TableCell
@@ -26,7 +34,7 @@ const TRow: React.FC<BridgeMovement> = ({ destination, amount, nonce }) => {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    maxWidth: 200,
+                    maxWidth: 150,
                 }}
             >
                 <Typography variant="caption">{amount.toString()}</Typography>
