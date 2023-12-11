@@ -76,6 +76,18 @@ sp.add_expression_compilation_target(
 )
 
 sp.add_expression_compilation_target(
+    OutgoingActionKind.SET_JOB_ENVIRONMENT,
+    sp.set_type_expr(
+        OutgoingActionLambda.set_job_environment,
+        sp.TLambda(
+            Type.OutgoingActionLambdaArg,
+            Type.OutgoingActionLambdaReturn,
+            with_operations=True,
+        ),
+    ),
+)
+
+sp.add_expression_compilation_target(
     "OUT_" + OutgoingActionKind.NOOP,
     sp.set_type_expr(
         OutgoingActionLambda.noop,

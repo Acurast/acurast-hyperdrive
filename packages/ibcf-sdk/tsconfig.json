@@ -12,6 +12,7 @@
         "outDir": "./dist",
         "moduleResolution": "node",
         "resolveJsonModule": true,
+        "skipLibCheck": true,
         "rootDir": "./src"
     },
     "include": ["./src"],
