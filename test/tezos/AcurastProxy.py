@@ -149,6 +149,10 @@ def test():
                         function=OutgoingActionLambda.finalize_job,
                         storage=sp.bytes("0x"),
                     ),
+                    OutgoingActionKind.SET_JOB_ENVIRONMENT: sp.record(
+                        function=OutgoingActionLambda.set_job_environment,
+                        storage=sp.bytes("0x"),
+                    ),
                 }
             ),
             incoming_actions=sp.big_map(
@@ -377,4 +381,27 @@ def test():
             ],
             mmr_size=7,
         )
+    )
+
+    # Set job environment
+    set_job_environment_payload = sp.set_type_expr(
+        sp.record(
+            job_id = sp.nat(1),
+            public_key = sp.bytes("0x028160f8d4230005bb3b6aa08078fe73b33b8db12d1d7b2083d593e585e64b061a"),
+            processors = sp.map({
+                sp.bytes("0xd80a8b0d800a3320528693947f7317871b2d51e5f3c8f3d0d4e4f7e6938ed68f"): sp.map({
+                    sp.bytes("0xabcd"): sp.bytes("0xabcd")
+                })
+            })
+        ),
+        Type.SetJobEnvironmentAction
+    )
+    set_job_environment_bytes = scenario.compute(sp.pack(set_job_environment_payload))
+    scenario.show(set_job_environment_bytes)
+    set_job_environment_action = sp.record(
+        kind=OutgoingActionKind.SET_JOB_ENVIRONMENT, payload=set_job_environment_bytes
+    )
+    actions = [set_job_environment_action]
+    acurastProxy.send_actions(actions).run(
+        sender=job_creator.address, level=BLOCK_LEVEL_1, amount=expected_fee
     )

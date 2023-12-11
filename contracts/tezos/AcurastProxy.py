@@ -155,6 +155,12 @@ class Type:
         storage=sp.TNat,
     ).right_comb()
 
+    SetJobEnvironmentAction = sp.TRecord(
+        job_id = sp.TNat,
+        public_key = sp.TBytes,
+        processors = sp.TMap(sp.TBytes, sp.TMap(sp.TBytes, sp.TBytes))
+    ).right_comb()
+
     # Incoming actions
     AssignProcessor = sp.TRecord(
         job_id=sp.TNat,
@@ -324,6 +330,7 @@ class OutgoingActionKind:
     FINALIZE_JOB = "FINALIZE_JOB"
     DEREGISTER_JOB = "DEREGISTER_JOB"
     REGISTER_JOB = "REGISTER_JOB"
+    SET_JOB_ENVIRONMENT = "SET_JOB_ENVIRONMENT"
     TELEPORT_ACRST = "TELEPORT_ACRST" # TODO: remove?
     NOOP = "NOOP"
 
@@ -570,6 +577,35 @@ class OutgoingActionLambda:
             sp.verify(job_information.creator == origin, Error.NOT_JOB_CREATOR)
 
         value = sp.pack((OutgoingActionKind.FINALIZE_JOB, origin, sp.pack(job_ids)))
+        key = sp.pack(arg.context.action_id)
+        state_param = sp.record(key=key, value=value)
+        # Add acurast action to the state merkle tree
+        merkle_aggregator_contract = sp.contract(
+            IBCF_Aggregator_Type.Insert_argument,
+            arg.context.store.config.merkle_aggregator,
+            "insert",
+        ).open_some(Error.INVALID_STATE_CONTRACT)
+        sp.transfer(state_param, sp.mutez(0), merkle_aggregator_contract)
+
+        sp.result(
+            sp.record(
+                context=arg.context,
+                new_action_storage=arg.storage,
+            )
+        )
+
+    @Decorator.generate_lambda(with_operations=True)
+    def set_job_environment(arg):
+        sp.set_type(arg, Type.OutgoingActionLambdaArg)
+
+        # Validate payload
+        decoded_arg = sp.compute(
+            sp.unpack(arg.payload, Type.SetJobEnvironmentAction).open_some(Error.COULD_NOT_UNPACK)
+        )
+
+        origin = sp.compute(sp.sender)
+
+        value = sp.pack((OutgoingActionKind.SET_JOB_ENVIRONMENT, origin, arg.payload))
         key = sp.pack(arg.context.action_id)
         state_param = sp.record(key=key, value=value)
         # Add acurast action to the state merkle tree

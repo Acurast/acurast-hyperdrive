@@ -9,6 +9,7 @@
         "alwaysStrict": true,
         "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "outDir": "bin"
     },
     "include": ["src"],
