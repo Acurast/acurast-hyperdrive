@@ -253,7 +253,7 @@ mod mmr {
 }
 
 #[ink::contract]
-mod state_aggregator {
+pub mod state_aggregator {
     use ink::prelude::vec::Vec;
     use ink::prelude::vec;
     use ink::env::hash;
@@ -266,6 +266,17 @@ mod state_aggregator {
     use scale::{Decode, Encode};
 
     use crate::Map;
+
+    #[derive(Decode, Encode, Debug)]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo)
+    )]
+    pub enum ConfigureArgument {
+        SetOwner(AccountId),
+        SetSnapshotDuration(u32),
+        SetAuthorizedProvider(AccountId),
+    }
 
     struct MergeKeccak;
 
@@ -289,8 +300,8 @@ mod state_aggregator {
         derive(scale_info::TypeInfo)
     )]
     pub struct MerkleProof<T: scale::Decode + ink::storage::traits::Packed + scale::EncodeLike> {
-        mmr_size: u64,
-        proof: Vec<T>,
+        pub mmr_size: u64,
+        pub proof: Vec<T>,
     }
 
     #[ink(event)]
@@ -303,7 +314,7 @@ mod state_aggregator {
     #[derive(Debug)]
     pub struct Config {
         /// Multi-sig address allowed to manage the contract
-        governance_address: AccountId,
+        owner: AccountId,
         /// This constant defined how many levels each snapshot has
         snapshot_duration: u32,
         /// Authorized contract that can insert data
@@ -322,10 +333,11 @@ mod state_aggregator {
 
     impl StateAggregator {
         #[ink(constructor)]
-        pub fn new(admin: AccountId) -> Self {
+        pub fn new(owner: AccountId, snapshot_duration: u32) -> Self {
             let mut contract = Self::default();
 
-            contract.config.governance_address = admin;
+            contract.config.owner = owner;
+            contract.config.snapshot_duration = snapshot_duration;
             contract
         }
 
@@ -333,16 +345,20 @@ mod state_aggregator {
         pub fn default() -> Self {
             Self {
                 config: Config {
-                    governance_address: AccountId::from([0x0; 32]),
+                    owner: AccountId::from([0x0; 32]),
                     snapshot_duration: 5,
                     acurast_contract: AccountId::from([0x0; 32]),
                 },
                 snapshot_start_level: 0,
-                snapshot_counter: 0,
+                snapshot_counter: 1,
                 mmr_size: 0,
                 tree: Mapping::new(),
                 snapshot_level: Mapping::new()
             }
+        }
+
+        fn fail_if_not_owner(&self) {
+            assert!(self.config.owner.eq(&self.env().caller()), "NOT_OWNER");
         }
 
         fn finalize_snapshot(&mut self, required: bool) {
@@ -372,6 +388,20 @@ mod state_aggregator {
                 });
             } else {
                 assert!(!required, "CANNOT_SNAPSHOT");
+            }
+        }
+
+        #[ink(message)]
+        pub fn configure(&mut self, configure: Vec<ConfigureArgument>) {
+            // Only the administrator can configure the contract
+            self.fail_if_not_owner();
+
+            for c in configure {
+                match c {
+                    ConfigureArgument::SetOwner(address) => self.config.owner = address,
+                    ConfigureArgument::SetSnapshotDuration(duration) => self.config.snapshot_duration = duration,
+                    ConfigureArgument::SetAuthorizedProvider(address) => self.config.acurast_contract = address,
+                }
             }
         }
 
@@ -418,13 +448,10 @@ mod state_aggregator {
         pub fn snapshot_root(&self) -> [u8; 32] {
             let mmr = super::mmr::MMR::<[u8; 32], MergeKeccak>::new(self.mmr_size);
 
-            mmr.get_root(&self.tree).expect("COULD_NOT_GENERATE_PROOF")
+            mmr.get_root(&self.tree).expect("COULD_NOT_GET_ROOT")
         }
     }
 
-    /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-    /// module and test functions are marked with a `#[test]` attribute.
-    /// The below code is technically just normal Rust code.
     #[cfg(test)]
     mod tests {
         /// Imports all the definitions from the outer scope so we can use them here.
@@ -435,36 +462,93 @@ mod state_aggregator {
         fn test_constructor() {
             let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
             let admin = accounts.alice;
+            let snapshot_duration = 5;
 
-            let validator = StateAggregator::new(admin.clone());
-            assert_eq!(validator.config.governance_address, admin);
+            let validator = StateAggregator::new(admin.clone(), snapshot_duration);
+            assert_eq!(validator.config.owner, admin);
+            assert_eq!(validator.config.snapshot_duration, snapshot_duration);
         }
 
         #[ink::test]
-        fn test_submit_root() {
+        #[should_panic(expected="NOT_OWNER")]
+        fn test_unauthorized_configure() {
             let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
             let admin = accounts.alice;
+            let data_provider = accounts.bob;
+            let snapshot_duration = 5;
 
-            let mut state_aggregator = StateAggregator::new(admin);
+            let mut state_aggregator = StateAggregator::new(admin, snapshot_duration);
+
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
+
+            // (Panic Expected) : Only the admin can call the configure method
+            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(data_provider)]);
+        }
+
+        #[ink::test]
+        fn test_authorized_configure() {
+            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+            let admin = accounts.alice;
+            let data_provider = accounts.bob;
+            let snapshot_duration = 5;
+
+            let mut state_aggregator = StateAggregator::new(admin, snapshot_duration);
 
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(admin);
 
+            // (Panic Expected) : Only the admin can call the configure method
+            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(data_provider)]);
+        }
+
+        #[ink::test]
+        fn test_worflow() {
+            let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
+            let admin = accounts.alice;
+            let data_provider = accounts.bob;
+            let snapshot_duration = 5;
+
+            let mut state_aggregator = StateAggregator::new(admin, snapshot_duration);
+
+            // Set data provider
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(admin);
+            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(data_provider)]);
+
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+
+            // Insert data (First message)
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(data_provider);
             let data_hash = [0; 32];
             state_aggregator.insert(data_hash);
             assert_eq!(state_aggregator.mmr_size, 1);
-            dbg!(state_aggregator.snapshot_root());
+            assert_eq!(state_aggregator.snapshot_root(), data_hash);
+            assert_eq!(state_aggregator.snapshot_start_level, 1);
+            assert_eq!(state_aggregator.snapshot_counter, 1);
+
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
 
             let data_hash = [1; 32];
             state_aggregator.insert(data_hash);
             assert_eq!(state_aggregator.mmr_size, 3);
-            dbg!(state_aggregator.snapshot_root());
+            assert_eq!(state_aggregator.snapshot_root(), [213, 244, 247, 225, 217, 137, 132, 132, 128, 35, 111, 176, 165, 248, 8, 213, 135, 122, 191, 119, 131, 100, 174, 80, 132, 82, 52, 221, 108, 30, 128, 252]);
+            assert_eq!(state_aggregator.snapshot_start_level, 1);
+            assert_eq!(state_aggregator.snapshot_counter, 1);
+
+            // Snapshots have a duration of 5 blocks
+            // Test that after 5 blocks, the next message will finalize the snapshot
+
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
 
             let data_hash = [2; 32];
             state_aggregator.insert(data_hash);
             assert_eq!(state_aggregator.mmr_size, 4);
-            dbg!(state_aggregator.snapshot_root());
+            assert_eq!(state_aggregator.snapshot_root(), [159, 146, 79, 136, 82, 0, 125, 15, 177, 253, 13, 245, 231, 50, 185, 188, 98, 1, 49, 137, 247, 85, 232, 173, 225, 190, 54, 50, 234, 171, 110, 143]);
+            assert_eq!(state_aggregator.snapshot_start_level, 7);
+            assert_eq!(state_aggregator.snapshot_counter, 2);
 
-            //dbg!(state_aggregator.generate_proof(vec![0]))
         }
     }
 }
