@@ -176,6 +176,7 @@ $(BUILD_FOLDER)/npm-packages: package.json
 
 install-pip-packages: $(BUILD_FOLDER)/pip-packages
 $(BUILD_FOLDER)/pip-packages: requirements.txt
+	@pip3 install --upgrade pip
 	@pip3 install -r requirements.txt --quiet
 	$(touch_done)
 
