@@ -2,7 +2,7 @@
 
 
 #[ink::contract]
-mod validator {
+pub mod validator {
     use ink::prelude::vec::Vec;
     use ink::prelude::vec;
     use ink::env::hash;

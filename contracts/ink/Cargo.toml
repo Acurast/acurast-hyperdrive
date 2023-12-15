@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "proxy",
+    "state",
+    "validator",
+]
+resolver ="1"
