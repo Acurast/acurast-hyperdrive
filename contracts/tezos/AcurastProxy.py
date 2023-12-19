@@ -98,6 +98,7 @@ class Error:
     UNEXPECTED_STORAGE_VERSION = "UNEXPECTED_STORAGE_VERSION"
     INVALID_PROOF = "INVALID_PROOF"
     NOT_JOB_PROCESSOR = "NOT_JOB_PROCESSOR"
+    JOB_ALREADY_FINALIZED = "JOB_ALREADY_FINALIZED"
     PAUSED = "CONTRACT_PAUSED"
     CANNOT_FINALIZE_JOB = "CANNOT_FINALIZE_JOB"
     CANNOT_CANCEL_JOB = "CANNOT_CANCEL_JOB"
@@ -334,12 +335,10 @@ class OutgoingActionKind:
     TELEPORT_ACRST = "TELEPORT_ACRST" # TODO: remove?
     NOOP = "NOOP"
 
-
 class IncomingActionKind:
     ASSIGN_JOB_PROCESSOR = "ASSIGN_JOB_PROCESSOR"
     FINALIZE_JOB = "FINALIZE_JOB"
     NOOP = "NOOP"
-
 
 class OutgoingActionLambda:
     @Decorator.generate_lambda(with_operations=True)
@@ -603,7 +602,14 @@ class OutgoingActionLambda:
             sp.unpack(arg.payload, Type.SetJobEnvironmentAction).open_some(Error.COULD_NOT_UNPACK)
         )
 
+        # Get job information
+        job_information = sp.compute(
+            arg.context.store.job_information.get(decoded_arg.job_id, message=Error.JOB_UNKNOWN),
+        )
+
+        # Only the job creator can deregister the job
         origin = sp.compute(sp.sender)
+        sp.verify(job_information.creator == origin, Error.NOT_JOB_CREATOR)
 
         value = sp.pack((OutgoingActionKind.SET_JOB_ENVIRONMENT, origin, arg.payload))
         key = sp.pack(arg.context.action_id)
@@ -884,6 +890,9 @@ class AcurastProxy(sp.Contract):
             job_information.value.processors.contains(sp.sender),
             Error.NOT_JOB_PROCESSOR,
         )
+
+        # Verify that the job has not been finalized
+        sp.verify(job_information.value.status == Job_Status.FinalizedOrCancelled, Error.JOB_ALREADY_FINALIZED)
 
         # Re-fill processor fees
         # Forbidden to credit 0ꜩ to a contract without code.
