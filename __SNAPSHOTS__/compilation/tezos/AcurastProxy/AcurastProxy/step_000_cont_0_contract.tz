@@ -215,6 +215,17 @@ code
                 PUSH string "NOT_JOB_PROCESSOR"; 
                 FAILWITH;   
               }; 
+            PUSH nat 3; 
+            DUP 2;      
+            GET 8;      
+            COMPARE;    
+            EQ;         
+            IF
+              {}
+              {
+                PUSH string "JOB_ALREADY_FINALIZED"; 
+                FAILWITH;   
+              }; 
             DUP;        
             CAR;        
             GET 5;      
@@ -252,7 +263,7 @@ code
                 SUB_MUTEZ;  
                 IF_NONE
                   {
-                    PUSH int 892; 
+                    PUSH int 901; 
                     FAILWITH;   
                   }
                   {}; 
@@ -387,7 +398,7 @@ code
                 IF
                   {}
                   {
-                    PUSH string "WrongCondition: compute_AcurastProxy_842.value.incoming_action_id == self.data.store.incoming_seq_id"; 
+                    PUSH string "WrongCondition: compute_AcurastProxy_848.value.incoming_action_id == self.data.store.incoming_seq_id"; 
                     FAILWITH;   
                   }; 
                 DIG 3;      
@@ -461,7 +472,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 871; 
+                    PUSH int 877; 
                     FAILWITH;   
                   }
                   {}; 
@@ -572,7 +583,7 @@ code
                 GET;        
                 IF_NONE
                   {
-                    PUSH int 809; 
+                    PUSH int 815; 
                     FAILWITH;   
                   }
                   {}; 
