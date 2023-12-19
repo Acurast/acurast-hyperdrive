@@ -16,6 +16,7 @@ strum_macros = { version = "0.24.1", default-features = false }
 
 acurast-state-ink = { path = "../state", default-features = false, features = ["ink-as-dependency"] }
 acurast-validator-ink = { path = "../validator", default-features = false, features = ["ink-as-dependency"] }
+acurast-consumer-ink = { path = "../consumer", default-features = false, features = ["ink-as-dependency"] }
 
 [dev-dependencies]
 ink_e2e = "4.2.0"
@@ -30,7 +31,8 @@ std = [
     "scale/std",
     "scale-info/std",
     "acurast-state-ink/std",
-    "acurast-validator-ink/std"
+    "acurast-validator-ink/std",
+    "acurast-consumer-ink/std"
 ]
 ink-as-dependency = []
 e2e-tests = []
