@@ -1,8 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-use ink::storage::{Mapping};
+use ink::env::call::Selector;
+use ink::storage::Mapping;
 
 type Map<SK, T> = Mapping<u64, T, SK>;
+
+const INSERT_SELECTOR: Selector = Selector::new(ink::selector_bytes!("insert"));
 
 mod mmr {
     extern crate alloc;
@@ -10,17 +13,16 @@ mod mmr {
     use alloc::borrow::Cow;
     use alloc::collections::VecDeque;
     use ckb_merkle_mountain_range::helper::{
-        get_peak_map, get_peaks, parent_offset,
-        pos_height_in_tree, sibling_offset,
+        get_peak_map, get_peaks, parent_offset, pos_height_in_tree, sibling_offset,
     };
     use ckb_merkle_mountain_range::{Error, Merge, Result};
-    use ink::storage::traits::{StorageKey, Packed};
-    use scale::{Encode, EncodeLike};
     use core::fmt::Debug;
     use core::marker::PhantomData;
+    use ink::storage::traits::{Packed, StorageKey};
+    use scale::{Encode, EncodeLike};
 
-    use ink::prelude::vec::Vec;
     use ink::prelude::vec;
+    use ink::prelude::vec::Vec;
 
     use crate::Map;
 
@@ -30,7 +32,6 @@ mod mmr {
         batch: Vec<(u64, Vec<T>)>,
         merge: PhantomData<(T, M)>,
     }
-
 
     impl<T, M> MMR<T, M> {
         pub fn new(mmr_size: u64) -> Self {
@@ -48,7 +49,12 @@ mod mmr {
 
     impl<T: Clone + PartialEq + Encode + Packed + EncodeLike, M: Merge<Item = T>> MMR<T, M> {
         // find internal MMR elem, the pos must exists, otherwise a error will return
-        fn find_elem<'b, SK: StorageKey>(&self, pos: u64, store: &Map<SK, T>, hashes: &'b [T]) -> Result<Cow<'b, T>> {
+        fn find_elem<'b, SK: StorageKey>(
+            &self,
+            pos: u64,
+            store: &Map<SK, T>,
+            hashes: &'b [T],
+        ) -> Result<Cow<'b, T>> {
             let pos_offset = pos.checked_sub(self.mmr_size);
             if let Some(elem) = pos_offset.and_then(|i| hashes.get(i as usize)) {
                 return Ok(Cow::Borrowed(elem));
@@ -58,7 +64,11 @@ mod mmr {
         }
 
         // push a element and return position
-        pub fn push<SK: StorageKey>(&mut self, store: &Map<SK, T>, elem: T) -> Result<Vec<(u64, Vec<T>)>> {
+        pub fn push<SK: StorageKey>(
+            &mut self,
+            store: &Map<SK, T>,
+            elem: T,
+        ) -> Result<Vec<(u64, Vec<T>)>> {
             let mut elems = vec![elem];
             let elem_pos = self.mmr_size;
             let peak_map = get_peak_map(self.mmr_size);
@@ -89,11 +99,7 @@ mod mmr {
             }
             let peaks: Vec<T> = get_peaks(self.mmr_size)
                 .into_iter()
-                .map(|peak_pos| {
-                    store
-                        .get(peak_pos)
-                        .ok_or(Error::InconsistentStore)
-                })
+                .map(|peak_pos| store.get(peak_pos).ok_or(Error::InconsistentStore))
                 .collect::<Result<Vec<T>>>()?;
             self.bag_rhs_peaks(peaks)?.ok_or(Error::InconsistentStore)
         }
@@ -118,7 +124,7 @@ mod mmr {
             proof: &mut Vec<T>,
             pos_list: Vec<u64>,
             peak_pos: u64,
-            store: &Map<SK, T>
+            store: &Map<SK, T>,
         ) -> Result<()> {
             // do nothing if position itself is the peak
             if pos_list.len() == 1 && pos_list == [peak_pos] {
@@ -126,11 +132,7 @@ mod mmr {
             }
             // take peak root from store if no positions need to be proof
             if pos_list.is_empty() {
-                proof.push(
-                    store
-                        .get(peak_pos)
-                        .ok_or(Error::InconsistentStore)?,
-                );
+                proof.push(store.get(peak_pos).ok_or(Error::InconsistentStore)?);
                 return Ok(());
             }
 
@@ -164,11 +166,7 @@ mod mmr {
                     // drop sibling
                     queue.pop_front();
                 } else {
-                    proof.push(
-                        store
-                            .get(sib_pos)
-                            .ok_or(Error::InconsistentStore)?,
-                    );
+                    proof.push(store.get(sib_pos).ok_or(Error::InconsistentStore)?);
                 }
                 if parent_pos < peak_pos {
                     // save pos to tree buf
@@ -182,7 +180,11 @@ mod mmr {
         /// 1. sort positions
         /// 2. push merkle proof to proof by peak from left to right
         /// 3. push bagged right hand side root
-        pub fn gen_proof<SK: StorageKey>(&self, mut pos_list: Vec<u64>, store: &Map<SK, T>) -> Result<MerkleProof<T, M>> {
+        pub fn gen_proof<SK: StorageKey>(
+            &self,
+            mut pos_list: Vec<u64>,
+            store: &Map<SK, T>,
+        ) -> Result<MerkleProof<T, M>> {
             if pos_list.is_empty() {
                 return Err(Error::GenProofForInvalidLeaves);
             }
@@ -230,7 +232,6 @@ mod mmr {
         merge: PhantomData<M>,
     }
 
-
     impl<T: Clone + PartialEq + Encode + Packed + EncodeLike, M: Merge<Item = T>> MerkleProof<T, M> {
         pub fn new(mmr_size: u64, proof: Vec<T>) -> Self {
             MerkleProof {
@@ -249,29 +250,25 @@ mod mmr {
         }
         v.drain(..).collect()
     }
-
 }
 
 #[ink::contract]
 pub mod state_aggregator {
-    use ink::prelude::vec::Vec;
-    use ink::prelude::vec;
     use ink::env::hash;
-    use ink::storage::{Mapping};
+    use ink::prelude::vec;
+    use ink::prelude::vec::Vec;
+    use ink::storage::traits::AutoKey;
+    use ink::storage::Mapping;
 
-    use ckb_merkle_mountain_range::{Result};
-    use ink::storage::traits::{AutoKey};
+    use ckb_merkle_mountain_range::Merge;
+    use ckb_merkle_mountain_range::Result;
 
-    use ckb_merkle_mountain_range::{Merge};
     use scale::{Decode, Encode};
 
     use crate::Map;
 
     #[derive(Decode, Encode, Debug)]
-    #[cfg_attr(
-        feature = "std",
-        derive(scale_info::TypeInfo)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ConfigureArgument {
         SetOwner(AccountId),
         SetSnapshotDuration(u32),
@@ -295,10 +292,7 @@ pub mod state_aggregator {
     }
 
     #[derive(Decode, Encode, Debug)]
-    #[cfg_attr(
-        feature = "std",
-        derive(scale_info::TypeInfo)
-    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct MerkleProof<T: scale::Decode + ink::storage::traits::Packed + scale::EncodeLike> {
         pub mmr_size: u64,
         pub proof: Vec<T>,
@@ -307,7 +301,7 @@ pub mod state_aggregator {
     #[ink(event)]
     pub struct SnapshotFinalized {
         snapshot: u128,
-        level: BlockNumber
+        level: BlockNumber,
     }
 
     #[ink::storage_item]
@@ -353,7 +347,7 @@ pub mod state_aggregator {
                 snapshot_counter: 1,
                 mmr_size: 0,
                 tree: Mapping::new(),
-                snapshot_level: Mapping::new()
+                snapshot_level: Mapping::new(),
             }
         }
 
@@ -376,13 +370,14 @@ pub mod state_aggregator {
 
                 // Snapshot previous block level
                 let snapshot_level = current_block_number - 1;
-                self.snapshot_level.insert(self.snapshot_counter, &snapshot_level);
+                self.snapshot_level
+                    .insert(self.snapshot_counter, &snapshot_level);
 
                 // Start new snapshot
                 self.snapshot_start_level = current_block_number;
                 self.tree = Mapping::new();
 
-                Self::env().emit_event(SnapshotFinalized {
+                self.env().emit_event(SnapshotFinalized {
                     snapshot: self.snapshot_counter,
                     level: snapshot_level,
                 });
@@ -399,8 +394,12 @@ pub mod state_aggregator {
             for c in configure {
                 match c {
                     ConfigureArgument::SetOwner(address) => self.config.owner = address,
-                    ConfigureArgument::SetSnapshotDuration(duration) => self.config.snapshot_duration = duration,
-                    ConfigureArgument::SetAuthorizedProvider(address) => self.config.acurast_contract = address,
+                    ConfigureArgument::SetSnapshotDuration(duration) => {
+                        self.config.snapshot_duration = duration
+                    }
+                    ConfigureArgument::SetAuthorizedProvider(address) => {
+                        self.config.acurast_contract = address
+                    }
                 }
             }
         }
@@ -416,7 +415,10 @@ pub mod state_aggregator {
             self.finalize_snapshot(false);
 
             // Only the authorized contract can add data
-            assert!(self.config.acurast_contract == self.env().caller(), "NOT_ALLOWED");
+            assert!(
+                self.config.acurast_contract == self.env().caller(),
+                "NOT_ALLOWED"
+            );
 
             let mut mmr = super::mmr::MMR::<[u8; 32], MergeKeccak>::new(self.mmr_size);
 
@@ -434,9 +436,14 @@ pub mod state_aggregator {
         pub fn generate_proof(&self, positions: Vec<u64>) -> MerkleProof<[u8; 32]> {
             let mmr = super::mmr::MMR::<[u8; 32], MergeKeccak>::new(self.mmr_size);
 
-            let proof = mmr.gen_proof(positions, &self.tree).expect("COULD_NOT_GENERATE_PROOF");
+            let proof = mmr
+                .gen_proof(positions, &self.tree)
+                .expect("COULD_NOT_GENERATE_PROOF");
 
-            MerkleProof { mmr_size: proof.mmr_size, proof: proof.proof }
+            MerkleProof {
+                mmr_size: proof.mmr_size,
+                proof: proof.proof,
+            }
         }
 
         #[ink(message)]
@@ -470,7 +477,7 @@ pub mod state_aggregator {
         }
 
         #[ink::test]
-        #[should_panic(expected="NOT_OWNER")]
+        #[should_panic(expected = "NOT_OWNER")]
         fn test_unauthorized_configure() {
             let accounts = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>();
             let admin = accounts.alice;
@@ -482,7 +489,9 @@ pub mod state_aggregator {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(accounts.bob);
 
             // (Panic Expected) : Only the admin can call the configure method
-            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(data_provider)]);
+            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(
+                data_provider,
+            )]);
         }
 
         #[ink::test]
@@ -497,7 +506,9 @@ pub mod state_aggregator {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(admin);
 
             // (Panic Expected) : Only the admin can call the configure method
-            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(data_provider)]);
+            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(
+                data_provider,
+            )]);
         }
 
         #[ink::test]
@@ -511,7 +522,9 @@ pub mod state_aggregator {
 
             // Set data provider
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(admin);
-            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(data_provider)]);
+            state_aggregator.configure(vec![ConfigureArgument::SetAuthorizedProvider(
+                data_provider,
+            )]);
 
             ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
 
@@ -529,7 +542,13 @@ pub mod state_aggregator {
             let data_hash = [1; 32];
             state_aggregator.insert(data_hash);
             assert_eq!(state_aggregator.mmr_size, 3);
-            assert_eq!(state_aggregator.snapshot_root(), [213, 244, 247, 225, 217, 137, 132, 132, 128, 35, 111, 176, 165, 248, 8, 213, 135, 122, 191, 119, 131, 100, 174, 80, 132, 82, 52, 221, 108, 30, 128, 252]);
+            assert_eq!(
+                state_aggregator.snapshot_root(),
+                [
+                    213, 244, 247, 225, 217, 137, 132, 132, 128, 35, 111, 176, 165, 248, 8, 213,
+                    135, 122, 191, 119, 131, 100, 174, 80, 132, 82, 52, 221, 108, 30, 128, 252
+                ]
+            );
             assert_eq!(state_aggregator.snapshot_start_level, 1);
             assert_eq!(state_aggregator.snapshot_counter, 1);
 
@@ -545,10 +564,15 @@ pub mod state_aggregator {
             let data_hash = [2; 32];
             state_aggregator.insert(data_hash);
             assert_eq!(state_aggregator.mmr_size, 4);
-            assert_eq!(state_aggregator.snapshot_root(), [159, 146, 79, 136, 82, 0, 125, 15, 177, 253, 13, 245, 231, 50, 185, 188, 98, 1, 49, 137, 247, 85, 232, 173, 225, 190, 54, 50, 234, 171, 110, 143]);
+            assert_eq!(
+                state_aggregator.snapshot_root(),
+                [
+                    159, 146, 79, 136, 82, 0, 125, 15, 177, 253, 13, 245, 231, 50, 185, 188, 98, 1,
+                    49, 137, 247, 85, 232, 173, 225, 190, 54, 50, 234, 171, 110, 143
+                ]
+            );
             assert_eq!(state_aggregator.snapshot_start_level, 7);
             assert_eq!(state_aggregator.snapshot_counter, 2);
-
         }
     }
 }

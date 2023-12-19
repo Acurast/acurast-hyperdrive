@@ -3,5 +3,6 @@ members = [
     "proxy",
     "state",
     "validator",
+    "consumer"
 ]
 resolver ="1"

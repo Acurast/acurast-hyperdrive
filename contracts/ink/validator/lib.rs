@@ -1,14 +1,14 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-
 #[ink::contract]
 pub mod validator {
-    use ink::prelude::vec::Vec;
-    use ink::prelude::vec;
     use ink::env::hash;
-    use ink::storage::Mapping;
+    use ink::prelude::vec;
+    use ink::prelude::vec::Vec;
+    use ink::storage::{traits::Packed, Mapping};
+    use scale::{Decode, Encode, EncodeLike};
 
-    use ckb_merkle_mountain_range::{MerkleProof, Merge, Error};
+    use ckb_merkle_mountain_range::{Error, Merge, MerkleProof as MMRMerkleProof};
 
     struct MergeKeccak;
 
@@ -24,6 +24,21 @@ pub mod validator {
 
             Ok(output.try_into().expect("INVALID_HASH_LENGTH"))
         }
+    }
+
+    #[derive(Decode, Encode, Debug)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub struct LeafProof {
+        pub leaf_index: u64,
+        pub data: Vec<u8>,
+    }
+
+    #[derive(Decode, Encode, Debug)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub struct MerkleProof<T: Decode + Packed + EncodeLike> {
+        pub mmr_size: u64,
+        pub proof: Vec<T>,
+        pub leaves: Vec<LeafProof>,
     }
 
     const MAX_VALIDATORS: usize = 50;
@@ -49,12 +64,16 @@ pub mod validator {
         current_snapshot: u128,
         root: Mapping<u128, [u8; 32]>,
         snapshot_submissions: Mapping<AccountId, [u8; 32]>,
-        snapshot_submissions_accounts: Vec<AccountId>
+        snapshot_submissions_accounts: Vec<AccountId>,
     }
 
     impl Validator {
         #[ink(constructor)]
-        pub fn new(admin: AccountId, minimum_endorsements: u16, mut validators: Vec<AccountId>) -> Self {
+        pub fn new(
+            admin: AccountId,
+            minimum_endorsements: u16,
+            mut validators: Vec<AccountId>,
+        ) -> Self {
             assert!(validators.len() <= MAX_VALIDATORS, "TOO_MANY_VALIDATORS");
             assert!(minimum_endorsements > 0, "NON_ZERO_ENDORSEMENTS");
 
@@ -74,12 +93,12 @@ pub mod validator {
                 config: Config {
                     governance_address: AccountId::from([0x0; 32]),
                     minimum_endorsements: 0,
-                    validators: vec![]
+                    validators: vec![],
                 },
                 current_snapshot: 1,
                 root: Default::default(),
                 snapshot_submissions: Default::default(),
-                snapshot_submissions_accounts: Default::default()
+                snapshot_submissions_accounts: Default::default(),
             }
         }
 
@@ -149,26 +168,35 @@ pub mod validator {
         // Views
 
         #[ink(message)]
-        pub fn verify_proof(&self, snapshot: u128, mmr_size: u64, proof_items: Vec<[u8; 32]>, leaves: Vec<(u64, Vec<u8>)>) -> bool {
+        pub fn verify_proof(&self, snapshot: u128, proof: MerkleProof<[u8; 32]>) -> bool {
             // Get snapshot root
             let snaptshot_root = self.root.get(snapshot).unwrap_or_default();
 
             // Prepare proof instance
-            let proof = MerkleProof::<[u8; 32], MergeKeccak>::new(mmr_size, proof_items);
+            let mmr_proof =
+                MMRMerkleProof::<[u8; 32], MergeKeccak>::new(proof.mmr_size, proof.proof);
 
             // Derive root from proof and leaves
-            let hashed_leaves: Vec<(u64, [u8; 32])> = leaves.iter().map(|item| {
-                let mut hash = <hash::Keccak256 as hash::HashOutput>::Type::default();
-                ink::env::hash_bytes::<hash::Keccak256>(&item.1, &mut hash);
+            let hashed_leaves: Vec<(u64, [u8; 32])> = proof
+                .leaves
+                .iter()
+                .map(|item| {
+                    let mut hash = <hash::Keccak256 as hash::HashOutput>::Type::default();
+                    ink::env::hash_bytes::<hash::Keccak256>(&item.data, &mut hash);
 
-                (item.0, hash.try_into().expect("INVALID_HASH_LENGTH"))
-            }).collect();
-            let derived_root = proof.calculate_root(hashed_leaves).expect("INVALID_PROOF");
+                    (
+                        item.leaf_index,
+                        hash.try_into().expect("INVALID_HASH_LENGTH"),
+                    )
+                })
+                .collect();
+            let derived_root = mmr_proof
+                .calculate_root(hashed_leaves)
+                .expect("INVALID_PROOF");
 
             // Check if the derived proof matches the one from the snapshot
             snaptshot_root == derived_root
         }
-
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -187,7 +215,11 @@ pub mod validator {
             let minimum_endorsements: u16 = 1;
             let validators: Vec<AccountId> = vec![admin];
 
-            let validator = Validator::new(admin.clone(), minimum_endorsements.clone(), validators.clone());
+            let validator = Validator::new(
+                admin.clone(),
+                minimum_endorsements.clone(),
+                validators.clone(),
+            );
             assert_eq!(validator.config.governance_address, admin);
             assert_eq!(validator.config.minimum_endorsements, minimum_endorsements);
             assert_eq!(validator.config.validators, validators);
