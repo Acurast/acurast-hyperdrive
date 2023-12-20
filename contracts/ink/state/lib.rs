@@ -5,8 +5,19 @@ use ink::storage::Mapping;
 
 type Map<SK, T> = Mapping<u64, T, SK>;
 
+pub use state_aggregator::Error;
+
+// Method selectors
+
 pub const INSERT_SELECTOR: Selector = Selector::new(ink::selector_bytes!("insert"));
 pub const GENERATE_PROOF_SELECTOR: Selector = Selector::new(ink::selector_bytes!("generate_proof"));
+
+// Method types
+
+pub type InsertReturn = Result<u128, state_aggregator::Error>;
+
+pub type GenerateProofReturn =
+    Result<state_aggregator::MerkleProof<[u8; 32]>, state_aggregator::Error>;
 
 mod mmr {
     extern crate alloc;
@@ -257,12 +268,11 @@ mod mmr {
 pub mod state_aggregator {
     use ink::env::hash;
     use ink::prelude::vec;
-    use ink::prelude::vec::Vec;
+    use ink::prelude::{format, string::String, vec::Vec};
     use ink::storage::traits::AutoKey;
     use ink::storage::Mapping;
 
-    use ckb_merkle_mountain_range::Merge;
-    use ckb_merkle_mountain_range::Result;
+    use ckb_merkle_mountain_range::{Merge, Result as MMRResult};
 
     use scale::{Decode, Encode};
 
@@ -280,7 +290,7 @@ pub mod state_aggregator {
 
     impl Merge for MergeKeccak {
         type Item = [u8; 32];
-        fn merge(lhs: &Self::Item, rhs: &Self::Item) -> Result<Self::Item> {
+        fn merge(lhs: &Self::Item, rhs: &Self::Item) -> MMRResult<Self::Item> {
             let mut concat = vec![];
             concat.extend(lhs);
             concat.extend(rhs);
@@ -303,6 +313,14 @@ pub mod state_aggregator {
     pub struct SnapshotFinalized {
         snapshot: u128,
         level: BlockNumber,
+    }
+
+    /// Errors returned by the contract's methods.
+    #[derive(Debug, PartialEq, Eq, Encode, Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum Error {
+        NotAllowed,
+        CouldNotGenerateProof(String),
     }
 
     #[ink::storage_item]
@@ -411,15 +429,14 @@ pub mod state_aggregator {
         }
 
         #[ink(message)]
-        pub fn insert(&mut self, hash: [u8; 32]) {
+        pub fn insert(&mut self, hash: [u8; 32]) -> crate::InsertReturn {
             // Check if the snapshot can be finalized
             self.finalize_snapshot(false);
 
             // Only the authorized contract can add data
-            assert!(
-                self.config.acurast_contract == self.env().caller(),
-                "NOT_ALLOWED"
-            );
+            if self.config.acurast_contract != self.env().caller() {
+                return Err(Error::NotAllowed);
+            }
 
             let mut mmr = super::mmr::MMR::<[u8; 32], MergeKeccak>::new(self.mmr_size);
 
@@ -431,19 +448,22 @@ pub mod state_aggregator {
                 }
             }
             self.mmr_size = mmr.mmr_size();
+
+            Ok(self.snapshot_counter)
         }
 
         #[ink(message)]
-        pub fn generate_proof(&self, positions: Vec<u64>) -> MerkleProof<[u8; 32]> {
+        pub fn generate_proof(&self, positions: Vec<u64>) -> crate::GenerateProofReturn {
             let mmr = super::mmr::MMR::<[u8; 32], MergeKeccak>::new(self.mmr_size);
 
-            let proof = mmr
-                .gen_proof(positions, &self.tree)
-                .expect("COULD_NOT_GENERATE_PROOF");
+            let proof = mmr.gen_proof(positions, &self.tree);
 
-            MerkleProof {
-                mmr_size: proof.mmr_size,
-                proof: proof.proof,
+            match proof {
+                Err(err) => Err(Error::CouldNotGenerateProof(format!("{:?}", err))),
+                Ok(proof) => Ok(MerkleProof {
+                    mmr_size: proof.mmr_size,
+                    proof: proof.proof,
+                }),
             }
         }
 
@@ -501,6 +521,10 @@ pub mod state_aggregator {
             let admin = accounts.alice;
             let data_provider = accounts.bob;
             let snapshot_duration = 5;
+
+            let leaf_index: Vec<u64> = (0..=1).collect();
+
+            dbg!(leaf_index);
 
             let mut state_aggregator = StateAggregator::new(admin, snapshot_duration);
 
