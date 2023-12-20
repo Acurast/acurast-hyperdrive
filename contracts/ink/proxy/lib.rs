@@ -15,8 +15,7 @@ mod proxy {
     use scale::{Decode, Encode};
     use scale_info::prelude::cmp::Ordering;
 
-    use acurast_state_ink::state_aggregator::StateAggregatorRef;
-    use acurast_validator_ink::validator::{LeafProof, MerkleProof, ValidatorRef};
+    use acurast_validator_ink::validator::{LeafProof, MerkleProof};
 
     #[derive(Clone, Eq, PartialEq, Encode, Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -198,8 +197,8 @@ mod proxy {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ConfigureArgument {
         SetOwner(AccountId),
-        SetMerkleAggregator(Hash),
-        SetProofValidator(Hash),
+        SetMerkleAggregator(AccountId),
+        SetProofValidator(AccountId),
         SetPaused(bool),
         SetPayloadVersion(u16),
         SetJobInfoVersion(u16),
@@ -243,9 +242,9 @@ mod proxy {
         /// Address allowed to manage the contract
         owner: AccountId,
         /// The state aggregator
-        merkle_aggregator: StateAggregatorRef,
+        merkle_aggregator: AccountId,
         /// The Merkle Mountain Range proof validator
-        proof_validator: ValidatorRef,
+        proof_validator: AccountId,
         /// Flag that states if the contract is paused or not
         paused: bool,
         /// Payload versioning
@@ -279,21 +278,11 @@ mod proxy {
 
         #[ink(constructor)]
         pub fn default() -> Self {
-            let merkle_aggregator = StateAggregatorRef::new(AccountId::from([0x0; 32]), 5)
-                .code_hash(Hash::try_from([0; 32]).expect("COULD_NOT_INSTANCIATE_STATE_AGGREGATOR"))
-                .endowment(0)
-                .salt_bytes([0xDE, 0xAD, 0xBE, 0xEF])
-                .instantiate();
-            let proof_validator = ValidatorRef::new(AccountId::from([0x0; 32]), 0, Vec::new())
-                .code_hash(Hash::try_from([0; 32]).expect("COULD_NOT_INSTANCIATE_PROOF_VALIDATOR"))
-                .endowment(0)
-                .salt_bytes([0xDE, 0xAD, 0xBE, 0xEF])
-                .instantiate();
             Self {
                 config: Config {
                     owner: AccountId::from([0x0; 32]),
-                    merkle_aggregator,
-                    proof_validator,
+                    merkle_aggregator: AccountId::from([0x0; 32]),
+                    proof_validator: AccountId::from([0x0; 32]),
                     paused: false,
                     payload_version: 1,
                     job_info_version: 1,
@@ -345,21 +334,11 @@ mod proxy {
             for a in actions {
                 match a {
                     ConfigureArgument::SetOwner(address) => self.config.owner = address,
-                    ConfigureArgument::SetMerkleAggregator(code_hash) => {
-                        self.config.merkle_aggregator =
-                            StateAggregatorRef::new(AccountId::from([0x0; 32]), 5)
-                                .code_hash(code_hash)
-                                .endowment(0)
-                                .salt_bytes([0xDE, 0xAD, 0xBE, 0xEF])
-                                .instantiate()
+                    ConfigureArgument::SetMerkleAggregator(address) => {
+                        self.config.merkle_aggregator = address
                     }
-                    ConfigureArgument::SetProofValidator(code_hash) => {
-                        self.config.proof_validator =
-                            ValidatorRef::new(AccountId::from([0x0; 32]), 0, Vec::new())
-                                .code_hash(code_hash)
-                                .endowment(0)
-                                .salt_bytes([0xDE, 0xAD, 0xBE, 0xEF])
-                                .instantiate()
+                    ConfigureArgument::SetProofValidator(address) => {
+                        self.config.proof_validator = address
                     }
                     ConfigureArgument::SetPaused(paused) => self.config.paused = paused,
                     ConfigureArgument::SetPayloadVersion(version) => {
@@ -413,9 +392,12 @@ mod proxy {
                         let maximum_reward =
                             (slots as u128) * (execution_count as u128) * reward_per_execution;
 
+                        // Get exchange price
+                        let cost: u128 = self.config.exchange_ratio.exchange_price(maximum_reward);
+
                         // Validate job registration payment
                         assert!(
-                            self.env().transferred_value() == expected_fee + maximum_reward,
+                            self.env().transferred_value() == expected_fee + cost,
                             "INVALID_FEE_AMOUNT"
                         );
 
@@ -539,16 +521,31 @@ mod proxy {
                     "ACTION_TOO_BIG"
                 );
 
-                // Store encoded action
-                self.actions
-                    .insert(self.next_outgoing_action_id, &encoded_action);
+                let call_result: Result<(), ink::LangError> = build_call::<DefaultEnvironment>()
+                    .call(self.config.merkle_aggregator)
+                    .exec_input(
+                        ExecutionInput::new(acurast_state_ink::INSERT_SELECTOR)
+                            .push_arg(Self::blake2b_hash(&encoded_action)),
+                    )
+                    .transferred_value(0)
+                    .returns::<Result<_, LangError>>()
+                    .invoke();
 
-                // Increment action id
-                self.next_outgoing_action_id += 1;
+                match call_result {
+                    // An error emitted by the smart contracting language.
+                    // For more details see ink::LangError.
+                    Err(lang_error) => {
+                        panic!("Unexpected ink::LangError: {:?}", lang_error)
+                    }
+                    Ok(_) => {
+                        // Store encoded action
+                        self.actions
+                            .insert(self.next_outgoing_action_id, &encoded_action);
 
-                self.config
-                    .merkle_aggregator
-                    .insert(Self::blake2b_hash(&encoded_action))
+                        // Increment action id
+                        self.next_outgoing_action_id += 1;
+                    }
+                }
             }
         }
 
@@ -566,22 +563,39 @@ mod proxy {
 
             let leaf_index: Vec<u64> = (from_id..=to).collect();
             // Generate proof
-            let proof = self
-                .config
-                .merkle_aggregator
-                .generate_proof(leaf_index.clone());
+            let call_result: Result<
+                acurast_state_ink::state_aggregator::MerkleProof<[u8; 32]>,
+                ink::LangError,
+            > = build_call::<DefaultEnvironment>()
+                .call(self.config.merkle_aggregator)
+                .exec_input(
+                    ExecutionInput::new(acurast_state_ink::GENERATE_PROOF_SELECTOR)
+                        .push_arg(leaf_index.clone()),
+                )
+                .transferred_value(0)
+                .returns::<Result<_, LangError>>()
+                .invoke();
 
-            // Prepare result
-            MerkleProof {
-                mmr_size: proof.mmr_size,
-                proof: proof.proof,
-                leaves: leaf_index
-                    .iter()
-                    .map(|index| LeafProof {
-                        leaf_index: *index,
-                        data: self.actions.get(index).expect("UNKNOWN_ACTION_ID"),
-                    })
-                    .collect(),
+            match call_result {
+                // An error emitted by the smart contracting language.
+                // For more details see ink::LangError.
+                Err(lang_error) => {
+                    panic!("Unexpected ink::LangError: {:?}", lang_error)
+                }
+                Ok(proof) => {
+                    // Prepare result
+                    MerkleProof {
+                        mmr_size: proof.mmr_size,
+                        proof: proof.proof,
+                        leaves: leaf_index
+                            .iter()
+                            .map(|index| LeafProof {
+                                leaf_index: *index,
+                                data: self.actions.get(index).expect("UNKNOWN_ACTION_ID"),
+                            })
+                            .collect(),
+                    }
+                }
             }
         }
 
@@ -591,7 +605,6 @@ mod proxy {
             // The contract should not be paused
             self.fail_if_paused();
 
-            //let mut a = proof.leaves.as_mut_slice().sort();
             let mut actions: Vec<IncomingAction> = proof
                 .leaves
                 .iter()
@@ -605,10 +618,27 @@ mod proxy {
             actions.sort();
 
             // Validate proof
-            assert!(
-                self.config.proof_validator.verify_proof(snapshot, proof),
-                "PROOF_INVALID"
-            );
+            let call_result: Result<bool, ink::LangError> = build_call::<DefaultEnvironment>()
+                .call(self.config.proof_validator)
+                .exec_input(
+                    ExecutionInput::new(acurast_validator_ink::VERIFY_PROOF_SELECTOR)
+                        .push_arg(snapshot)
+                        .push_arg(proof),
+                )
+                .transferred_value(0)
+                .returns::<Result<_, LangError>>()
+                .invoke();
+
+            match call_result {
+                // An error emitted by the smart contracting language.
+                // For more details see ink::LangError.
+                Err(lang_error) => {
+                    panic!("Unexpected ink::LangError: {:?}", lang_error)
+                }
+                Ok(is_valid) => {
+                    assert!(is_valid, "PROOF_INVALID");
+                }
+            }
 
             for action in actions {
                 // Verify if message was already processed and fail if it was

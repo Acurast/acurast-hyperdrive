@@ -5,7 +5,8 @@ use ink::storage::Mapping;
 
 type Map<SK, T> = Mapping<u64, T, SK>;
 
-const INSERT_SELECTOR: Selector = Selector::new(ink::selector_bytes!("insert"));
+pub const INSERT_SELECTOR: Selector = Selector::new(ink::selector_bytes!("insert"));
+pub const GENERATE_PROOF_SELECTOR: Selector = Selector::new(ink::selector_bytes!("generate_proof"));
 
 mod mmr {
     extern crate alloc;
