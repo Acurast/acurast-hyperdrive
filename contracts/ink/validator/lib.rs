@@ -1,5 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
+use ink::env::call::Selector;
+
+pub const VERIFY_PROOF_SELECTOR: Selector = Selector::new(ink::selector_bytes!("verify_proof"));
+
 #[ink::contract]
 pub mod validator {
     use ink::env::hash;

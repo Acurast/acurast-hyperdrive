@@ -6,9 +6,7 @@ pub const FULFILL_SELECTOR: Selector = Selector::new(ink::selector_bytes!("fulfi
 
 #[ink::contract]
 mod client {
-    use ink::{
-        prelude::vec::Vec,
-    };
+    use ink::prelude::vec::Vec;
 
     #[ink(storage)]
     pub struct Client {}
