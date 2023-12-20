@@ -6,3 +6,6 @@ members = [
     "consumer"
 ]
 resolver ="1"
+
+[profile.release]
+overflow-checks = false     # Disable integer overflow checks.

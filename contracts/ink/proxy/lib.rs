@@ -8,13 +8,14 @@ mod proxy {
             call::{build_call, ExecutionInput},
             hash, DefaultEnvironment,
         },
-        prelude::vec::Vec,
+        prelude::{format, string::String, string::ToString, vec::Vec},
         storage::{traits::StorageLayout, Mapping},
         LangError,
     };
     use scale::{Decode, Encode};
     use scale_info::prelude::cmp::Ordering;
 
+    use acurast_helpers_ink::OuterError;
     use acurast_validator_ink::validator::{LeafProof, MerkleProof};
 
     #[derive(Clone, Eq, PartialEq, Encode, Decode)]
@@ -118,10 +119,28 @@ mod proxy {
     }
 
     #[derive(Clone, Eq, PartialEq, Decode)]
-    pub struct IncomingAction {
+    pub struct RawIncomingAction {
         id: u64,
         payload_version: u16,
         payload: Vec<u8>,
+    }
+
+    #[derive(Clone, Eq, PartialEq, Decode)]
+    pub struct IncomingAction {
+        id: u64,
+        payload: VersionedIncomingActionPayload,
+    }
+
+    impl IncomingAction {
+        fn decode(payload: &Vec<u8>) -> Result<Self, Error> {
+            match RawIncomingAction::decode(&mut payload.as_slice()) {
+                Err(err) => Err(Error::InvalidIncomingAction(format!("{:?}", err))),
+                Ok(action) => Ok(Self {
+                    id: action.id,
+                    payload: VersionedIncomingActionPayload::decode(action)?,
+                }),
+            }
+        }
     }
 
     impl Ord for IncomingAction {
@@ -139,6 +158,27 @@ mod proxy {
     impl PartialOrd for IncomingAction {
         fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
             Some(self.cmp(other))
+        }
+    }
+
+    #[derive(Clone, Eq, PartialEq, Decode)]
+    pub enum VersionedIncomingActionPayload {
+        V1(IncomingActionPayloadV1),
+    }
+
+    impl VersionedIncomingActionPayload {
+        fn decode(action: RawIncomingAction) -> Result<Self, Error> {
+            match action.payload_version {
+                v if v == Version::V1 as u16 => {
+                    let action = IncomingActionPayloadV1::decode(&mut action.payload.as_slice())
+                        .map_err(|err| {
+                            Error::Verbose(format!("Cannot decode incoming action V1 {:?}", err))
+                        })?;
+
+                    Ok(Self::V1(action))
+                }
+                v => Err(Error::UnknownIncomingActionVersion(v)),
+            }
         }
     }
 
@@ -173,6 +213,7 @@ mod proxy {
         FinalizedOrCancelled = 3,
     }
 
+    #[derive(Clone, Eq, PartialEq)]
     pub enum Version {
         V1 = 1,
     }
@@ -193,6 +234,26 @@ mod proxy {
         abstract_data: Vec<u8>, // Abstract data, this field can be used to add new parameters to the job information structure after the contract has been deployed.
     }
 
+    #[derive(Clone, Eq, PartialEq, Encode, Decode)]
+    pub enum JobInformation {
+        V1(JobInformationV1),
+    }
+
+    impl JobInformation {
+        fn decode(instance: &Proxy, job_id: u64) -> Result<Self, Error> {
+            match instance.get_job(job_id)? {
+                (Version::V1, job_bytes) => {
+                    let job =
+                        JobInformationV1::decode(&mut job_bytes.as_slice()).map_err(|err| {
+                            Error::Verbose(format!("Cannot decode job information V1 {:?}", err))
+                        })?;
+
+                    Ok(Self::V1(job))
+                }
+            }
+        }
+    }
+
     #[derive(Encode, Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ConfigureArgument {
@@ -210,6 +271,31 @@ mod proxy {
     #[ink(event)]
     pub struct IncomingActionProcessed {
         action_id: u64,
+    }
+
+    /// Errors returned by the contract's methods.
+    #[derive(Debug, PartialEq, Eq, Encode, Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum Error {
+        UnknownJobVersion(u16),
+        UnknownIncomingActionVersion(u16),
+        JobAlreadyFinished,
+        NotJobProcessor,
+        UnknownJob,
+        InvalidProof,
+        ContractPaused,
+        NotOwner,
+        NotJobCreator,
+        CannotFinalizeJob,
+        OutgoingActionTooBig,
+        Verbose(String),
+        UnknownActionIndex(u64),
+        InvalidIncomingAction(String),
+        /// Error wrappers
+        StateAggregatorError(acurast_state_ink::Error),
+        ValidatorError(acurast_validator_ink::Error),
+        ConsumerError(String),
+        LangError(LangError),
     }
 
     #[derive(Debug, Encode, Decode)]
@@ -263,16 +349,18 @@ mod proxy {
         next_outgoing_action_id: u64,
         processed_incoming_actions: Mapping<u64, ()>,
         next_job_id: u64,
-        actions: Mapping<u64, Vec<u8>>,
+        actions: Mapping<u64, (u128, Vec<u8>)>,
         job_info: Mapping<u64, (u16, Vec<u8>)>,
     }
 
     impl Proxy {
         #[ink(constructor)]
-        pub fn new(owner: AccountId) -> Self {
+        pub fn new(owner: AccountId, state: AccountId, validator: AccountId) -> Self {
             let mut contract = Self::default();
 
             contract.config.owner = owner;
+            contract.config.merkle_aggregator = state;
+            contract.config.proof_validator = validator;
             contract
         }
 
@@ -300,13 +388,20 @@ mod proxy {
             }
         }
 
-        fn fail_if_not_owner(&self) {
-            assert!(self.config.owner.eq(&self.env().caller()), "NOT_OWNER");
+        fn fail_if_not_owner(&self) -> Result<(), Error> {
+            if self.config.owner.eq(&self.env().caller()) {
+                Ok(())
+            } else {
+                Err(Error::NotOwner)
+            }
         }
 
-        /// Panic if the contract is paused
-        fn fail_if_paused(&self) {
-            assert!(!self.config.paused, "CONTRACT_PAUSED");
+        fn fail_if_paused(&self) -> Result<(), Error> {
+            if self.config.paused {
+                Err(Error::ContractPaused)
+            } else {
+                Ok(())
+            }
         }
 
         fn blake2b_hash(data: &Vec<u8>) -> [u8; 32] {
@@ -316,7 +411,18 @@ mod proxy {
             output
         }
 
-        /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
+        fn get_job(&self, job_id: u64) -> Result<(Version, Vec<u8>), Error> {
+            if let Some((version, job_bytes)) = self.job_info.get(job_id) {
+                match version {
+                    o if o == Version::V1 as u16 => Ok((Version::V1, job_bytes)),
+                    v => Err(Error::UnknownJobVersion(v)),
+                }
+            } else {
+                Err(Error::UnknownJob)
+            }
+        }
+
+        /// Modifies the code which is used to execute calls to this contract.
         pub fn set_code(&mut self, code_hash: [u8; 32]) {
             ink::env::set_code_hash(&code_hash).unwrap_or_else(|err| {
                 panic!(
@@ -328,11 +434,11 @@ mod proxy {
         }
 
         #[ink(message)]
-        pub fn configure(&mut self, actions: Vec<ConfigureArgument>) {
-            self.fail_if_not_owner();
+        pub fn configure(&mut self, actions: Vec<ConfigureArgument>) -> Result<(), Error> {
+            self.fail_if_not_owner()?;
 
-            for a in actions {
-                match a {
+            for action in actions {
+                match action {
                     ConfigureArgument::SetOwner(address) => self.config.owner = address,
                     ConfigureArgument::SetMerkleAggregator(address) => {
                         self.config.merkle_aggregator = address
@@ -357,13 +463,15 @@ mod proxy {
                     ConfigureArgument::SetCode(code_hash) => self.set_code(code_hash),
                 }
             }
+
+            Ok(())
         }
 
         /// This method is called by users to interact with the acurast protocol
         #[ink(message)]
-        pub fn send_actions(&mut self, actions: Vec<UserAction>) {
+        pub fn send_actions(&mut self, actions: Vec<UserAction>) -> Result<(), Error> {
             // The contract should not be paused
-            self.fail_if_paused();
+            self.fail_if_paused()?;
 
             let caller = self.env().caller();
 
@@ -378,7 +486,9 @@ mod proxy {
                         let start_time = payload.start_time;
                         let end_time = payload.end_time;
                         let interval = payload.interval;
-                        assert!(interval > 0, "INTERVAL_CANNNOT_BE_ZERO");
+                        if interval == 0 {
+                            return Err(Error::Verbose("INTERVAL_CANNNOT_BE_ZERO".to_string()));
+                        }
                         let execution_count = (end_time - start_time) / interval as u128;
 
                         // Calculate the fee required for all job executions
@@ -396,10 +506,11 @@ mod proxy {
                         let cost: u128 = self.config.exchange_ratio.exchange_price(maximum_reward);
 
                         // Validate job registration payment
-                        assert!(
-                            self.env().transferred_value() == expected_fee + cost,
-                            "INVALID_FEE_AMOUNT"
-                        );
+                        if self.env().transferred_value() != expected_fee + cost {
+                            return Err(Error::Verbose(
+                                "AMOUNT_CANNOT_COVER_JOB_COSTS".to_string(),
+                            ));
+                        }
 
                         let info = JobInformationV1 {
                             creator: self.env().caller(),
@@ -444,62 +555,47 @@ mod proxy {
                     }
                     UserAction::DeregisterJob(ids) => {
                         for id in ids.clone() {
-                            let (version, job_bytes) = self.job_info.get(id).expect("UNKNOWN_JOB");
-                            match version {
-                                o if o == Version::V1 as u16 => {
-                                    let job = JobInformationV1::decode(&mut job_bytes.as_slice())
-                                        .expect("COULD_NOT_DECODE_JOB");
-
+                            match JobInformation::decode(self, id)? {
+                                JobInformation::V1(job) => {
                                     // Only the job creator can deregister the job
-                                    assert!(job.creator == self.env().caller(), "NOT_JOB_CREATOR");
-
-                                    // Verify if job can be finalized
-                                    let is_open = job.status == StatusKind::Open;
-                                    assert!(is_open, "CANNOT_CANCEL_JOB");
+                                    if job.creator != self.env().caller() {
+                                        return Err(Error::NotJobCreator);
+                                    }
                                 }
-                                v => panic!("Unknown job information version: {:?}", v),
-                            };
+                            }
                         }
-
                         OutgoingActionPayload::DeregisterJob(ids)
                     }
                     UserAction::FinalizeJob(ids) => {
                         for id in ids.clone() {
-                            let (version, job_bytes) = self.job_info.get(id).expect("UNKNOWN_JOB");
-                            match version {
-                                o if o == Version::V1 as u16 => {
-                                    let job = JobInformationV1::decode(&mut job_bytes.as_slice())
-                                        .expect("COULD_NOT_DECODE_JOB");
-
-                                    // Only the job creator can deregister the job
-                                    assert!(job.creator == self.env().caller(), "NOT_JOB_CREATOR");
+                            match JobInformation::decode(self, id)? {
+                                JobInformation::V1(job) => {
+                                    // Only the job creator can finalize the job
+                                    if job.creator != self.env().caller() {
+                                        return Err(Error::NotJobCreator);
+                                    }
 
                                     // Verify if job can be finalized
-                                    let is_open = job.status == StatusKind::Open;
                                     let is_expired =
                                         (job.end_time / 1000) < self.env().block_timestamp().into();
-                                    assert!(is_open | is_expired, "CANNOT_CANCEL_JOB");
+                                    if !is_expired {
+                                        return Err(Error::CannotFinalizeJob);
+                                    }
                                 }
-                                v => panic!("Unknown job information version: {:?}", v),
-                            };
+                            }
                         }
 
                         OutgoingActionPayload::FinalizeJob(ids)
                     }
                     UserAction::SetJobEnvironment(payload) => {
-                        let (version, job_bytes) =
-                            self.job_info.get(payload.job_id).expect("UNKNOWN_JOB");
-                        match version {
-                            o if o == Version::V1 as u16 => {
-                                let job = JobInformationV1::decode(&mut job_bytes.as_slice())
-                                    .expect("COULD_NOT_DECODE_JOB");
-
-                                // Only the job creator can deregister the job
-                                assert!(job.creator == self.env().caller(), "NOT_JOB_CREATOR");
+                        match JobInformation::decode(self, payload.job_id)? {
+                            JobInformation::V1(job) => {
+                                // Only the job creator can set environment variables
+                                if job.creator != self.env().caller() {
+                                    return Err(Error::NotJobCreator);
+                                }
                             }
-                            v => panic!("Unknown job information version: {:?}", v),
-                        };
-
+                        }
                         OutgoingActionPayload::SetJobEnvironment(payload)
                     }
                     UserAction::Noop => OutgoingActionPayload::Noop,
@@ -513,157 +609,108 @@ mod proxy {
                 }
                 .encode();
 
-                // Verify that the encoded action size is less than `next_action_id`
-                assert!(
-                    encoded_action
-                        .len()
-                        .lt(&(self.config.max_message_bytes as usize)),
-                    "ACTION_TOO_BIG"
-                );
+                // Verify that the encoded action size is less than `max_message_bytes`
+                if !encoded_action
+                    .len()
+                    .lt(&(self.config.max_message_bytes as usize))
+                {
+                    return Err(Error::OutgoingActionTooBig);
+                }
 
-                let call_result: Result<(), ink::LangError> = build_call::<DefaultEnvironment>()
-                    .call(self.config.merkle_aggregator)
-                    .exec_input(
-                        ExecutionInput::new(acurast_state_ink::INSERT_SELECTOR)
-                            .push_arg(Self::blake2b_hash(&encoded_action)),
-                    )
-                    .transferred_value(0)
-                    .returns::<Result<_, LangError>>()
-                    .invoke();
+                let call_result: OuterError<acurast_state_ink::InsertReturn> =
+                    build_call::<DefaultEnvironment>()
+                        .call(self.config.merkle_aggregator)
+                        .exec_input(
+                            ExecutionInput::new(acurast_state_ink::INSERT_SELECTOR)
+                                .push_arg(Self::blake2b_hash(&encoded_action)),
+                        )
+                        .transferred_value(0)
+                        .returns()
+                        .try_invoke();
 
                 match call_result {
-                    // An error emitted by the smart contracting language.
-                    // For more details see ink::LangError.
-                    Err(lang_error) => {
-                        panic!("Unexpected ink::LangError: {:?}", lang_error)
-                    }
-                    Ok(_) => {
+                    // Errors from the underlying execution environment (e.g the Contracts pallet)
+                    Err(error) => Err(Error::Verbose(format!("{:?}", error))),
+                    // Errors from the programming language
+                    Ok(Err(error)) => Err(Error::LangError(error)),
+                    // Errors emitted by the contract being called
+                    Ok(Ok(Err(error))) => Err(Error::StateAggregatorError(error)),
+                    // Successful call result
+                    Ok(Ok(Ok(snapshot))) => {
                         // Store encoded action
                         self.actions
-                            .insert(self.next_outgoing_action_id, &encoded_action);
+                            .insert(self.next_outgoing_action_id, &(snapshot, encoded_action));
 
                         // Increment action id
                         self.next_outgoing_action_id += 1;
+
+                        Ok(())
                     }
-                }
+                }?;
             }
-        }
 
-        #[ink(message)]
-        pub fn generate_proof(&self, from: u64, to: u64) -> MerkleProof<[u8; 32]> {
-            // Bound checks
-            assert!(from > 0, "`from` should be higher than 0");
-            assert!(
-                to < self.next_outgoing_action_id,
-                "`to` should be less then `next_action_id`"
-            );
-
-            // normalize leaf position: leafs start on position 0, but actions id's start from 1
-            let from_id = from - 1;
-
-            let leaf_index: Vec<u64> = (from_id..=to).collect();
-            // Generate proof
-            let call_result: Result<
-                acurast_state_ink::state_aggregator::MerkleProof<[u8; 32]>,
-                ink::LangError,
-            > = build_call::<DefaultEnvironment>()
-                .call(self.config.merkle_aggregator)
-                .exec_input(
-                    ExecutionInput::new(acurast_state_ink::GENERATE_PROOF_SELECTOR)
-                        .push_arg(leaf_index.clone()),
-                )
-                .transferred_value(0)
-                .returns::<Result<_, LangError>>()
-                .invoke();
-
-            match call_result {
-                // An error emitted by the smart contracting language.
-                // For more details see ink::LangError.
-                Err(lang_error) => {
-                    panic!("Unexpected ink::LangError: {:?}", lang_error)
-                }
-                Ok(proof) => {
-                    // Prepare result
-                    MerkleProof {
-                        mmr_size: proof.mmr_size,
-                        proof: proof.proof,
-                        leaves: leaf_index
-                            .iter()
-                            .map(|index| LeafProof {
-                                leaf_index: *index,
-                                data: self.actions.get(index).expect("UNKNOWN_ACTION_ID"),
-                            })
-                            .collect(),
-                    }
-                }
-            }
+            Ok(())
         }
 
         /// This method purpose is to receive provable messages from the acurast protocol
         #[ink(message)]
-        pub fn receive_actions(&mut self, snapshot: u128, proof: MerkleProof<[u8; 32]>) {
-            // The contract should not be paused
-            self.fail_if_paused();
+        pub fn receive_actions(
+            &mut self,
+            snapshot: u128,
+            proof: MerkleProof<[u8; 32]>,
+        ) -> Result<(), Error> {
+            // The contract cannot be paused
+            self.fail_if_paused()?;
 
             let mut actions: Vec<IncomingAction> = proof
                 .leaves
                 .iter()
-                .map(|leaf| {
-                    IncomingAction::decode(&mut leaf.data.as_slice())
-                        .expect("COULD_NOT_DECODE_INCOMING_ACTION")
-                })
-                .collect();
+                .map(|leaf| IncomingAction::decode(&leaf.data))
+                .collect::<Result<Vec<IncomingAction>, Error>>()?;
 
             // Sort actions
             actions.sort();
 
             // Validate proof
-            let call_result: Result<bool, ink::LangError> = build_call::<DefaultEnvironment>()
-                .call(self.config.proof_validator)
-                .exec_input(
-                    ExecutionInput::new(acurast_validator_ink::VERIFY_PROOF_SELECTOR)
-                        .push_arg(snapshot)
-                        .push_arg(proof),
-                )
-                .transferred_value(0)
-                .returns::<Result<_, LangError>>()
-                .invoke();
+            let call_result: OuterError<acurast_validator_ink::VerifyProofReturn> =
+                build_call::<DefaultEnvironment>()
+                    .call(self.config.proof_validator)
+                    .exec_input(
+                        ExecutionInput::new(acurast_validator_ink::VERIFY_PROOF_SELECTOR)
+                            .push_arg(snapshot)
+                            .push_arg(proof),
+                    )
+                    .transferred_value(0)
+                    .returns()
+                    .try_invoke();
 
             match call_result {
-                // An error emitted by the smart contracting language.
-                // For more details see ink::LangError.
-                Err(lang_error) => {
-                    panic!("Unexpected ink::LangError: {:?}", lang_error)
-                }
-                Ok(is_valid) => {
-                    assert!(is_valid, "PROOF_INVALID");
-                }
-            }
+                // Errors from the underlying execution environment (e.g the Contracts pallet)
+                Err(error) => Err(Error::Verbose(format!("{:?}", error))),
+                // Errors from the programming language
+                Ok(Err(error)) => Err(Error::LangError(error)),
+                // Errors emitted by the contract being called
+                Ok(Ok(Err(error))) => Err(Error::ValidatorError(error)),
+                // Proof is not valid
+                Ok(Ok(Ok(is_valid))) if !is_valid => Err(Error::InvalidProof),
+                // Proof is valid
+                Ok(Ok(Ok(_))) => {
+                    // The proof is valid
+                    for action in actions {
+                        // Verify if message was already processed and fail if it was
+                        assert!(
+                            !self.processed_incoming_actions.contains(action.id),
+                            "INVALID_INCOMING_ACTION_ID"
+                        );
+                        self.processed_incoming_actions.insert(action.id, &());
 
-            for action in actions {
-                // Verify if message was already processed and fail if it was
-                assert!(
-                    !self.processed_incoming_actions.contains(action.id),
-                    "INVALID_INCOMING_ACTION_ID"
-                );
-                self.processed_incoming_actions.insert(action.id, &());
-                // Decode message
-                match action.payload_version {
-                    o if o == Version::V1 as u16 => {
-                        // Process message
-                        let decoded_action =
-                            IncomingActionPayloadV1::decode(&mut action.payload.as_slice())
-                                .expect("COULD_NOT_DECODE_INCOMING_ACTION_V1");
-                        match decoded_action {
-                            IncomingActionPayloadV1::AssignJobProcessor(payload) => {
-                                let (version, job_bytes) =
-                                    self.job_info.get(payload.job_id).expect("UNKNOWN_JOB");
-                                match version {
-                                    o if o == Version::V1 as u16 => {
-                                        let mut job =
-                                            JobInformationV1::decode(&mut job_bytes.as_slice())
-                                                .expect("COULD_NOT_DECODE_JOB");
-
+                        // Process action
+                        match action.payload {
+                            VersionedIncomingActionPayload::V1(
+                                IncomingActionPayloadV1::AssignJobProcessor(payload),
+                            ) => {
+                                match JobInformation::decode(self, payload.job_id)? {
+                                    JobInformation::V1(mut job) => {
                                         // Update the processor list for the given job
                                         job.processors.push(payload.processor);
 
@@ -680,20 +727,20 @@ mod proxy {
                                         }
 
                                         // Save changes
-                                        self.job_info.insert(payload.job_id, &(o, job.encode()));
-                                    }
-                                    v => panic!("Unknown job information version: {:?}", v),
-                                };
-                            }
-                            IncomingActionPayloadV1::FinalizeJob(payload) => {
-                                let (version, job_bytes) =
-                                    self.job_info.get(payload.job_id).expect("UNKNOWN_JOB");
-                                match version {
-                                    o if o == Version::V1 as u16 => {
-                                        let mut job =
-                                            JobInformationV1::decode(&mut job_bytes.as_slice())
-                                                .expect("COULD_NOT_DECODE_JOB");
+                                        self.job_info.insert(
+                                            payload.job_id,
+                                            &(Version::V1 as u16, job.encode()),
+                                        );
 
+                                        Ok(())
+                                    }
+                                }
+                            }
+                            VersionedIncomingActionPayload::V1(
+                                IncomingActionPayloadV1::FinalizeJob(payload),
+                            ) => {
+                                match JobInformation::decode(self, payload.job_id)? {
+                                    JobInformation::V1(mut job) => {
                                         // Update job status
                                         job.status = StatusKind::FinalizedOrCancelled;
 
@@ -710,48 +757,50 @@ mod proxy {
                                         }
 
                                         // Save changes
-                                        self.job_info.insert(payload.job_id, &(o, job.encode()));
-                                    }
-                                    v => panic!("Unknown job information version: {:?}", v),
-                                };
-                            }
-                            IncomingActionPayloadV1::Noop => {
-                                // Intentionally do nothing
-                            }
-                        }
-                    }
-                    v => panic!("Unknown incodming action version: {:?}", v),
-                }
+                                        self.job_info.insert(
+                                            payload.job_id,
+                                            &(Version::V1 as u16, job.encode()),
+                                        );
 
-                // Emit event informing that a given incoming message has been processed
-                EmitEvent::<Self>::emit_event(
-                    self.env(),
-                    IncomingActionProcessed {
-                        action_id: action.id,
-                    },
-                );
+                                        Ok(())
+                                    }
+                                }
+                            }
+                            VersionedIncomingActionPayload::V1(IncomingActionPayloadV1::Noop) => {
+                                // Intentionally do nothing
+                                Ok(())
+                            }
+                        }?;
+
+                        // Emit event informing that a given incoming message has been processed
+                        EmitEvent::<Self>::emit_event(
+                            self.env(),
+                            IncomingActionProcessed {
+                                action_id: action.id,
+                            },
+                        );
+                    }
+
+                    Ok(())
+                }
             }
         }
 
         #[ink(message)]
-        pub fn fulfill(&mut self, job_id: u64, payload: Vec<u8>) {
-            self.fail_if_paused();
+        pub fn fulfill(&mut self, job_id: u64, payload: Vec<u8>) -> Result<(), Error> {
+            self.fail_if_paused()?;
 
-            // Get job information
-            let (version, job_bytes) = self.job_info.get(job_id).expect("UNKNOWN_JOB");
-            match version {
-                o if o == Version::V1 as u16 => {
-                    let mut job = JobInformationV1::decode(&mut job_bytes.as_slice())
-                        .expect("COULD_NOT_DECODE_JOB");
-
+            match JobInformation::decode(self, job_id)? {
+                JobInformation::V1(mut job) => {
                     // Verify if sender is assigned to the job
-                    assert!(
-                        job.processors.contains(&self.env().caller()),
-                        "NOT_JOB_PROCESSOR",
-                    );
+                    if !job.processors.contains(&self.env().caller()) {
+                        return Err(Error::NotJobProcessor);
+                    }
 
                     // Verify that the job has not been finalized
-                    assert!(job.status == StatusKind::Assigned, "JOB_ALREADY_FINISHED");
+                    if job.status != StatusKind::Assigned {
+                        return Err(Error::JobAlreadyFinished);
+                    }
 
                     // Re-fill processor fees
                     // Forbidden to credit 0ꜩ to a contract without code.
@@ -765,7 +814,7 @@ mod proxy {
                     };
 
                     // Pass the fulfillment to the destination contract
-                    let call_result: Result<(), ink::LangError> =
+                    let call_result: OuterError<acurast_consumer_ink::FulfillReturn> =
                         build_call::<DefaultEnvironment>()
                             .call(job.destination)
                             .exec_input(
@@ -774,22 +823,95 @@ mod proxy {
                                     .push_arg(payload),
                             )
                             .transferred_value(next_execution_fee)
-                            .returns::<Result<_, LangError>>()
-                            .invoke();
+                            .returns()
+                            .try_invoke();
 
                     match call_result {
-                        // An error emitted by the smart contracting language.
-                        // For more details see ink::LangError.
-                        Err(lang_error) => {
-                            panic!("Unexpected ink::LangError: {:?}", lang_error)
-                        }
-                        Ok(_) => {
+                        // Errors from the underlying execution environment (e.g the Contracts pallet)
+                        Err(error) => Err(Error::Verbose(format!("{:?}", error))),
+                        // Errors from the programming language
+                        Ok(Err(error)) => Err(Error::LangError(error)),
+                        // Errors emitted by the contract being called
+                        Ok(Ok(Err(error))) => Err(Error::ConsumerError(error)),
+                        // Successful call result
+                        Ok(Ok(Ok(()))) => {
                             // Save changes
-                            self.job_info.insert(job_id, &(o, job.encode()));
+                            self.job_info
+                                .insert(job_id, &(Version::V1 as u16, job.encode()));
+
+                            Ok(())
                         }
                     }
                 }
-                _ => panic!("UNKNOWN_JOB_INFORMATION_VERSION"),
+            }
+        }
+
+        //
+        // Views
+        //
+
+        /// The purpose of this method is to generate proofs for outgoing actions
+        #[ink(message)]
+        pub fn generate_proof(&self, from: u64, to: u64) -> Result<MerkleProof<[u8; 32]>, Error> {
+            // Validate arguments
+            if from == 0 || to == 0 {
+                return Err(Error::Verbose("`from/to` cannot be zero".to_string()));
+            }
+            if to >= self.next_outgoing_action_id {
+                return Err(Error::Verbose(
+                    "`to` should be less then `next_action_id`".to_string(),
+                ));
+            }
+
+            // Normalize leaf position: leafs start on position 0, but actions id's start from 1
+            let from_id = from - 1;
+            let to_id = to - 1;
+
+            // Prepare a range of actions for generating the proof
+            let leaf_index: Vec<u64> = (from_id..=to_id).collect();
+
+            // Generate proof
+            let call_result: OuterError<acurast_state_ink::GenerateProofReturn> =
+                build_call::<DefaultEnvironment>()
+                    .call(self.config.merkle_aggregator)
+                    .exec_input(
+                        ExecutionInput::new(acurast_state_ink::GENERATE_PROOF_SELECTOR)
+                            .push_arg(leaf_index.clone()),
+                    )
+                    .transferred_value(0)
+                    .returns()
+                    .try_invoke();
+
+            match call_result {
+                // Errors from the underlying execution environment (e.g the Contracts pallet)
+                Err(error) => Err(Error::Verbose(format!("{:?}", error))),
+                // Errors from the programming language
+                Ok(Err(error)) => Err(Error::LangError(error)),
+                // Errors emitted by the contract being called
+                Ok(Ok(Err(error))) => Err(Error::StateAggregatorError(error)),
+                // Successful call result
+                Ok(Ok(Ok(proof))) => {
+                    let leaves: Vec<LeafProof> = leaf_index
+                        .iter()
+                        .map(|index| {
+                            let action_id = *index + 1;
+                            match self.actions.get(action_id) {
+                                None => Err(Error::UnknownActionIndex(action_id)),
+                                Some((_snapshot, data)) => Ok(LeafProof {
+                                    leaf_index: *index,
+                                    data,
+                                }),
+                            }
+                        })
+                        .collect::<Result<Vec<LeafProof>, Error>>()?;
+
+                    // Prepare result
+                    Ok(MerkleProof {
+                        mmr_size: proof.mmr_size,
+                        proof: proof.proof,
+                        leaves,
+                    })
+                }
             }
         }
     }

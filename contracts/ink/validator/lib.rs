@@ -2,23 +2,31 @@
 
 use ink::env::call::Selector;
 
+pub use validator::Error;
+
+// Method selectors
+
 pub const VERIFY_PROOF_SELECTOR: Selector = Selector::new(ink::selector_bytes!("verify_proof"));
+
+// Method types
+
+pub type VerifyProofReturn = Result<bool, validator::Error>;
 
 #[ink::contract]
 pub mod validator {
     use ink::env::hash;
     use ink::prelude::vec;
-    use ink::prelude::vec::Vec;
+    use ink::prelude::{format, string::String, vec::Vec};
     use ink::storage::{traits::Packed, Mapping};
     use scale::{Decode, Encode, EncodeLike};
 
-    use ckb_merkle_mountain_range::{Error, Merge, MerkleProof as MMRMerkleProof};
+    use ckb_merkle_mountain_range::{Error as MMRError, Merge, MerkleProof as MMRMerkleProof};
 
     struct MergeKeccak;
 
     impl Merge for MergeKeccak {
         type Item = [u8; 32];
-        fn merge(lhs: &Self::Item, rhs: &Self::Item) -> Result<Self::Item, Error> {
+        fn merge(lhs: &Self::Item, rhs: &Self::Item) -> Result<Self::Item, MMRError> {
             let mut concat = vec![];
             concat.extend(lhs);
             concat.extend(rhs);
@@ -46,6 +54,14 @@ pub mod validator {
     }
 
     const MAX_VALIDATORS: usize = 50;
+
+    /// Errors returned by the contract's methods.
+    #[derive(Debug, PartialEq, Eq, Encode, Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum Error {
+        ProofInvalid(String),
+        SnapshotUnknown,
+    }
 
     /// A custom type that we can use in our contract storage
     #[ink::storage_item]
@@ -169,12 +185,18 @@ pub mod validator {
             }
         }
 
+        //
         // Views
+        //
 
         #[ink(message)]
-        pub fn verify_proof(&self, snapshot: u128, proof: MerkleProof<[u8; 32]>) -> bool {
+        pub fn verify_proof(
+            &self,
+            snapshot: u128,
+            proof: MerkleProof<[u8; 32]>,
+        ) -> crate::VerifyProofReturn {
             // Get snapshot root
-            let snaptshot_root = self.root.get(snapshot).unwrap_or_default();
+            let snaptshot_root = self.root.get(snapshot).ok_or(Error::SnapshotUnknown)?;
 
             // Prepare proof instance
             let mmr_proof =
@@ -188,18 +210,20 @@ pub mod validator {
                     let mut hash = <hash::Keccak256 as hash::HashOutput>::Type::default();
                     ink::env::hash_bytes::<hash::Keccak256>(&item.data, &mut hash);
 
-                    (
-                        item.leaf_index,
-                        hash.try_into().expect("INVALID_HASH_LENGTH"),
-                    )
+                    match <[u8; 32]>::try_from(hash) {
+                        Ok(h) => Ok((item.leaf_index, h)),
+                        Err(err) => Err(Error::ProofInvalid(format!("{:?}", err))),
+                    }
                 })
-                .collect();
-            let derived_root = mmr_proof
-                .calculate_root(hashed_leaves)
-                .expect("INVALID_PROOF");
+                .collect::<Result<Vec<(u64, [u8; 32])>, Error>>()?;
 
-            // Check if the derived proof matches the one from the snapshot
-            snaptshot_root == derived_root
+            match mmr_proof.calculate_root(hashed_leaves) {
+                Err(err) => Err(Error::ProofInvalid(format!("{:?}", err))),
+                Ok(derived_root) => {
+                    // Check if the derived proof matches the one from the snapshot
+                    Ok(snaptshot_root == derived_root)
+                }
+            }
         }
     }
 

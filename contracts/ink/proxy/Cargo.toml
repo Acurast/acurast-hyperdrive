@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Papers AG"]
 edition = "2021"
 
+[profile.release]
+overflow-checks = false     # Disable integer overflow checks.
+
 [dependencies]
 ink = { version = "4.2.0", default-features = false }
 
@@ -14,6 +17,7 @@ derive_more = { version = "0.99.17", default-features = false }
 strum = { version = "0.24.1", default-features = false }
 strum_macros = { version = "0.24.1", default-features = false }
 
+acurast-helpers-ink = { path = "../helpers", default-features = false }
 acurast-state-ink = { path = "../state", default-features = false, features = ["ink-as-dependency"] }
 acurast-validator-ink = { path = "../validator", default-features = false, features = ["ink-as-dependency"] }
 acurast-consumer-ink = { path = "../consumer", default-features = false, features = ["ink-as-dependency"] }
@@ -30,6 +34,7 @@ std = [
     "ink/std",
     "scale/std",
     "scale-info/std",
+    "acurast-helpers-ink/std",
     "acurast-state-ink/std",
     "acurast-validator-ink/std",
     "acurast-consumer-ink/std"
