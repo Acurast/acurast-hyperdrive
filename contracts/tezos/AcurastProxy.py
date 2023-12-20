@@ -101,7 +101,6 @@ class Error:
     JOB_ALREADY_FINALIZED = "JOB_ALREADY_FINALIZED"
     PAUSED = "CONTRACT_PAUSED"
     CANNOT_FINALIZE_JOB = "CANNOT_FINALIZE_JOB"
-    CANNOT_CANCEL_JOB = "CANNOT_CANCEL_JOB"
     NOT_JOB_CREATOR = "NOT_JOB_CREATOR"
 
 
@@ -520,10 +519,6 @@ class OutgoingActionLambda:
         job_information = sp.compute(
             arg.context.store.job_information.get(job_id, message=Error.JOB_UNKNOWN),
         )
-
-        # Verify if job can be finalized
-        is_open = sp.compute(job_information.status == Job_Status.Open)
-        sp.verify(is_open, Error.CANNOT_CANCEL_JOB)
 
         # Only the job creator can deregister the job
         origin = sp.compute(sp.sender)
