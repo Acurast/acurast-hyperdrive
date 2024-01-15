@@ -219,7 +219,7 @@ code
             DUP 2;      
             GET 8;      
             COMPARE;    
-            EQ;         
+            NEQ;        
             IF
               {}
               {
