@@ -887,7 +887,7 @@ class AcurastProxy(sp.Contract):
         )
 
         # Verify that the job has not been finalized
-        sp.verify(job_information.value.status == Job_Status.FinalizedOrCancelled, Error.JOB_ALREADY_FINALIZED)
+        sp.verify(job_information.value.status != Job_Status.FinalizedOrCancelled, Error.JOB_ALREADY_FINALIZED)
 
         # Re-fill processor fees
         # Forbidden to credit 0ꜩ to a contract without code.
