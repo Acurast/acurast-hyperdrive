@@ -17,6 +17,12 @@ It allows smart contracts on a source chain to store ✉️ states that are veri
 | [yarn](https://yarnpkg.com/)                      |
 | [nodejs](https://nodejs.org/en)                   |
 
+## Clone repository
+
+```sh
+git clone https://github.com/Acurast/acurast-hyperdrive.git --recurse-submodules
+```
+
 ## Contract Compilation
 
 ```sh
