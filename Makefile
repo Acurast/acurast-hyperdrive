@@ -68,8 +68,8 @@ test/tezos/ligo/%: test/tezos/ligo/%.mligo
 ifeq (, ${HAS_DOCKER})
 	@echo "Skipping compilation $<, it requires docker."
 else
-#	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) compile contract $< --output-file $(SNAPSHOTS_FOLDER)/compilation/$*_contract.tz
-	@./ligo run test $<
+	@docker run --rm -v "$(PWD)":"$(PWD)" -w "$(PWD)" ligolang/ligo:$(LIGO_VERSION) run test $<
+# 	@./ligo run test $<
 endif
 
 clean-tezos-tests:
@@ -176,8 +176,9 @@ $(BUILD_FOLDER)/npm-packages: package.json
 
 install-pip-packages: $(BUILD_FOLDER)/pip-packages
 $(BUILD_FOLDER)/pip-packages: requirements.txt
-	@pip3 install --upgrade pip
-	@pip3 install -r requirements.txt --quiet
+	@python3 -m venv .local
+	@.local/bin/pip3 install --upgrade pip
+	@.local/bin/pip3 install -r requirements.txt
 	$(touch_done)
 
 install-dependencies: install-smartpy install-npm-packages install-pip-packages

@@ -23,7 +23,7 @@ let test =
         snapshot_level=Big_map.empty;
         merkle_tree=PatriciaTrie.empty_tree;
     } in
-    let taddr, _, _ = Test.originate IBCF_Aggregator.main initial_storage 0tez in
+    let taddr, _, _ = Test.originate_uncurried IBCF_Aggregator.main initial_storage 0tez in
 
     let contr = Test.to_contract taddr in
     let () = Test.set_source alice in
